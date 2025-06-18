@@ -1,0 +1,170 @@
+.searchContainer {
+  position: relative;
+  width: 100%;
+  max-width: 250px;
+}
+
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 14px 8px 44px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a202c;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.searchInput:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.searchInput:hover:not(:disabled) {
+  border-color: #cbd5e0;
+}
+
+.searchInput.disabled,
+.searchInput:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.searchInput::placeholder {
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  color: #718096;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.loadingSpinner {
+  position: absolute;
+  right: 44px;
+  width: 20px;
+  height: 20px;
+}
+
+.spinner {
+  width: 100%;
+  height: 100%;
+  color: #4299e1;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerCircle {
+  stroke: currentColor;
+  stroke-dasharray: 62.8;
+  stroke-dashoffset: 62.8;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+.clearButton {
+  position: absolute;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: #718096;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  color: #4a5568;
+  background-color: #f7fafc;
+}
+
+.clearButton:focus {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
+
+.clearButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Animations */
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .searchContainer {
+    max-width: 100%;
+  }
+  
+  .searchInput {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 10px 14px 10px 40px;
+  }
+  
+  .searchIcon {
+    left: 12px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .loadingSpinner {
+    right: 40px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .clearButton {
+    right: 10px;
+    width: 22px;
+    height: 22px;
+  }
+}

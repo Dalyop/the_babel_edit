@@ -1,0 +1,155 @@
+.container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 105px;
+  }
+  
+  .select {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 1rem;
+    font-size: var(--font-size-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    background-color: transparent;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 12px;
+    transition: border-color 0.2s ease;
+  }
+  
+  .select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+  
+  .select:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
+  
+  .select:disabled,
+  .select.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  .select.error {
+    border-color: var(--color-accent);
+  }
+  
+  .select.error:focus {
+    border-color: var(--color-accent);
+  }
+  
+  .arrow {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6b7280;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .select:focus + .arrow {
+    color: #0066cc;
+    transform: translateY(-50%) rotate(180deg);
+  }
+  
+  .select:disabled + .arrow,
+  .select.disabled + .arrow {
+    color: #d1d5db;
+  }
+  
+  .select.error + .arrow {
+    color: #d73a49;
+  }
+  
+  /* Option styling */
+  .select option {
+    font-size: var(--font-size-md);
+    padding: 0.5rem;
+  }
+  
+  .select option:disabled {
+    color: #8b949e;
+    background-color: #f5f7fa;
+  }
+  
+  /* Dark mode support
+  @media (prefers-color-scheme: dark) {
+    .select {
+      color: #e6edf3;
+      background-color: #21262d;
+      border-color: #30363d;
+    }
+  
+    .select:focus {
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+    }
+  
+    .select:hover:not(:disabled) {
+      border-color: #484f58;
+    }
+  
+    .select:disabled,
+    .select.disabled {
+      background-color: #161b22;
+      color: #6e7681;
+      border-color: #30363d;
+    }
+  
+    .select.error {
+      border-color: #f85149;
+    }
+  
+    .select.error:focus {
+      border-color: #f85149;
+      box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.1);
+    }
+  
+    .arrow {
+      color: #8b949e;
+    }
+  
+    .select:focus + .arrow {
+      color: #58a6ff;
+    }
+  
+    .select:disabled + .arrow,
+    .select.disabled + .arrow {
+      color: #484f58;
+    }
+  
+    .select.error + .arrow {
+      color: #f85149;
+    }
+  
+    .select option {
+      color: #e6edf3;
+      background-color: #21262d;
+    }
+  
+    .select option:disabled {
+      color: #6e7681;
+      background-color: #161b22;
+    }
+  }
+   */
+  /* Responsive design */
+  @media (max-width: 640px) {
+    .container {
+      max-width: 100%;
+    }
+  
+    .select {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+  }

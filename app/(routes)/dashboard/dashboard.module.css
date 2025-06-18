@@ -1,0 +1,96 @@
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    /* padding: 0 1rem; */
+}
+.section {
+    /* padding: 0 40px; */
+    margin: 2rem 0;
+    width: 100%;
+}
+.cards {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+.card1 {
+    flex: 0 0 30%;
+    min-width: 250px;
+}
+.card2 {
+    flex: 0 0 60%;
+    min-width: 250px;
+}
+.productsSection {
+    padding: 0 var(--spacing-md);
+    margin: var(--spacing-xl) 0;
+    width: 100%;
+    position: relative;
+    max-width: 1400px;
+    margin: var(--spacing-xl) auto;
+}
+
+.productsContainer {
+    display: flex;
+    overflow-x: hidden;
+    padding: var(--spacing-md) 0;
+    width: 100%;
+    position: relative;
+}
+
+.productsWrapper {
+    display: flex;
+    gap: var(--spacing-lg);
+    transition: transform 0.3s ease;
+    width: 100%;
+}
+
+.productsWrapper > * {
+    flex: 0 0 320px;
+    width: 320px;
+    min-width: 320px;
+}
+
+.productsContainer::-webkit-scrollbar {
+    height: 8px;
+}
+
+.productsContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.productsContainer::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.productsContainer::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Arrow button positioning */
+.productsSection :global(.arrowButton) {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: var(--color-background);
+    box-shadow: var(--shadow-sm);
+}
+
+.productsSection :global(.left) {
+    left: var(--spacing-md);
+}
+
+.productsSection :global(.right) {
+    right: var(--spacing-md);
+}

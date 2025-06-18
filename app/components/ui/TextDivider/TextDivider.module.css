@@ -1,0 +1,18 @@
+.container {
+    margin: .5rem auto;
+    padding: 2rem;
+}
+.text {
+    font-size: 1.5rem;
+    color: #322e2e;
+    text-align: center;
+    text-transform: uppercase;
+}
+.divider {
+    display: block;
+    width: 70px;
+    height: 5px;
+    border-radius: 5px;
+    background-color: #322e2e;
+    margin: .2rem auto;
+}

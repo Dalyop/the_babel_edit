@@ -1,26 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Poppins:wght@300;400;500;600&display=swap');
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --color-primary: #322e2e;
+  --color-secondary: #666;
+  --color-accent: #ff4444;
+  --color-background: #ffffff;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #e0e0e0;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Font Sizes */
+  --font-size-base: 0.8em;
+  --font-size-sm: 0.875em;
+  --font-size-md: 1em;
+  --font-size-lg: 1.25em;
+  --font-size-xl: 1.5em;
+  --font-size-2xl: 2em;
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+
+  /* Component Sizes */
+  --icon-size-sm: 1rem;
+  --icon-size-md: 1.25rem;
+  --icon-size-lg: 1.5rem;
+  --select-height: 2.5rem;
+  --input-height: 2.5rem;
+  --button-height: 2.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base styles */
+html {
+  font-size: var(--font-size-base);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Poppins', sans-serif;
+  color: var(--color-text);
+  line-height: 1.5;
+  background-color: rgb(240, 220, 194);
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+}
+
+/* Form elements */
+input, select, textarea, button {
+  font-family: 'Poppins', sans-serif;
+  font-size: var(--font-size-md);
+}
+
+select {
+  height: var(--select-height);
+  padding: 0 var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  font-size: var(--font-size-md) !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Ensure select options also inherit font size */
+select option {
+  font-size: var(--font-size-md);
+}
+
+input {
+  height: var(--input-height);
+  padding: 0 var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+}
+
+button {
+  height: var(--button-height);
+  padding: 0 var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  cursor: pointer;
+}
+
+/* Icons */
+[class*="icon-"] {
+  font-size: var(--icon-size-md);
+  line-height: 1;
+}
+
+.icon-sm {
+  font-size: var(--icon-size-sm);
+}
+
+.icon-lg {
+  font-size: var(--icon-size-lg);
+}
+
+/* Links */
+a {
+  font-family: 'Poppins', sans-serif;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+/* Container */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* Utility classes */
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-md {
+  font-size: var(--font-size-md);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+
+/* Component-specific adjustments */
+.card {
+  font-size: var(--font-size-md);
+}
+
+.nav-item {
+  font-size: var(--font-size-md);
+}
+
+.dropdown-item {
+  font-size: var(--font-size-md);
+}
+
+/* Maintain aspect ratios for images and icons */
+img, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure proper spacing in lists */
+ul, ol {
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+}
+
+li {
+  margin-bottom: var(--spacing-xs);
 }
