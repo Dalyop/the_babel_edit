@@ -3,7 +3,7 @@
 import React, { useRef, useState } from 'react'
 import styles from './dashboard.module.css';
 import Navbar from '@/app/components/features/Navbar/Navbar'
-import Carousel from '@/app/components/features/Carousel/Carousle';
+import Carousel from '@/app/components/features/Carousel/Carousel';
 import TextDivider from '@/app/components/ui/TextDivider/TextDivider';
 import TransparentImageCard from '@/app/components/features/Transparent ImageCard/TransparentImageCard';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
@@ -35,28 +35,24 @@ function dashboard() {
             id: '1',
             image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
             alt: 'Mountain landscape at sunset',
-            title: 'Mountain Adventure',
             description: 'Discover breathtaking mountain landscapes and hiking trails'
         },
         {
             id: '2',
             image: 'https://images.unsplash.com/photo-1559563458-527698bf5295?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
             alt: 'Tropical beach with palm trees',
-            title: 'Beach Paradise',
             description: 'Relax on pristine beaches with crystal clear waters'
         },
         {
             id: '3',
             image: 'https://plus.unsplash.com/premium_photo-1683121266311-04c92a01f5e6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
             alt: 'City skyline at night',
-            title: 'Urban Explorer',
             description: 'Experience the vibrant energy of metropolitan cities'
         },
         {
             id: '4',
             image: 'https://images.unsplash.com/photo-1565084888279-aca607ecce0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
             alt: 'Forest path with tall trees',
-            title: 'Forest Journey',
             description: 'Walk through ancient forests and connect with nature'
         }
     ];

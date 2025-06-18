@@ -26,7 +26,7 @@
     min-width: 250px;
 }
 .productsSection {
-    padding: 0 var(--spacing-md);
+    padding: 0 50px;
     margin: var(--spacing-xl) 0;
     width: 100%;
     position: relative;

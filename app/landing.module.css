@@ -1,0 +1,264 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(240, 220, 194);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.logo {
+    flex-shrink: 0;
+}
+
+.nav {
+    display: flex;
+    gap: 2rem;
+}
+
+.navLink {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--font-size-md);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.navLink:hover {
+    color: var(--color-accent);
+}
+
+.main {
+    flex: 1;
+    margin-top: 80px;
+}
+
+.hero {
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(
+        rgba(240, 220, 194, 0.9),
+        rgba(240, 220, 194, 0.7)
+    );
+}
+
+.heroContent {
+    max-width: 800px;
+}
+
+.title {
+    font-size: 3.5rem;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: var(--color-secondary);
+    margin-bottom: 2rem;
+}
+
+.ctaButton {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background-color: var(--color-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ctaButton:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background-color: var(--color-accent);
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 4rem 2rem;
+    background-color: white;
+}
+
+.featureCard {
+    text-align: center;
+    padding: 2rem;
+    border-radius: var(--border-radius-lg);
+    background-color: rgb(240, 220, 194);
+    transition: transform 0.3s ease;
+}
+
+.featureCard:hover {
+    transform: translateY(-5px);
+}
+
+.featureIcon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.featureCard h2 {
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.featureCard p {
+    color: var(--color-secondary);
+    line-height: 1.6;
+}
+
+.cta {
+    text-align: center;
+    padding: 4rem 2rem;
+    background-color: rgb(240, 220, 194);
+}
+
+.cta h2 {
+    color: var(--color-primary);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.cta p {
+    color: var(--color-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+}
+
+.footer {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 3rem 2rem 1rem;
+}
+
+.footerContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footerSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.footerSection h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.footerSection a {
+    color: white;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.footerSection a:hover {
+    opacity: 1;
+}
+
+.socialLinks {
+    display: flex;
+    gap: 1rem;
+}
+
+.socialLinks a {
+    font-size: 1.5rem;
+}
+
+.copyright {
+    text-align: center;
+    padding-top: 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .nav {
+        gap: 1rem;
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+    }
+
+    .features {
+        padding: 2rem 1rem;
+    }
+
+    .cta {
+        padding: 2rem 1rem;
+    }
+
+    .cta h2 {
+        font-size: 2rem;
+    }
+
+    .footer {
+        padding: 2rem 1rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .nav {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .featureCard {
+        padding: 1.5rem;
+    }
+
+    .cta h2 {
+        font-size: 1.8rem;
+    }
+} 

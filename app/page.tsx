@@ -1,59 +1,94 @@
 'use client';
-import React from "react";
-import Image from "next/image";
-import Navbar from "@/app/components/features/Navbar/Navbar";
-import Carousel from "./components/features/Carousel/Carousle";
-import TransparentImageCard from "./components/features/Transparent ImageCard/TransparentImageCard";
-import ProductCard from "./components/features/ProductCard/ProductCard";
 
-const handleCardClick = (text: string) => {
-  alert(text)
-}
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { IMAGES } from './constants/constants';
+import styles from './landing.module.css';
 
-export default function Home() {
-  
-  const handleAddToBasket = (product: any) => {
-    console.log('Adding to basket:', product);
-    // Add your basket logic here
-  };
-
+export default function LandingPage() {
   return (
-    <div>
-      <Navbar />
-      {/* <Carousel
-          slides={slides}
-          height="500px"
-        /> */}
-      {/* <TransparentImageCard
-        backgroundImage="https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-        title="Exclusive Shoes"
-        subtitle="PRICE 20% OFF"
-        width="350px"
-        height="450px"
-        onClick={() => handleCardClick('Exclusive Shoes')}
-      /> */}
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div className={styles.logo}>
+          <Image 
+            src={IMAGES.LOGO_WHITE}
+            alt="Babel Edit Logo"
+            width={120}
+            height={120}
+            priority
+          />
+        </div>
+        <nav className={styles.nav}>
+          <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
+          <Link href="/about" className={styles.navLink}>About</Link>
+          <Link href="/contact" className={styles.navLink}>Contact</Link>
+        </nav>
+      </header>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
-        padding: '24px'
-      }}>
-        <ProductCard
-          imageSrc="/path-to-your-image.jpg"
-          imageAlt="Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse"
-          title="Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse"
-          currentPrice="90.00"
-          originalPrice="100.00"
-          onAddToBasket={() => handleAddToBasket({
-            title: "Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse",
-            price: 90.00
-          })}
-        />
-      </div>
+      <main className={styles.main}>
+        <section className={styles.hero}>
+          <div className={styles.heroContent}>
+            <h1 className={styles.title}>Welcome to Babel Edit</h1>
+            <p className={styles.subtitle}>Your Ultimate Fashion Destination</p>
+            <Link href="/dashboard" className={styles.ctaButton}>
+              Explore Collection
+            </Link>
+          </div>
+        </section>
 
+        <section className={styles.features}>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>👗</div>
+            <h2>Exclusive Styles</h2>
+            <p>Discover our curated collection of premium fashion items</p>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>🛍️</div>
+            <h2>Easy Shopping</h2>
+            <p>Seamless shopping experience with secure checkout</p>
+          </div>
+          <div className={styles.featureCard}>
+            <div className={styles.featureIcon}>🚚</div>
+            <h2>Fast Delivery</h2>
+            <p>Quick and reliable shipping to your doorstep</p>
+          </div>
+        </section>
 
+        <section className={styles.cta}>
+          <h2>Ready to Start Shopping?</h2>
+          <p>Join us today and discover the latest trends</p>
+          <Link href="/dashboard" className={styles.ctaButton}>
+            Visit Dashboard
+          </Link>
+        </section>
+      </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <div className={styles.footerSection}>
+            <h3>Babel Edit</h3>
+            <p>Your fashion destination</p>
+          </div>
+          <div className={styles.footerSection}>
+            <h3>Quick Links</h3>
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/about">About</Link>
+            <Link href="/contact">Contact</Link>
+          </div>
+          <div className={styles.footerSection}>
+            <h3>Connect With Us</h3>
+            <div className={styles.socialLinks}>
+              <a href="#" aria-label="Facebook">📘</a>
+              <a href="#" aria-label="Instagram">📸</a>
+              <a href="#" aria-label="Twitter">🐦</a>
+            </div>
+          </div>
+        </div>
+        <div className={styles.copyright}>
+          © 2024 Babel Edit. All rights reserved.
+        </div>
+      </footer>
     </div>
-
   );
 }

@@ -28,11 +28,11 @@
 }
 
 .left {
-    left: -20px;
+    left: 0px;
 }
 
 .right {
-    right: -20px;
+    right: 0px;
 }
 
 .arrowButton:disabled {
