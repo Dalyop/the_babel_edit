@@ -1,0 +1,311 @@
+.footer {
+  background: #f7f8fa;
+  color: #222;
+  font-size: 0.97rem;
+  padding: 3.5rem 0 2rem 0;
+  width: 100%;
+}
+
+.footerMain {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 3.5rem 2rem;
+}
+
+.footerColumns {
+  display: flex;
+  flex: 2 1 700px;
+  gap: 4.5rem;
+  min-width: 400px;
+}
+
+.footerCol {
+  min-width: 180px;
+}
+
+.footerColTitle {
+  font-weight: 800;
+  margin-bottom: 1.2rem;
+  letter-spacing: 1.5px;
+  font-size: 1.01rem;
+  text-transform: uppercase;
+}
+
+.footerCol ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footerCol ul li {
+  margin-bottom: 0.7rem;
+}
+
+.footerCol ul li a {
+  color: #6c6e74;
+  text-decoration: none;
+  font-size: 0.97rem;
+  transition: color 0.2s;
+}
+
+.footerCol ul li a:hover {
+  color: #222;
+  text-decoration: underline;
+}
+
+.footerColSocials {
+  min-width: 180px;
+}
+
+.socialIcons {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 2.1rem;
+  align-items: center;
+}
+
+.platformIcons {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.7rem;
+  font-size: 2.2rem;
+  align-items: center;
+}
+
+.footerNewsletter {
+  flex: 1 1 340px;
+  min-width: 300px;
+  margin-top: 2.5rem;
+  margin-right: 2.5rem;
+}
+
+.newsletterForm {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.2rem 0 0.7rem 0;
+}
+
+.newsletterInput {
+  flex: 1;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.97rem;
+  background: #fff;
+}
+
+.newsletterButton {
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 0.8rem 2.1rem;
+  font-weight: 700;
+  font-size: 0.97rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.newsletterButton:hover {
+  background: #444;
+}
+
+.privacyText {
+  font-size: 0.93rem;
+  color: #888;
+  margin-bottom: 1.7rem;
+}
+
+.privacyText a {
+  color: #3b5bdb;
+  text-decoration: underline;
+}
+
+.footerPayments {
+  flex: 1 1 340px;
+  min-width: 300px;
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.footerPayments h4 {
+  align-self: flex-start;
+  font-size: 1.01rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 1.1rem;
+}
+
+.paymentIcons {
+  display: grid;
+  grid-template-columns: repeat(6, 64px);
+  gap: 0.7rem 1.1rem;
+  margin-top: 0.2rem;
+  justify-content: end;
+}
+
+@media (max-width: 900px) {
+  .paymentIcons {
+    grid-template-columns: repeat(3, 64px);
+    justify-content: start;
+  }
+  .footerPayments {
+    align-items: flex-start;
+  }
+}
+
+.paymentIcons span {
+  display: inline-block;
+  width: 64px;
+  height: 38px;
+  background: #fff;
+  border-radius: 7px;
+  margin-bottom: 0.5rem;
+  border: 1.5px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Placeholder for payment/social/platform icons */
+.iconFb { background: #3b5998; }
+.iconTw { background: #1da1f2; }
+.iconIg { background: #e1306c; }
+.iconTt { background: #000; }
+.iconSc { background: #fffc00; }
+.iconAndroid { background: #a4c639; }
+.iconApple { background: #222; }
+.iconMastercard { background: #ff5f00; }
+.iconPaypal { background: #003087; }
+.iconEbay { background: #e53238; }
+.iconGpay { background: #4285f4; }
+.iconApplepay { background: #222; }
+.iconAmex { background: #2e77bb; }
+.iconAmazon { background: #ff9900; }
+.iconAlipay { background: #1677ff; }
+.iconBitcoin { background: #f7931a; }
+.iconDiscover { background: #f58220; }
+.iconWesterunion { background: #ffcc00; }
+.iconPayoneer { background: #ff4800; }
+
+.footerBottom {
+  border-top: 1px solid #e5e5e5;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footerCopyright {
+  color: #888;
+  font-size: 0.93rem;
+  margin-bottom: 0.5rem;
+  flex: 1 1 300px;
+  text-align: left;
+}
+
+.footerLegalLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  font-size: 0.93rem;
+  flex: 2 1 400px;
+  text-align: left;
+}
+
+.footerLegalLinks a {
+  color: #888;
+  text-decoration: underline;
+  transition: color 0.2s;
+  font-weight: 500;
+}
+
+.footerLegalLinks a:hover {
+  color: #222;
+}
+
+@media (max-width: 1100px) {
+  .footerMain {
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .footerColumns {
+    flex-direction: column;
+    gap: 2.5rem;
+    min-width: 0;
+  }
+  .footerNewsletter, .footerPayments {
+    margin-right: 0;
+    margin-top: 2rem;
+  }
+  .footerBottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+  .footerLegalLinks {
+    gap: 0.7rem;
+  }
+}
+
+.footerPaymentsBottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2.5rem 0 1.5rem 0;
+}
+.footerPaymentsBottom h4 {
+  font-size: 1.01rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 1.1rem;
+  letter-spacing: 1.2px;
+}
+.paymentIconsBottom {
+  display: grid;
+  grid-template-columns: repeat(6, 64px);
+  gap: 0.7rem 1.1rem;
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .paymentIconsBottom {
+    grid-template-columns: repeat(3, 64px);
+  }
+}
+.footerLegalLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left;
+}
+.footerLegalLinks a {
+  color: #888;
+  text-decoration: underline !important;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: color 0.2s;
+}
+.footerLegalLinks a:hover {
+  color: #222;
+}
+.footerColTitle, .footerPaymentsBottom h4 {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+.footerNewsletter {
+  margin-bottom: 2.5rem;
+} 

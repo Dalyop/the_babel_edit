@@ -10,6 +10,7 @@ interface ProductCardProps {
     originalPrice: number | string;
     onAddToBasket: () => void;
     className?: string;
+    imageContainerClassName?: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -19,11 +20,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   currentPrice,
   originalPrice,
   onAddToBasket,
-  className = ''
+  className = '',
+  imageContainerClassName = '',
 }) => {
   return (
     <div className={`${styles.card} ${className}`}>
-      <div className={styles.imageContainer}>
+      <div className={`${styles.imageContainer} ${imageContainerClassName}`}>
         <Image
           src={imageSrc}
           alt={imageAlt}

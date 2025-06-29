@@ -1,0 +1,109 @@
+.productDetailBg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e8ded6 0%, #e3d3d2 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.productDetailMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 0 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.productContent {
+  display: flex;
+  gap: 3.5rem;
+  align-items: flex-start;
+}
+
+.leftCol {
+  flex: 1.1;
+  min-width: 0;
+}
+
+.rightCol {
+  flex: 1.3;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.productTitle {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #232323;
+}
+
+.productPrice {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #232323;
+  margin-bottom: 0.5rem;
+}
+
+.reviewStars {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+
+.reviewCount {
+  color: #ff2d17;
+  font-size: 1rem;
+  margin-left: 0.3rem;
+}
+
+.productDesc {
+  font-size: 1.08rem;
+  color: #444;
+  margin-bottom: 1.2rem;
+  max-width: 420px;
+}
+
+.likeSection {
+  margin-top: 3.5rem;
+}
+
+.likeTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #232323;
+}
+
+.likeList {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.likeCard {
+  width: 190px;
+  min-width: 0;
+  max-width: 200px;
+}
+
+@media (max-width: 900px) {
+  .productContent {
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .leftCol, .rightCol {
+    max-width: 100%;
+  }
+  .likeList {
+    gap: 0.7rem;
+  }
+  .likeCard {
+    width: 100%;
+    max-width: 100%;
+  }
+}

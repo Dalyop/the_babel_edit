@@ -50,27 +50,27 @@ function Navbar() {
         <div className={styles.nav_links}>
           <div className={styles.links}>
             <Shirt color='black' />
-            <Link href='/'>Clothes</Link>
+            <Link href='/products?category=clothes'>Clothes</Link>
           </div>
           <div className={styles.links}>
             <Footprints color='black' />
-            <Link href='/'>Shoes</Link>
+            <Link href='/products?category=shoes'>Shoes</Link>
           </div>
           <div className={styles.links}>
             <BriefcaseBusiness />
-            <Link href='/'>Bags</Link>
+            <Link href='/products?category=bags'>Bags</Link>
           </div>
           <div className={styles.links}>
             <Gem color='black' />
-            <Link href='/'>Accessories</Link>
+            <Link href='/products?category=accessories'>Accessories</Link>
           </div>
           <div className={styles.links}>
             <PlaneLanding />
-            <Link href='/'>New Arrivals</Link>
+            <Link href='/products?category=new-arrivals'>New Arrivals</Link>
           </div>
           <div className={styles.links}>
             <Tag color='black' />
-            <Link href='/'>Sale</Link>
+            <Link href='/products?category=sale'>Sale</Link>
           </div>
         </div>
         <div className='search'>

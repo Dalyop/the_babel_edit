@@ -8,6 +8,7 @@ import TextDivider from '@/app/components/ui/TextDivider/TextDivider';
 import TransparentImageCard from '@/app/components/features/Transparent ImageCard/TransparentImageCard';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ArrowButton from '@/app/components/ui/ArrowButton/ArrowButton';
+import Footer from '@/app/components/features/Footer/Footer';
 
 function dashboard() {
     const productsWrapperRef = useRef<HTMLDivElement>(null);
@@ -168,6 +169,83 @@ function dashboard() {
                     onClick={() => scrollProducts('right')}
                     className={currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) + (productsWrapperRef.current?.parentElement?.clientWidth || 0) ? styles.hidden : ''}
                 />
+            </section>
+
+            <TextDivider 
+            text='Brands for you'
+            />
+            <section className={styles.section}>
+                <div className={styles.brands}>
+                    {/* Placeholder brand logos */}
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Chanel_logo_interlocking_cs.svg" alt="Chanel" className={styles.brandLogo} />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/D%26G_logo.svg" alt="D&G" className={styles.brandLogo} />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Dior_Logo.svg" alt="Dior" className={styles.brandLogo} />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/Versace_logo.svg" alt="Versace" className={styles.brandLogo} />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Zara.svg" alt="Zara" className={styles.brandLogo} />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Gucci_Logo.svg" alt="Gucci" className={styles.brandLogo} />
+                </div>
+            </section>
+            <section className={styles.section}>
+                <div
+                    className={styles.promoSection}
+                    style={{
+                        backgroundImage: `url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80')`
+                    }}
+                >
+                    <div className={styles.promoOverlay}>
+                        <h2 className={styles.promoTitle}>SUMMER COLLECTIONS</h2>
+                        <button className={styles.promoButton}>SHOP NOW &rarr;</button>
+                        <div className={styles.promoCountdown}>
+                            <div className={styles.promoCountdownItem}>
+                                <div className={styles.promoCountdownItemValue}>07</div>
+                                <div className={styles.promoCountdownLabel}>Days</div>
+                            </div>
+                            <div className={styles.promoCountdownSeparator}>:</div>
+                            <div className={styles.promoCountdownItem}>
+                                <div className={styles.promoCountdownItemValue}>08</div>
+                                <div className={styles.promoCountdownLabel}>Hours</div>
+                            </div>
+                            <div className={styles.promoCountdownSeparator}>:</div>
+                            <div className={styles.promoCountdownItem}>
+                                <div className={styles.promoCountdownItemValue}>04</div>
+                                <div className={styles.promoCountdownLabel}>Minutes</div>
+                            </div>
+                            <div className={styles.promoCountdownSeparator}>:</div>
+                            <div className={styles.promoCountdownItem}>
+                                <div className={styles.promoCountdownItemValue}>05</div>
+                                <div className={styles.promoCountdownLabel}>Seconds</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <div className={styles.testimonialsWrapper}>
+                    <div className={styles.testimonialsTopBg}></div>
+                    <div className={styles.testimonialsContent}>
+                        <div className={styles.testimonialsHeader}>
+                            <div className={styles.testimonialsTitleScript}>Testimonials</div>
+                            <div className={styles.testimonialsTitleMain}>THEY SAYS</div>
+                            <div className={styles.testimonialsSubtitle}>OUR HAPPY CLIENTS</div>
+                        </div>
+                        <div className={styles.testimonialsText}>
+                            <em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Scelerisque eget cras commodo amet, vel praesent cras turpis vestibulum. Sodales nisl nunc dolor sem tellus cursus consequat. A quam nulla nec at. Pulvinar.</em>
+                        </div>
+                        <div className={styles.testimonialsClientRow}>
+                            <span className={styles.testimonialsClientName}>JOHNY DEEP</span>
+                            <span className={styles.testimonialsClientCountry}>POLANDIA</span>
+                        </div>
+                        <img
+                            className={styles.testimonialsShoesImg}
+                            src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80"
+                            alt="Shoes testimonial"
+                        />
+                    </div>
+                    <div className={styles.testimonialsBottomBg}></div>
+                </div>
+            </section>
+            <section>
+                <Footer />
             </section>
         </div>
     )
