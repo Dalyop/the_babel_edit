@@ -1,0 +1,287 @@
+.accountBg {
+  min-height: 100vh;
+  /* background: linear-gradient(135deg, #e8ded6 0%, #e3d3d2 100%); */
+}
+
+.accountMain {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem 1.5rem;
+  gap: 2.5rem;
+}
+
+.sidebar {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem 2rem 2rem;
+  min-width: 260px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  box-shadow: 0 2px 12px rgba(34,34,34,0.06);
+  height: fit-content;
+}
+
+.sidebarTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.sidebarMenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebarMenu li {
+  font-size: 1.15rem;
+  color: #232323;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sidebarMenu .active {
+  color: #ff2d17;
+  font-weight: 700;
+  position: relative;
+}
+
+.sidebarMenu .active::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff2d17;
+  margin-right: 0.7rem;
+}
+
+.logout {
+  margin-top: auto;
+  color: #8b8b8b;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.profileContent {
+  flex: 1;
+  /* background: #fff; */
+  border-radius: 16px;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  box-shadow: 0 2px 12px rgba(34,34,34,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  box-shadow: -2px -2px 0 0 white;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e8ded6;
+}
+
+.profileName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #232323;
+}
+
+.profileEmail {
+  color: #8b8b8b;
+  font-size: 1.1rem;
+}
+
+.editProfileBtn {
+  margin-left: auto;
+  background: #ff2d17;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editProfileBtn:hover {
+  background: #d92613;
+}
+
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #232323;
+  margin-bottom: 0.2rem;
+}
+
+.profileForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.profileForm input {
+  margin-top: 0.3rem;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e3d3d2;
+  border-radius: 7px;
+  font-size: 1.08rem;
+  background: #f6f1ef;
+  color: #232323;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.profileForm input:focus {
+  border: 1.5px solid #ff2d17;
+}
+
+.labelIcon {
+  margin-right: 0.7rem;
+  font-size: 1.1rem;
+}
+
+.addressSection {
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.addressTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.addressCard {
+  background: #f6f1ef;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 0.7rem;
+  font-size: 1.08rem;
+  box-shadow: 0 1px 4px rgba(34,34,34,0.04);
+}
+
+.addressType {
+  font-weight: 700;
+  color: #232323;
+  min-width: 50px;
+}
+
+.addressText {
+  color: #444;
+  flex: 1;
+}
+
+.addressArrow {
+  color: #b8b8b8;
+  font-size: 1.3rem;
+  margin-left: auto;
+}
+
+.addAddressBtn {
+  background: #fff;
+  color: #ff2d17;
+  border: 1.5px solid #ff2d17;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.addAddressBtn:hover {
+  background: #ff2d17;
+  color: #fff;
+}
+
+.sectionBox {
+  background: #f6f1ef;
+  border-radius: 8px;
+  padding: 1.2rem 1.2rem 1rem 1.2rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.7rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionBtn {
+  background: #fff;
+  color: #232323;
+  border: 1.5px solid #e3d3d2;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  margin-right: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sectionBtn:hover {
+  background: #ff2d17;
+  color: #fff;
+  border: 1.5px solid #ff2d17;
+}
+
+@media (max-width: 900px) {
+  .accountMain {
+    flex-direction: column;
+    padding: 1.5rem 0.5rem;
+    gap: 1.5rem;
+  }
+  .sidebar {
+    min-width: 0;
+    max-width: 100%;
+    padding: 1.5rem 1rem;
+  }
+  .profileContent {
+    padding: 1.5rem 1rem;
+  }
+} 
