@@ -5,13 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { IMAGES } from './constants/constants';
 import styles from './landing.module.css';
+import Footer from './components/features/Footer/Footer';
 
 export default function LandingPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.logo}>
-          <Image 
+          <Image
             src={IMAGES.LOGO_WHITE}
             alt="Babel Edit Logo"
             width={120}
@@ -20,7 +21,7 @@ export default function LandingPage() {
           />
         </div>
         <nav className={styles.nav}>
-          <Link href="/dashboard" className={styles.navLink}>Dashboard</Link>
+          <Link href="/dashboard" className={styles.navLink}>Shop now</Link>
           <Link href="/about" className={styles.navLink}>About</Link>
           <Link href="/contact" className={styles.navLink}>Contact</Link>
         </nav>
@@ -63,32 +64,7 @@ export default function LandingPage() {
           </Link>
         </section>
       </main>
-
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.footerSection}>
-            <h3>Babel Edit</h3>
-            <p>Your fashion destination</p>
-          </div>
-          <div className={styles.footerSection}>
-            <h3>Quick Links</h3>
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/about">About</Link>
-            <Link href="/contact">Contact</Link>
-          </div>
-          <div className={styles.footerSection}>
-            <h3>Connect With Us</h3>
-            <div className={styles.socialLinks}>
-              <a href="#" aria-label="Facebook">📘</a>
-              <a href="#" aria-label="Instagram">📸</a>
-              <a href="#" aria-label="Twitter">🐦</a>
-            </div>
-          </div>
-        </div>
-        <div className={styles.copyright}>
-          © 2024 Babel Edit. All rights reserved.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
