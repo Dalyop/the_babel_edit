@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <style>
+      .menu {
+        display: flex;
+        flex-flow: column;
+        background-color: yellow;
+        border-radius: 5px;
+        margin: 3px;
+        width: 30px;
+      }
+      .menu div {
+        width: 25px;
+        height: 3px;
+        margin: 3px;
+        background-color: black;
+      }
+      .open1 {
+        transform: rotate(45deg);
+      }
+      .open3 {
+        position: absolute;
+        transform: rotate(-45deg);
+      }
+    </style>
+    <div id="menu" class="menu" oncli_ck="clickMenu()">
+      <div class="bar1" id="bar1"></div>
+      <div class="bar2" id="bar2"></div>
+      <div class="bar3" id="bar3"></div>
+    </div>
+
+    <script>
+      const menu = document.getElementById("menu");
+      console.log(menu);
+
+      function clickMenu() {
+        const bar1 = document.getElementById("bar1");
+        const bar2 = document.getElementById("bar2");
+        const bar3 = document.getElementById("bar3");
+        bar2.style.display = "none";
+        console.log(bar1.className === "bar1")
+        if (bar1.className === "bar1") {
+          bar1.classList.toggle("open1");
+          bar3.classList.toggle("open3");
+        }
+      }
+    </script>
+  </body>
+</html>

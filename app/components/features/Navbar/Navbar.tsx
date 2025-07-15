@@ -19,7 +19,7 @@ const options = [
 
 function Navbar() {
   const [selectOption, setSelectedOption] = useState('');
-  
+
   return (
     <nav>
       <div className={styles.top_nav}>
@@ -29,24 +29,24 @@ function Navbar() {
           onChange={setSelectedOption}
           placeholder="Language"
         />
-        <Link href='/'>Account</Link>
-        <Link href='/'>Wish List</Link>
+        <Link href='/account'>Account</Link>
+        <Link href='/wishlist'>Wish List</Link>
         <div style={{ display: 'flex' }}>
-          <Link href='/'>Cart</Link>
+          <Link href='/cart'>Cart</Link>
           <ShoppingBasket color='black' />
         </div>
       </div>
 
       <div className={styles.navbar}>
 
+          <div className='brand'>
+            <Image src={IMAGES.LOGO_WHITE}
+              alt='logo'
+              width={100}
+              height={100}
+            />
+          </div>
 
-        <div className='brand'>
-          <Image src={IMAGES.LOGO_WHITE}
-            alt='logo'
-            width={100}
-            height={100}
-          />
-        </div>
         <div className={styles.nav_links}>
           <div className={styles.links}>
             <Shirt color='black' />

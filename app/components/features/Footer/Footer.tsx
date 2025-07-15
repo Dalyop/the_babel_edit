@@ -8,7 +8,7 @@ const Footer = () => (
         <div className={styles.footerCol}>
           <h4 className={styles.footerColTitle}>COMPANY INFO</h4>
           <ul>
-            <li><a href="#">About Babel's</a></li>
+            <li><a href="/about">About Babel's</a></li>
             <li><a href="#">Social Responsibility</a></li>
             <li><a href="#">Fashion Blogger</a></li>
           </ul>
@@ -16,7 +16,7 @@ const Footer = () => (
         <div className={styles.footerCol}>
           <h4 className={styles.footerColTitle}>HELP & SUPPORT</h4>
           <ul>
-            <li><a href="#">Shipping Info</a></li>
+            <li><a href="/contact">Shipping Info</a></li>
             <li><a href="#">Returns</a></li>
             <li><a href="#">How to Order</a></li>
             <li><a href="#">How to Track</a></li>
@@ -26,13 +26,13 @@ const Footer = () => (
         <div className={styles.footerCol}>
           <h4 className={styles.footerColTitle}>CUSTOMER CARE</h4>
           <ul>
-            <li><a href="#">Contact Us</a></li>
+            <li><a href="/contact">Contact Us</a></li>
             <li><a href="#">Payment</a></li>
             <li><a href="#">Bonus Point</a></li>
             <li><a href="#">Notices</a></li>
           </ul>
         </div>
-        <div className={styles.footerColSocials}>
+        {/* <div className={styles.footerColSocials}>
           <h4 className={styles.footerColTitle}>SOCIALS</h4>
           <div className={styles.socialIcons}>
             <a href="#" aria-label="Facebook"><span className={styles.iconFb}></span></a>
@@ -46,7 +46,7 @@ const Footer = () => (
             <span className={styles.iconAndroid}></span>
             <span className={styles.iconApple}></span>
           </div>
-        </div>
+        </div> */}
       </div>
       <div className={styles.footerNewsletter}>
         <h4>SIGN UP FOR LAURA'S CLOSET STYLE NEWS</h4>
