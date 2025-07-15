@@ -53,8 +53,8 @@
     text-align: center;
     padding: 2rem;
     background: linear-gradient(
-        rgba(240, 220, 194, 0.9),
-        rgba(240, 220, 194, 0.7)
+        #f0dcc2e6,
+        #f0dcc2b3
     );
 }
 
