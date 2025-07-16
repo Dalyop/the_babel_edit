@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from '@/app/components/features/Navbar/Navbar';
 import Footer from '@/app/components/features/Footer/Footer';
 import styles from "./signup.module.css";
@@ -8,11 +9,49 @@ import styles from "./signup.module.css";
 export default function SignupPage() {
   const [newsletter, setNewsletter] = useState(false);
   const [agree, setAgree] = useState(false);
+  const [email, setEmail] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const router = useRouter();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder: No real signup endpoint yet
-    alert("Account creation is not implemented yet.");
+    setError("");
+    setSuccess("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`https://the-babel-edit-backend.onrender.com/api/users/register`, {
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          firstname,
+          lastname,
+          password
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Registration failed.");
+      } else {
+        setSuccess("Account created successfully! Please log in.");
+        router.push('/auth/login');
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,29 +65,50 @@ export default function SignupPage() {
             and save favorites.
           </p>
           <label className={styles.inputLabel}>
-            <span className={styles.labelRow}><span className={styles.labelIcon}>🔑</span> Name</span>
+            <span className={styles.labelRow}><span className={styles.labelIcon}>🔑</span> First Name</span>
             <input
-              className={styles.input} type="text" placeholder="Name" required />
+              className={styles.input} type="text" placeholder="First Name" required
+              value={firstname}
+              onChange={e => setFirstname(e.target.value)}
+            />
+          </label>
+          <label className={styles.inputLabel}>
+            <span className={styles.labelRow}><span className={styles.labelIcon}>🔑</span> Last Name</span>
+            <input
+              className={styles.input} type="text" placeholder="Last Name" required
+              value={lastname}
+              onChange={e => setLastname(e.target.value)}
+            />
           </label>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>✉️</span> Email</span>
             <input
-              className={styles.input} type="email" placeholder="Email" required />
+              className={styles.input} type="email" placeholder="Email" required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
           </label>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>📞</span> Phone Number</span>
             <input
-              className={styles.input} type="tel" placeholder="Phone Number" required />
+              className={styles.input} type="tel" placeholder="Phone Number"
+            />
           </label>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>🔒</span> Password</span>
             <input
-              className={styles.input} type="password" placeholder="Password" required />
+              className={styles.input} type="password" placeholder="Password" required
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
           </label>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>🔒</span> Confirm Password</span>
             <input
-              className={styles.input} type="password" placeholder="Confirm Password" required />
+              className={styles.input} type="password" placeholder="Confirm Password" required
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+            />
           </label>
           <div className={styles.checkRow}>
             <input
@@ -73,7 +133,9 @@ export default function SignupPage() {
               i agree to the <span className={styles.terms}>Term & Conditions and Privacy Policy</span>
             </label>
           </div>
-          <button className={styles.createBtn} type="submit">Create Account</button>
+          {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+          {success && <div style={{ color: 'green', marginBottom: 8 }}>{success}</div>}
+          <button className={styles.createBtn} type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Account'}</button>
           <div className={styles.dividerRow}>
             <span className={styles.divider}></span>
             <span className={styles.orText}>or sign up with:</span>
