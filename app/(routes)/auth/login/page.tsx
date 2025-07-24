@@ -1,10 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import Navbar from '@/app/components/features/Navbar/Navbar';
-import Footer from '@/app/components/features/Footer/Footer';
 import styles from "./login.module.css";
 import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function LoginPage() {
   const [remember, setRemember] = useState(false);
@@ -20,7 +19,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("https://the-babel-edit-backend.onrender.com/api/users/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
+        // ""
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -28,22 +28,25 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Login failed.");
+        toast.error(data.message || "Login failed.");
       } else {
-        // Handle successful login (e.g., save token, 
-        // redirect)
-        // alert("Login successful!");
-        Optionally: router.push('/dashboard');
+        toast.success("Login successful!");
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Network error. Please try again.");
+      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
+
     <div>
-      <Navbar />
+
       <div className={styles.loginBg}>
         <form className={styles.loginCard} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Sign in to your account</h1>
@@ -73,7 +76,6 @@ export default function LoginPage() {
             <label htmlFor="remember">Remember me</label>
             <Link href="/auth/forgot" className={styles.forgotLink}>Forgot Password</Link>
           </div>
-          {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
           <button className={styles.signinBtn} type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
           <div className={styles.dividerRow}>
             <span className={styles.divider}></span>
@@ -91,8 +93,7 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-      <Footer />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
-
   );
 } 

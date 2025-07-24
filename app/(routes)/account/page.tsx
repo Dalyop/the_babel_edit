@@ -65,7 +65,7 @@ export default function AccountPage() {
               <input type="tel" placeholder="Phone Number" />
             </label>
             <div className={styles.addressSection}>
-              <div className={styles.addressTitle}><span className={styles.labelIcon}>🏠</span> Address</div>
+              <div className={styles.addressTitile}><span className={styles.labelIcon}>🏠</span> Address</div>
               {user.addresses.map((addr, idx) => (
                 <div className={styles.addressCard} key={idx}>
                   <span className={styles.addressType}>{addr.type}</span>

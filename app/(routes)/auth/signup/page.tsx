@@ -2,9 +2,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Navbar from '@/app/components/features/Navbar/Navbar';
-import Footer from '@/app/components/features/Footer/Footer';
 import styles from "./signup.module.css";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function SignupPage() {
   const [newsletter, setNewsletter] = useState(false);
@@ -19,19 +18,21 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      toast.error("Passwords do not match!")
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`https://the-babel-edit-backend.onrender.com/api/users/register`, {
-        method: "POST", 
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/register`, {
+
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
@@ -43,12 +44,17 @@ export default function SignupPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Registration failed.");
+        toast.error(data.message || "Registration failed.");
       } else {
-        setSuccess("Account created successfully! Please log in.");
-        router.push('/auth/login');
+        setSuccess("Account created successfully!");
+        toast.success("Account created successfully!");
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Network error. Please try again.");
+      toast(`Network error. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -56,7 +62,6 @@ export default function SignupPage() {
 
   return (
     <div>
-      <Navbar />
       <div className={styles.signupBg}>
         <form className={styles.signupCard} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Create Your Account</h1>
@@ -133,8 +138,6 @@ export default function SignupPage() {
               i agree to the <span className={styles.terms}>Term & Conditions and Privacy Policy</span>
             </label>
           </div>
-          {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-          {success && <div style={{ color: 'green', marginBottom: 8 }}>{success}</div>}
           <button className={styles.createBtn} type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Account'}</button>
           <div className={styles.dividerRow}>
             <span className={styles.divider}></span>
@@ -152,7 +155,7 @@ export default function SignupPage() {
           </div>
         </form>
       </div>
-      <Footer />
+      <ToastContainer position="top-right" hideProgressBar autoClose={3000} />
     </div>
   );
 } 

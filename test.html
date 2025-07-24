@@ -3,85 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-      .menu {
-        padding-left: 10px;
-        width: 30px;
-        height: 30px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        z-index: 10;
-      }
-      .menu div {
-        width: 25px;
-        height: 3px;
-        margin: 3px 0;
-        background-color: black;
-      }
-      .menu.open .bar1 {
-        transform: rotate(45deg) translate(5px, 5px);
-      }
-      .menu.open .bar2 {
-        opacity: 0;
-      }
-      .menu.open .bar3 {
-        transform: rotate(-45deg) translate(5px, -5px);
-      }
-      .sidebar {
-        display: none;
-        padding-top: 30px;
-        padding-left: 10px;
-        position: absolute;
-        top: 0;
-        background-color: #fffdcc;
-        width: 200px;
-        height: 100vh;
-      }
-    </style>
+    <title>Validation</title>
   </head>
   <body>
-    <div id="menu" class="menu">
-      <div class="bar1" id="bar1"></div>
-      <div class="bar2" id="bar2"></div>
-      <div class="bar3" id="bar3"></div>
-    </div>
-
-    <aside id="sidebar" class="sidebar">
-      <section class="item">
-        <a href="#">Some Link</a>
-      </section>
-      <section class="item">
-        <a href="#">Some Link</a>
-      </section>
-      <section class="item">
-        <a href="#">Some Link</a>
-      </section>
-      <section class="item">
-        <a href="#">Some Link</a>
-      </section>
-      <section class="item">
-        <a href="#">Some Link</a>
-      </section>
-    </aside>
     <script>
-      const menu = document.getElementById("menu");
-      menu.addEventListener("click", () => {
-        const sidebar = document.getElementById("sidebar");
-        console.log(sidebar.style.display !== "none");
-        sidebar.style.display !== "none"
-          ? (sidebar.style.display = "none")
-          : (sidebar.style.display = "block");
-        console.log(sidebar.style.display !== "none");
-        menu.classList.toggle("open");
-      });
+      
     </script>
   </body>
 </html>
