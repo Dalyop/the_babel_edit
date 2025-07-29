@@ -9,8 +9,22 @@ import TransparentImageCard from '@/app/components/features/Transparent ImageCar
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ArrowButton from '@/app/components/ui/ArrowButton/ArrowButton';
 import Footer from '@/app/components/features/Footer/Footer';
+import en from '@/locales/en/common.json';
+import fr from '@/locales/fr/common.json';
+import { useParams } from 'next/navigation';
 
 function dashboard() {
+    const { locale } = useParams();
+    const translations: Record<string, Record<string, string>> = { en, fr };
+    const t = (key: string, vars?: Record<string, any>) => {
+        let str = (translations[locale as string] || translations['en'])[key] || key;
+        if (vars) {
+            Object.entries(vars).forEach(([k, v]) => {
+                str = str.replace(`{{${k}}}`, v);
+            });
+        }
+        return str;
+    };
     const productsWrapperRef = useRef<HTMLDivElement>(null);
     const [currentPosition, setCurrentPosition] = useState(0);
 
@@ -70,22 +84,22 @@ function dashboard() {
                 />
             </section>
             <TextDivider
-                text="This Weeks Highlight"
+                text={t('thisWeeksHighlight')}
             />
             <section className={styles.section}>
                 <article className={styles.cards}>
                     <TransparentImageCard
                         backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
-                        title="Exclusive Shoes"
-                        subtitle="Exclusive Shoes"
-                        description="Price 20% Off"
+                        title={t('exclusiveShoes')}
+                        subtitle={t('exclusiveShoes')}
+                        description={t('priceOff', { percent: 20 })}
                         className={styles.card1}
                     />
                     <TransparentImageCard 
                         backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
-                        title="Exquisite Styles & Collection"
-                        subtitle="Exquisite Styles & Collection"
-                        description="Price 20% off"
+                        title={t('exquisiteStyles')}
+                        subtitle={t('exquisiteStyles')}
+                        description={t('priceOff', { percent: 20 })}
                         className={styles.card2}
                     />
                 </article>
@@ -107,7 +121,7 @@ function dashboard() {
                 </article>
             </section>
             <TextDivider 
-                text='Popular This Week'
+                text={t('popularThisWeek')}
             />
 
             <section className={styles.productsSection}>
@@ -172,7 +186,7 @@ function dashboard() {
             </section>
 
             <TextDivider 
-            text='Brands for you'
+            text={t('brandsForYou')}
             />
             <section className={styles.section}>
                 <div className={styles.brands}>

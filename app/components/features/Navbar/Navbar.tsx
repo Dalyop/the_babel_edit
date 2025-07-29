@@ -8,17 +8,33 @@ import styles from './Navbar.module.css';
 // icon imports
 import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket } from 'lucide-react';
 import Select from '../../ui/Select/Select';
+import { useRouter, usePathname } from 'next/navigation';
+import en from '@/locales/en/common.json';
+import fr from '@/locales/fr/common.json';
 
 const options = [
   { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
   { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-
-]
+];
 
 function Navbar() {
-  const [selectOption, setSelectedOption] = useState('');
+  const router = useRouter();
+  const pathname = usePathname();
+  // Get current locale from the path (e.g., /en/..., /fr/...)
+  const currentLocale = pathname.split('/')[1] || 'en';
+  const [selectOption, setSelectedOption] = useState(currentLocale);
+
+  // Translation setup
+  const translations: Record<string, Record<string, string>> = { en, fr };
+  const t = (key: string) => (translations[currentLocale] || translations['en'])[key] || key;
+
+  const handleLanguageChange = (locale: string) => {
+    setSelectedOption(locale);
+    // Replace the first segment of the path with the new locale
+    const segments = pathname.split('/');
+    segments[1] = locale;
+    router.push(segments.join('/'));
+  };
 
   return (
     <nav>
@@ -26,13 +42,13 @@ function Navbar() {
         <Select
           options={options}
           value={selectOption}
-          onChange={setSelectedOption}
+          onChange={handleLanguageChange}
           placeholder="Language"
         />
-        <Link href='/account'>Account</Link>
-        <Link href='/wishlist'>Wish List</Link>
+        <Link href={`/${currentLocale}/account`}>{t('account')}</Link>
+        <Link href={`/${currentLocale}/wishlist`}>{t('wishlist')}</Link>
         <div style={{ display: 'flex' }}>
-          <Link href='/cart'>Cart</Link>
+          <Link href={`/${currentLocale}/cart`}>{t('cart')}</Link>
           <ShoppingBasket color='black' />
         </div>
       </div>
@@ -50,33 +66,33 @@ function Navbar() {
         <div className={styles.nav_links}>
           <div className={styles.links}>
             <Shirt color='black' />
-            <Link href='/products?category=clothes'>Clothes</Link>
+            <Link href={`/${currentLocale}/products?category=clothes`}>{t('clothes')}</Link>
           </div>
           <div className={styles.links}>
             <Footprints color='black' />
-            <Link href='/products?category=shoes'>Shoes</Link>
+            <Link href={`/${currentLocale}/products?category=shoes`}>{t('shoes')}</Link>
           </div>
           <div className={styles.links}>
             <BriefcaseBusiness />
-            <Link href='/products?category=bags'>Bags</Link>
+            <Link href={`/${currentLocale}/products?category=bags`}>{t('bags')}</Link>
           </div>
           <div className={styles.links}>
             <Gem color='black' />
-            <Link href='/products?category=accessories'>Accessories</Link>
+            <Link href={`/${currentLocale}/products?category=accessories`}>{t('accessories')}</Link>
           </div>
           <div className={styles.links}>
             <PlaneLanding />
-            <Link href='/products?category=new-arrivals'>New Arrivals</Link>
+            <Link href={`/${currentLocale}/products?category=new-arrivals`}>{t('newArrivals')}</Link>
           </div>
           <div className={styles.links}>
             <Tag color='black' />
-            <Link href='/products?category=sale'>Sale</Link>
+            <Link href={`/${currentLocale}/products?category=sale`}>{t('sale')}</Link>
           </div>
         </div>
         <div className='search'>
           <SearchInput
             onSearch={() => { "This is a test" }}
-            placeholder='Search for products, brands and more'
+            placeholder={t('searchPlaceholder')}
           />
         </div>
       </div>

@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import Link from "next/link";
 import styles from "./login.module.css";
 import { useRouter } from "next/navigation";
-import { ToastContainer, toast } from "react-toastify";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginPage() {
   const [remember, setRemember] = useState(false);
@@ -12,36 +12,24 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
-        // ""
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Login failed.");
-        toast.error(data.message || "Login failed.");
-      } else {
-        toast.success("Login successful!");
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-      toast.error("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+    
+    const result = await login(email, password);
+
+    if (result.success) {
+      router.push('/dashboard');
+    } else {
+      setError(result.error);
     }
-  };
+
+    setLoading(false);
+  }
 
   return (
 
@@ -53,14 +41,14 @@ export default function LoginPage() {
           <p className={styles.subtitle}>Welcome back: Please enter your details.</p>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>✉️</span> Email</span>
-            <input className={styles.input} type="email" placeholder="Email" required
+            <input className={styles.input} type="email" placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
           </label>
           <label className={styles.inputLabel}>
             <span className={styles.labelRow}><span className={styles.labelIcon}>🔒</span> Password</span>
-            <input className={styles.input} type="password" placeholder="Password" required
+            <input className={styles.input} type="password" placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
@@ -93,7 +81,6 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 } 

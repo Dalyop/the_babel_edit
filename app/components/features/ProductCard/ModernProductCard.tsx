@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import styles from './ModernProductCard.module.css';
+import { useParams } from 'next/navigation';
 
 interface ModernProductCardProps {
   id?: string | number;
@@ -25,6 +26,8 @@ const ModernProductCard: React.FC<ModernProductCardProps> = ({
   isFavorite = false,
   onFavoriteToggle,
 }) => {
+  const params = useParams();
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -32,7 +35,7 @@ const ModernProductCard: React.FC<ModernProductCardProps> = ({
   };
 
   return (
-    <Link href={`/products/${id || '1'}`} className={styles.cardLink}>
+    <Link href={`/${typeof params.locale === 'string' ? params.locale : 'en'}/products/${id || '1'}`} className={styles.cardLink}>
       <div className={styles.card}>
         <div className={styles.imageWrapper}>
           <img src={imageSrc} alt={imageAlt} className={styles.image} />

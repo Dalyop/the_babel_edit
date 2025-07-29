@@ -8,6 +8,8 @@ import ProductOptions from './ProductOptions';
 import ProductTabs from './ProductTabs';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import styles from './ProductDetail.module.css';
+import en from '@/locales/en/common.json';
+import fr from '@/locales/fr/common.json';
 
 const productImages = [
   { src: '/images/babel_logo_black.jpg', alt: 'Causal Black T-Shirt 1' },
@@ -63,6 +65,19 @@ export default function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
 
+  // Translation setup
+  const currentLocale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en';
+  const translations: Record<string, Record<string, string>> = { en, fr };
+  const t = (key: string, vars?: Record<string, any>) => {
+    let str = (translations[currentLocale] || translations['en'])[key] || key;
+    if (vars) {
+      Object.entries(vars).forEach(([k, v]) => {
+        str = str.replace(`{{${k}}}`, v);
+      });
+    }
+    return str;
+  };
+
   const handleAddToCart = () => {
     // Here you would typically add the item to cart logic
     // For now, we'll just navigate to the cart page
@@ -70,10 +85,10 @@ export default function ProductDetailPage() {
   };
 
   const tabs = [
-    { label: 'Description', content: <div>T-shirt made from soft, breathable fabric.</div> },
-    { label: 'Size Guide', content: <div>Size guide content here.</div> },
-    { label: 'Reviews (34)', content: <div>Reviews content here.</div> },
-    { label: 'Shipping & Returns', content: <div>Shipping and returns info here.</div> },
+    { label: t('description'), content: <div>{t('productDescription')}</div> },
+    { label: t('sizeGuide'), content: <div>{t('sizeGuideContent')}</div> },
+    { label: t('reviewsWithCount', { count: 34 }), content: <div>{t('reviewsContent')}</div> },
+    { label: t('shippingReturns'), content: <div>{t('shippingReturnsContent')}</div> },
   ];
 
   return (
@@ -85,15 +100,15 @@ export default function ProductDetailPage() {
             <ProductImageGallery images={productImages} />
           </div>
           <div className={styles.rightCol}>
-            <h1 className={styles.productTitle}>Causal Black T-Shirt</h1>
-            <div className={styles.productPrice}>$90.00</div>
+            <h1 className={styles.productTitle}>{t('productTitle')}</h1>
+            <div className={styles.productPrice}>{t('productPrice')}</div>
             <div className={styles.reviewStars}>
               <span style={{ color: '#ffb400' }}>★ ★ ★ ★</span>
               <span style={{ color: '#d1d1d1' }}>★</span>
-              <span className={styles.reviewCount}>(34 Reviews)</span>
+              <span className={styles.reviewCount}>(34 {t('reviews')})</span>
             </div>
             <div className={styles.productDesc}>
-              A versatile black T-shirt made from soft, breathable fabric. Perfect for casual occasions, this classic piece offers a relaxed fit and timeless style.
+              {t('productDescription')}
             </div>
             <ProductOptions
               sizes={sizes}
@@ -123,16 +138,16 @@ export default function ProductDetailPage() {
               onClick={handleAddToCart}
               type="button"
             >
-              Add to Cart
+              {t('addToCart')}
             </button>
             <div style={{ color: '#232323', fontSize: '1rem', marginBottom: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <span style={{ marginRight: 8, fontSize: '1.2rem' }}>♡</span> Add to wishlist
+              <span style={{ marginRight: 8, fontSize: '1.2rem' }}>♡</span> {t('addToWishlist')}
             </div>
           </div>
         </div>
         <ProductTabs tabs={tabs} />
         <div className={styles.likeSection}>
-          <div className={styles.likeTitle}>You may also like</div>
+          <div className={styles.likeTitle}>{t('youMayAlsoLike')}</div>
           <div className={styles.likeList}>
             {youMayAlsoLike.map((item, idx) => (
               <ProductCard
