@@ -6,8 +6,11 @@ import Image from 'next/image';
 import { IMAGES } from './constants/constants';
 import styles from './landing.module.css';
 import Footer from './components/features/Footer/Footer';
+import { useParams } from 'next/navigation';
 
 export default function LandingPage() {
+  const params = useParams();
+  const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -21,9 +24,9 @@ export default function LandingPage() {
           />
         </div>
         <nav className={styles.nav}>
-          <Link href="/dashboard" className={styles.navLink}>Shop now</Link>
-          <Link href="/about" className={styles.navLink}>About</Link>
-          <Link href="/contact" className={styles.navLink}>Contact</Link>
+          <Link href={`/${currentLocale}/dashboard`} className={styles.navLink}>Shop now</Link>
+          <Link href={`/${currentLocale}/about`} className={styles.navLink}>About</Link>
+          <Link href={`/${currentLocale}/contact`} className={styles.navLink}>Contact</Link>
         </nav>
       </header>
 
@@ -32,7 +35,7 @@ export default function LandingPage() {
           <div className={styles.heroContent}>
             <h1 className={styles.title}>Welcome to Babel Edit</h1>
             <p className={styles.subtitle}>Your Ultimate Fashion Destination</p>
-            <Link href="/dashboard" className={styles.ctaButton}>
+            <Link href={`/${currentLocale}/dashboard`} className={styles.ctaButton}>
               Explore Collection
             </Link>
           </div>
@@ -59,7 +62,7 @@ export default function LandingPage() {
         <section className={styles.cta}>
           <h2>Ready to Start Shopping?</h2>
           <p>Join us today and discover the latest trends</p>
-          <Link href="/dashboard" className={styles.ctaButton}>
+          <Link href={`/${currentLocale}/dashboard`} className={styles.ctaButton}>
             Visit Dashboard
           </Link>
         </section>
