@@ -6,7 +6,7 @@ import { IMAGES } from '@/app/constants/constants';
 import SearchInput from '@/app/components/ui/SearchInput/SearchInput';
 import styles from './Navbar.module.css';
 // icon imports
-import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket } from 'lucide-react';
+import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X } from 'lucide-react';
 import Select from '../../ui/Select/Select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import en from '@/locales/en/common.json';
@@ -24,6 +24,7 @@ function Navbar() {
   const category = searchParams.get('category');
   const currentLocale = pathname.split('/')[1] || 'en';
   const [selectOption, setSelectedOption] = useState(currentLocale);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const translations: Record<string, Record<string, string>> = { en, fr };
   const t = (key: string) => (translations[currentLocale] || translations['en'])[key] || key;
@@ -35,10 +36,18 @@ function Navbar() {
     router.push(segments.join('/'));
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <nav>
-      {/* Top Navigation */}
-      <div className={styles.top_nav}>
+      {/* Top Navigation - Desktop */}
+      <div className={`${styles.top_nav} ${styles.desktop_only}`}>
         <Select
           options={options}
           value={selectOption}
@@ -53,9 +62,78 @@ function Navbar() {
         </div>
       </div>
 
+      {/* Mobile Top Bar */}
+      <div className={`${styles.mobile_top_bar} ${styles.mobile_only}`}>
+        <Link href={`/${currentLocale}/dashboard`}>
+          <div className={styles.mobile_brand}>
+            <Image
+              src={IMAGES.LOGO_WHITE}
+              alt="logo"
+              width={60}
+              height={60}
+            />
+          </div>
+        </Link>
+        
+        <button 
+          className={styles.hamburger_btn}
+          onClick={toggleMenu}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Hamburger Menu */}
+      <div className={`${styles.mobile_menu} ${isMenuOpen ? styles.menu_open : ''}`}>
+        <div className={styles.mobile_menu_content}>
+          <div className={styles.mobile_menu_item}>
+            <Select
+              options={options}
+              value={selectOption}
+              onChange={handleLanguageChange}
+              placeholder="Language"
+            />
+          </div>
+          <Link 
+            href={`/${currentLocale}/account`} 
+            className={styles.mobile_menu_item}
+            onClick={closeMenu}
+          >
+            {t('account')}
+          </Link>
+          <Link 
+            href={`/${currentLocale}/wishlist`} 
+            className={styles.mobile_menu_item}
+            onClick={closeMenu}
+          >
+            {t('wishlist')}
+          </Link>
+          <Link 
+            href={`/${currentLocale}/cart`} 
+            className={styles.mobile_menu_item}
+            onClick={closeMenu}
+          >
+            <div className={styles.cart_item}>
+              {t('cart')}
+              <ShoppingBasket size={20} />
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMenuOpen && (
+        <div 
+          className={styles.menu_overlay} 
+          onClick={closeMenu}
+        />
+      )}
+
       {/* Main Navbar */}
       <div className={styles.navbar}>
-        <Link href={`/${currentLocale}/dashboard`}>
+        {/* Desktop Logo */}
+        <Link href={`/${currentLocale}/dashboard`} className={styles.desktop_only}>
           <div className="brand">
             <Image
               src={IMAGES.LOGO_WHITE}
@@ -130,7 +208,7 @@ function Navbar() {
         </div>
 
         {/* Search Input */}
-        <div className="search">
+        <div className={`${styles.search} ${styles.desktop_only}`}>
           <SearchInput
             onSearch={() => {
               console.log('This is a test');
@@ -138,6 +216,16 @@ function Navbar() {
             placeholder={t('searchPlaceholder')}
           />
         </div>
+      </div>
+
+      {/* Mobile Search */}
+      <div className={`${styles.mobile_search} ${styles.mobile_only}`}>
+        <SearchInput
+          onSearch={() => {
+            console.log('This is a test');
+          }}
+          placeholder={t('searchPlaceholder')}
+        />
       </div>
     </nav>
   );

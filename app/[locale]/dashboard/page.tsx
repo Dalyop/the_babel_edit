@@ -30,14 +30,14 @@ function dashboard() {
 
     const scrollProducts = (direction: 'left' | 'right') => {
         if (!productsWrapperRef.current) return;
-        
+
         const cardWidth = 320; // Width of each card
         const gap = 24; // Gap between cards (1.5rem = 24px)
         const scrollAmount = cardWidth + gap;
         const containerWidth = productsWrapperRef.current.parentElement?.clientWidth || 0;
         const totalWidth = productsWrapperRef.current.scrollWidth;
         const maxScroll = -(totalWidth - containerWidth);
-        
+
         if (direction === 'left') {
             setCurrentPosition(prev => Math.min(0, prev + scrollAmount));
         } else {
@@ -83,20 +83,19 @@ function dashboard() {
                     height="500px"
                 />
             </section>
-            <TextDivider
-                text={t('thisWeeksHighlight')}
-            />
+            <TextDivider text={t('thisWeeksHighlight')} />
+
             <section className={styles.section}>
                 <article className={styles.cards}>
                     <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+                        backgroundImage="https://images.unsplash.com/photo-1593032465175-d0d1d3bb2f8e?auto=format&fit=crop&w=800&q=80"
                         title={t('exclusiveShoes')}
                         subtitle={t('exclusiveShoes')}
                         description={t('priceOff', { percent: 20 })}
                         className={styles.card1}
                     />
-                    <TransparentImageCard 
-                        backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+                    <TransparentImageCard
+                        backgroundImage="https://images.unsplash.com/photo-1536849249743-0f1d4f014aa1?auto=format&fit=crop&w=800&q=80"
                         title={t('exquisiteStyles')}
                         subtitle={t('exquisiteStyles')}
                         description={t('priceOff', { percent: 20 })}
@@ -105,14 +104,14 @@ function dashboard() {
                 </article>
                 <article className={styles.cards}>
                     <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+                        backgroundImage="https://images.unsplash.com/photo-1585238342028-96629ef3c72f?auto=format&fit=crop&w=800&q=80"
                         title="New Arrivals"
                         subtitle="New Arrivals"
                         description="Price 20% off"
                         className={styles.card2}
                     />
-                    <TransparentImageCard 
-                        backgroundImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+                    <TransparentImageCard
+                        backgroundImage="https://images.unsplash.com/photo-1612423284934-a7e8e6e06cbe?auto=format&fit=crop&w=800&q=80"
                         title="Exclusive Items"
                         subtitle="Exclusive Items"
                         description="Price 20% off"
@@ -120,23 +119,23 @@ function dashboard() {
                     />
                 </article>
             </section>
-            <TextDivider 
+            <TextDivider
                 text={t('popularThisWeek')}
             />
 
             <section className={styles.productsSection}>
-                <ArrowButton 
-                    direction="left" 
+                <ArrowButton
+                    direction="left"
                     onClick={() => scrollProducts('left')}
                     className={currentPosition === 0 ? styles.hidden : ''}
                 />
                 <div className={styles.productsContainer}>
-                    <div 
+                    <div
                         ref={productsWrapperRef}
                         className={styles.productsWrapper}
                         style={{ transform: `translateX(${currentPosition}px)` }}
                     >
-                        <ProductCard 
+                        <ProductCard
                             imageSrc="https://images.unsplash.com/photo-1542291026-7eec264c27ff"
                             imageAlt="Red Nike Sneakers"
                             title="Nike Red Sneakers"
@@ -144,7 +143,7 @@ function dashboard() {
                             originalPrice={129.99}
                             onAddToBasket={() => console.log('Added to basket')}
                         />
-                        <ProductCard 
+                        <ProductCard
                             imageSrc="https://images.unsplash.com/photo-1608231387042-66d1773070a5"
                             imageAlt="Black Adidas Shoes"
                             title="Adidas Black Ultraboost"
@@ -152,7 +151,7 @@ function dashboard() {
                             originalPrice={179.99}
                             onAddToBasket={() => console.log('Added to basket')}
                         />
-                        <ProductCard 
+                        <ProductCard
                             imageSrc="https://images.unsplash.com/photo-1600269452121-4f2416e55c28"
                             imageAlt="White Puma Shoes"
                             title="Puma White Runner"
@@ -160,7 +159,7 @@ function dashboard() {
                             originalPrice={99.99}
                             onAddToBasket={() => console.log('Added to basket')}
                         />
-                        <ProductCard 
+                        <ProductCard
                             imageSrc="https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb"
                             imageAlt="Blue New Balance"
                             title="New Balance Blue Classic"
@@ -168,7 +167,7 @@ function dashboard() {
                             originalPrice={119.99}
                             onAddToBasket={() => console.log('Added to basket')}
                         />
-                        <ProductCard 
+                        <ProductCard
                             imageSrc="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519"
                             imageAlt="Green Reebok"
                             title="Reebok Green Sport"
@@ -178,25 +177,24 @@ function dashboard() {
                         />
                     </div>
                 </div>
-                <ArrowButton 
-                    direction="right" 
+                <ArrowButton
+                    direction="right"
                     onClick={() => scrollProducts('right')}
                     className={currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) + (productsWrapperRef.current?.parentElement?.clientWidth || 0) ? styles.hidden : ''}
                 />
             </section>
 
-            <TextDivider 
-            text={t('brandsForYou')}
+            <TextDivider
+                text={t('brandsForYou')}
             />
             <section className={styles.section}>
                 <div className={styles.brands}>
-                    {/* Placeholder brand logos */}
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Chanel_logo_interlocking_cs.svg" alt="Chanel" className={styles.brandLogo} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/D%26G_logo.svg" alt="D&G" className={styles.brandLogo} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Dior_Logo.svg" alt="Dior" className={styles.brandLogo} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/Versace_logo.svg" alt="Versace" className={styles.brandLogo} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Zara.svg" alt="Zara" className={styles.brandLogo} />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6e/Gucci_Logo.svg" alt="Gucci" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2021/06/Chanel-logo.png" alt="Chanel" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2020/03/Dolce-Gabbana-Logo.png" alt="D&G" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Dior-logo.png" alt="Dior" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2021/06/Versace-logo.png" alt="Versace" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Zara-Logo.png" alt="Zara" className={styles.brandLogo} />
+                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Gucci-Logo.png" alt="Gucci" className={styles.brandLogo} />
                 </div>
             </section>
             <section className={styles.section}>

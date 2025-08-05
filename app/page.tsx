@@ -16,7 +16,7 @@ export default function LandingPage() {
       <header className={styles.header}>
         <div className={styles.logo}>
           <Image
-            src={IMAGES.LOGO_WHITE}
+            src={IMAGES.LOGO_WHITE_RM}
             alt="Babel Edit Logo"
             width={120}
             height={120}

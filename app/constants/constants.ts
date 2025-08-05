@@ -3,6 +3,8 @@ export const IMAGES = {
   // Logo images
   LOGO_WHITE: '/images/babel_logo_white.jpg',
   LOGO_DARK: '/images/Babel_logo_black.jpg',
+  LOGO_WHITE_RM: '/images/Babel_logo_white-removebg.png',
+  LOGO_DARK_RM: '/images/Babel_logo_black-removebg.png',
   
   // Hero/Header images
   HERO_BG: '/images/hero-bg.jpg',

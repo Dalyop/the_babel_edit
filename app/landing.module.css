@@ -2,7 +2,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: rgb(240, 220, 194);
+    background-color: var(--pColor);
 }
 
 .header {
@@ -52,10 +52,7 @@
     justify-content: center;
     text-align: center;
     padding: 2rem;
-    background: linear-gradient(
-        #f0dcc2e6,
-        #f0dcc2b3
-    );
+    background: var(--pColor);
 }
 
 .heroContent {
@@ -104,7 +101,7 @@
     text-align: center;
     padding: 2rem;
     border-radius: var(--border-radius-lg);
-    background-color: rgb(240, 220, 194);
+    background-color: var(--pColor);
     transition: transform 0.3s ease;
 }
 
@@ -131,7 +128,8 @@
 .cta {
     text-align: center;
     padding: 4rem 2rem;
-    background-color: rgb(240, 220, 194);
+    background-color: var(--pColor);
+
 }
 
 .cta h2 {

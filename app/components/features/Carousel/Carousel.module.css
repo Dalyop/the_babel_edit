@@ -220,3 +220,116 @@
         background-color: rgba(0, 0, 0, 1);
     }
 }
+/* Mobile-first Enhancements */
+@media (max-width: 768px) {
+    .carousel {
+      height: 220px !important;
+      border-radius: 12px;
+    }
+  
+    .section {
+      margin: 1.5rem 0;
+      padding: 0 1rem;
+    }
+  
+    .cards {
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+  
+    .card1, .card2 {
+      flex: 1 1 100% !important;
+      min-width: 100% !important;
+    }
+  
+    .productsSection {
+      padding: 0;
+      margin: 2rem 0;
+    }
+  
+    .productsWrapper {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 1rem;
+      padding: 0 1rem;
+    }
+  
+    .productsWrapper > * {
+      flex: 0 0 80%;
+      scroll-snap-align: start;
+      min-width: 80%;
+    }
+  
+    .productsSection :global(.arrowButton) {
+      display: none !important;
+    }
+  
+    .brands {
+      gap: 1rem;
+      padding: 0 1rem;
+    }
+  
+    .brandLogo {
+      width: 60px;
+      height: 60px;
+    }
+  
+    .promoOverlay {
+      margin: 1rem;
+      padding: 1.5rem;
+      gap: 1rem;
+      max-width: 100%;
+    }
+  
+    .promoTitle {
+      font-size: 2rem;
+    }
+  
+    .promoCountdown {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  
+    .testimonialsContent {
+      padding: 2rem 1rem 0 1rem;
+    }
+  
+    .testimonialsText {
+      font-size: 1rem;
+      padding: 0 0.5rem;
+    }
+  
+    .testimonialsClientRow {
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+  
+    .testimonialsShoesImg {
+      width: 100%;
+      max-width: 90vw;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .productsWrapper > * {
+      flex: 0 0 90%;
+      min-width: 90%;
+    }
+  
+    .promoTitle {
+      font-size: 1.6rem;
+    }
+  
+    .promoCountdownItemValue {
+      font-size: 1.5rem;
+    }
+  
+    .promoButton {
+      padding: 0.6rem 1.5rem;
+      font-size: 1rem;
+    }
+  }
+  

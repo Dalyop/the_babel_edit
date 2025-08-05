@@ -6,12 +6,14 @@
   /* Colors */
   --color-primary: #322e2e;
   --color-secondary: #666;
-  --color-accent: #ff4444;
+  --color-accent: #FF2200;
   --color-background: #ffffff;
   --color-text: #333333;
   --color-text-light: #666666;
   --color-border: #e0e0e0;
-
+  --baseColor: #E3CCCB;
+  --pColor: #E3DACB;
+    
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -55,7 +57,7 @@ body {
   font-family: 'Poppins', sans-serif;
   color: var(--color-text);
   line-height: 1.5;
-  background-color: rgb(240, 220, 194);
+  background-color: var(--pColor);
   margin: 0;
   min-height: 100vh;
 }
