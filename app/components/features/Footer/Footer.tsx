@@ -15,7 +15,7 @@ const Footer = () => {
   const pathname = usePathname();
   const currentLocale = pathname.split('/')[1] || 'en';
   const [selectOption, setSelectedOption] = useState(currentLocale);
-  
+
   // Mobile accordion states
   const [expandedSections, setExpandedSections] = useState({
     companyInfo: false,
@@ -33,13 +33,16 @@ const Footer = () => {
     segments[1] = locale;
     router.push(segments.join('/'));
   };
+  
+  type SectionKey = 'companyInfo' | 'helpSupport' | 'customerCare' | 'newsletter';
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: SectionKey) => {
     setExpandedSections(prev => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
+
 
   return (
     <footer className={styles.footer}>
@@ -47,7 +50,7 @@ const Footer = () => {
         <div className={styles.footerColumns}>
           {/* Company Info */}
           <div className={styles.footerCol}>
-            <div 
+            <div
               className={styles.footerColHeader}
               onClick={() => toggleSection('companyInfo')}
             >
@@ -67,7 +70,7 @@ const Footer = () => {
 
           {/* Help & Support */}
           <div className={styles.footerCol}>
-            <div 
+            <div
               className={styles.footerColHeader}
               onClick={() => toggleSection('helpSupport')}
             >
@@ -89,7 +92,7 @@ const Footer = () => {
 
           {/* Customer Care */}
           <div className={styles.footerCol}>
-            <div 
+            <div
               className={styles.footerColHeader}
               onClick={() => toggleSection('customerCare')}
             >
@@ -111,7 +114,7 @@ const Footer = () => {
 
         {/* Newsletter Section */}
         <div className={styles.footerNewsletter}>
-          <div 
+          <div
             className={styles.footerColHeader}
             onClick={() => toggleSection('newsletter')}
           >
