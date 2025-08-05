@@ -4,8 +4,12 @@ import Link from "next/link";
 import styles from "./login.module.css";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import { useParams } from "next/navigation";
 
 export default function LoginPage() {
+  const params = useParams();
+  const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
+
   const [remember, setRemember] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +27,7 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (result.success) {
-      router.push('/dashboard');
+      router.push(`/${currentLocale}/dashboard`);
     } else {
       setError(result.error);
     }
@@ -77,7 +81,7 @@ export default function LoginPage() {
           </div>
           <div className={styles.signupRow}>
             Dont have an account?{' '}
-            <Link href="/auth/signup" className={styles.signupLink}><span className={styles.lockIcon}>🔒</span> Create one</Link>
+            <Link href={`/${currentLocale}/auth/signup`} className={styles.signupLink}><span className={styles.lockIcon}>🔒</span> Create one</Link>
           </div>
         </form>
       </div>

@@ -9,7 +9,7 @@
 .signupCard {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 16px rgba(34,34,34,0.08);
+  box-shadow: 0 2px 16px rgba(34, 34, 34, 0.08);
   padding: 3rem 2.5rem 2.5rem 2.5rem;
   max-width: 480px;
   width: 100%;
@@ -58,6 +58,31 @@
   margin-right: 0.2rem;
 }
 
+/* Password strength indicator - positioned after the label text */
+.strengthIndicator {
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.strengthIndicator.weak {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.strengthIndicator.medium {
+  color: #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.strengthIndicator.strong {
+  color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Input Styles */
 .input[type="text"],
 .input[type="email"],
 .input[type="tel"],
@@ -66,7 +91,6 @@
   border: 1.5px solid #e3d3d2;
   border-radius: 7px;
   font-size: 1.08rem;
-  /* background: #f6f1ef; */
   color: #232323;
   outline: none;
   transition: border 0.2s;
@@ -79,6 +103,57 @@
   border: 1.5px solid #ff2d17;
 }
 
+/* Input error styling */
+.inputError {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Password help section */
+.passwordHelp {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.passwordRequirements {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.requirementMet {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.requirementUnmet {
+  color: #6c757d;
+}
+
+/* Validation messages */
+.errorText {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.successText {
+  color: #28a745;
+  font-size: 12px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Checkbox Styles */
 .checkRow {
   display: flex;
   align-items: center;
@@ -100,6 +175,7 @@
   cursor: pointer;
 }
 
+/* Button Styles */
 .createBtn {
   background: #ff2d17;
   color: #fff;
@@ -118,6 +194,13 @@
   background: #d92613;
 }
 
+.createBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #6c757d;
+}
+
+/* Divider Styles */
 .dividerRow {
   display: flex;
   align-items: center;
@@ -138,6 +221,7 @@
   font-weight: 500;
 }
 
+/* Social Login Styles */
 .socialRow {
   display: flex;
   gap: 1rem;
@@ -150,7 +234,7 @@
   border: 1.5px solid #e3d3d2;
   border-radius: 8px;
   padding: 0.7rem 1.2rem;
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #232323;
   display: flex;
@@ -170,6 +254,7 @@
   height: 22px;
 }
 
+/* Sign in Link */
 .signinRow {
   text-align: center;
   font-size: 1.08rem;
@@ -192,9 +277,28 @@
   margin-right: 0.1rem;
 }
 
+/* Animations */
+.passwordHelp,
+.errorText,
+.successText {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
 @media (max-width: 600px) {
   .signupCard {
     padding: 1.2rem 0.5rem;
     max-width: 98vw;
   }
-} 
+}

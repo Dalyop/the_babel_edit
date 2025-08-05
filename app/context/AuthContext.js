@@ -15,12 +15,14 @@ export const useAuth = () => {
 
 // Cookie utility functions
 const setCookie = (name, value, days = 7) => {
+  if (typeof document === 'undefined') return;
   const expires = new Date();
   expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
   document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
 };
 
 const getCookie = (name) => {
+  if (typeof document === 'undefined') return null;
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
   for (let i = 0; i < ca.length; i++) {
@@ -32,7 +34,38 @@ const getCookie = (name) => {
 };
 
 const deleteCookie = (name) => {
+  if (typeof document === 'undefined') return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
+// User data storage utilities
+const setUserData = (userData) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('user', JSON.stringify(userData));
+  } catch (error) {
+    console.error('Failed to save user data:', error);
+  }
+};
+
+const getUserData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error('Failed to retrieve user data:', error);
+    return null;
+  }
+};
+
+const clearUserData = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('user');
+  } catch (error) {
+    console.error('Failed to clear user data:', error);
+  }
 };
 
 export const AuthProvider = ({ children }) => {
@@ -42,8 +75,65 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    checkAuth();
+    initializeAuth();
   }, []);
+
+  const initializeAuth = async () => {
+    try {
+      // First, try to restore user from localStorage
+      const storedUser = getUserData();
+      const storedToken = getCookie('accessToken');
+      
+      if (storedUser && storedToken) {
+        setUser(storedUser);
+        setAccessToken(storedToken);
+        
+        // Verify the stored credentials are still valid
+        const isValid = await verifyStoredAuth(storedToken);
+        if (!isValid) {
+          // If stored auth is invalid, clear everything
+          clearAuthData();
+        }
+      } else if (storedToken) {
+        // Have token but no user data, try to fetch user info
+        await checkAuth();
+      }
+      
+    } catch (error) {
+      console.error('Auth initialization failed:', error);
+      clearAuthData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyStoredAuth = async (token) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update user data if it changed on the server
+        if (data.user) {
+          setUser(data.user);
+          setUserData(data.user);
+        }
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Auth verification failed:', error);
+      return false;
+    }
+  };
 
   // Enhanced API call helper with automatic token handling
   const apiCall = async (endpoint, options = {}) => {
@@ -52,7 +142,7 @@ export const AuthProvider = ({ children }) => {
     const makeRequest = async (authToken) => {
       return fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         ...options,
-        credentials: 'include', // Important for httpOnly cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
@@ -81,7 +171,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
         method: 'POST',
-        credentials: 'include', // This sends httpOnly refresh cookie
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -92,7 +182,13 @@ export const AuthProvider = ({ children }) => {
         
         // Store new access token
         setAccessToken(data.accessToken);
-        setCookie('accessToken', data.accessToken, 1); // 1 day expiry
+        setCookie('accessToken', data.accessToken, 1);
+        
+        // Update user data if provided
+        if (data.user) {
+          setUser(data.user);
+          setUserData(data.user);
+        }
         
         return data.accessToken;
       } else {
@@ -108,33 +204,24 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = accessToken || getCookie('accessToken');
       if (!token) {
-        setLoading(false);
         return;
       }
 
-      const response = await apiCall('/verify');
+      const response = await apiCall('/auth/verify');
 
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.user);
+        setUserData(userData.user); // Store in localStorage
         setAccessToken(token);
       } else if (response.status === 401) {
-        // Token invalid/expired - cleanup
         clearAuthData();
-      } else {
-        // Network or server error - keep trying later
-        console.error('Auth verification failed, status:', response.status);
       }
     } catch (error) {
-      // Network error - don't clear tokens immediately for better UX
       console.error('Auth check failed:', error);
-      
-      // Only clear if it's clearly an auth error
       if (error.message === 'Session expired') {
         clearAuthData();
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -142,7 +229,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
-        credentials: 'include', // Important for receiving httpOnly cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -157,12 +244,12 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       
-      // Store access token (short-lived, ~15 minutes)
+      // Store both token and user data
       setAccessToken(data.accessToken);
-      setCookie('accessToken', data.accessToken, 1); // 1 day as fallback
-      
-      // Refresh token should be set as httpOnly cookie by backend
+      setCookie('accessToken', data.accessToken, 1);
       setUser(data.user);
+      setUserData(data.user); // Store in localStorage
+      
       toast.success("Login successful!");
       
       return { success: true };
@@ -191,11 +278,11 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       
-      // Store access token
+      // Store both token and user data
       setAccessToken(data.accessToken);
       setCookie('accessToken', data.accessToken, 1);
-      
       setUser(data.user);
+      setUserData(data.user); // Store in localStorage
       
       return { success: true };
     } catch (error) {
@@ -208,11 +295,11 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null);
     setUser(null);
     deleteCookie('accessToken');
+    clearUserData(); // Clear from localStorage
   };
 
   const logout = async () => {
     try {
-      // Call backend logout to clear httpOnly refresh cookie
       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
@@ -242,14 +329,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Add these helper functions for Google auth
-  // const setUser = (userData) => {
-  //   setUser(userData);
-  // };
-
   const setAuthToken = (token) => {
     setAccessToken(token);
     setCookie('accessToken', token, 1);
+  };
+
+  // Function to update user data (useful for profile updates)
+  const updateUser = (userData) => {
+    setUser(userData);
+    setUserData(userData);
   };
 
   const value = {
@@ -258,9 +346,10 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     loading,
-    authenticatedFetch, // Expose this for components to use
-    setUser, // For Google auth callback
-    setAuthToken, // For Google auth callback
+    authenticatedFetch,
+    setUser: updateUser, // Use the enhanced version
+    setAuthToken,
+    updateUser, // Explicitly expose for profile updates
   };
 
   return (

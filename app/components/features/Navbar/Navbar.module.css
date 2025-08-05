@@ -10,7 +10,7 @@
     display: flex;
 }
 .top_nav {
-    background-color: rgb(240, 220, 194);
+    background-color: #fff;
     padding: 10px 20px;
     color: black;
     display: flex;
@@ -49,3 +49,8 @@
     height: 1.2rem;
     color: #4a4a4a; /* Lighter shade of black */
 }
+.activeLink {
+    color: #ef9b2d !important;
+    font-weight: 600;
+  }
+  
