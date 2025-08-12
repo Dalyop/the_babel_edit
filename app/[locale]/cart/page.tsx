@@ -1,58 +1,43 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useCartStore } from '@/app/store/useCartStore';
 import Navbar from '@/app/components/features/Navbar/Navbar';
 import Footer from '@/app/components/features/Footer/Footer';
 import styles from "./cart.module.css";
 
-const initialCart = [
-  {
-    image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80",
-    name: "Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse",
-    size: "M",
-    color: "Black",
-    price: 90.0,
-    quantity: 2,
-  },
-  {
-    image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80",
-    name: "Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse",
-    size: "M",
-    color: "Black",
-    price: 90.0,
-    quantity: 2,
-  },
-  {
-    image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80",
-    name: "Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse",
-    size: "M",
-    color: "Black",
-    price: 90.0,
-    quantity: 2,
-  },
-  {
-    image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80",
-    name: "Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse",
-    size: "M",
-    color: "Black",
-    price: 90.0,
-    quantity: 2,
-  },
-];
-
 export default function CartPage() {
-  const [cart, setCart] = useState(initialCart);
+  const params = useParams();
+  const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
+  
+  const { 
+    items, 
+    loading, 
+    error, 
+    totalAmount, 
+    updateQuantity, 
+    removeFromCart, 
+    fetchCart 
+  } = useCartStore();
+  
   const [promo, setPromo] = useState("");
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 9.0;
-  const total = subtotal + shipping;
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
-  const handleQuantity = (idx: number, delta: number) => {
-    setCart(cart => cart.map((item, i) => i === idx ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item));
+  const shipping = 9.0;
+  const total = totalAmount + shipping;
+
+  const handleQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity >= 1) {
+      updateQuantity(itemId, newQuantity);
+    }
   };
 
-  const handleRemove = (idx: number) => {
-    setCart(cart => cart.filter((_, i) => i !== idx));
+  const handleRemove = (itemId: string) => {
+    removeFromCart(itemId);
   };
 
   const handlePromo = (e: React.FormEvent<HTMLFormElement>) => {
@@ -60,62 +45,184 @@ export default function CartPage() {
     alert("Promo code logic not implemented.");
   };
 
+  if (loading) {
+    return (
+      <div className={styles.cartBg}>
+        <Navbar />
+        <main className={styles.cartMain}>
+          <h1 className={styles.heading}>Shopping Cart</h1>
+          <div className={styles.cartContainer}>
+            <div className={styles.cartItemsSection}>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>Loading cart...</div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.cartBg}>
+        <Navbar />
+        <main className={styles.cartMain}>
+          <h1 className={styles.heading}>Shopping Cart</h1>
+          <div className={styles.cartContainer}>
+            <div className={styles.cartItemsSection}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>Error: {error}</div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.cartBg}>
       <Navbar />
       <main className={styles.cartMain}>
         <h1 className={styles.heading}>Shopping Cart</h1>
-        <div className={styles.cartContainer}>
-          <div className={styles.cartItemsSection}>
-            {cart.map((item, idx) => (
-              <div className={styles.cartItemCard} key={idx}>
-                <img src={item.image} alt={item.name} className={styles.cartImg} />
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>{item.name}</div>
-                  <div className={styles.cartItemMeta}>Size: {item.size} | Color: {item.color}</div>
-                  <div className={styles.cartItemPrice}>${item.price.toFixed(2)}</div>
-                  <div className={styles.cartItemControls}>
-                    <button className={styles.qtyBtn} type="button" onClick={() => handleQuantity(idx, -1)}>-</button>
-                    <span className={styles.qty}>{item.quantity}</span>
-                    <button className={styles.qtyBtn} type="button" onClick={() => handleQuantity(idx, 1)}>+</button>
+        
+        {items.length === 0 ? (
+          <div className={styles.cartContainer}>
+            <div className={styles.cartItemsSection}>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                Your cart is empty.<br />Start adding products to see them here!
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.cartContainer}>
+            <div className={styles.cartItemsSection}>
+              {items.map((item) => (
+                <div className={styles.cartItemCard} key={item.id}>
+                  <div className={styles.cartItemImage}>
+                    <img 
+                      src={item.imageUrl || '/placeholder-product.jpg'} 
+                      alt={item.name} 
+                      className={styles.cartImg} 
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder-product.jpg';
+                      }}
+                    />
                   </div>
-                  <button className={styles.removeBtn} type="button" onClick={() => handleRemove(idx)}>
-                    <span className={styles.removeIcon}>🗑️</span> Remove
+                  
+                  <div className={styles.cartItemInfo}>
+                    <div className={styles.cartItemHeader}>
+                      <h3 className={styles.cartItemName}>{item.name}</h3>
+                      <button 
+                        className={styles.removeBtn} 
+                        type="button" 
+                        onClick={() => handleRemove(item.id)}
+                        disabled={loading}
+                        title="Remove item"
+                      >
+                        <span className={styles.removeIcon}>✕</span>
+                      </button>
+                    </div>
+                    
+                    {(item.size || item.color) && (
+                      <div className={styles.cartItemMeta}>
+                        {item.size && <span className={styles.metaItem}>Size: {item.size}</span>}
+                        {item.color && <span className={styles.metaItem}>Color: {item.color}</span>}
+                      </div>
+                    )}
+                    
+                    <div className={styles.cartItemFooter}>
+                      <div className={styles.cartItemPrice}>
+                        <span className={styles.priceLabel}>Price:</span>
+                        <span className={styles.price}>${item.price.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className={styles.cartItemControls}>
+                        <button 
+                          className={styles.qtyBtn} 
+                          type="button" 
+                          onClick={() => handleQuantity(item.id, item.quantity - 1)}
+                          disabled={loading || item.quantity <= 1}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+                        <span className={styles.qty}>{item.quantity}</span>
+                        <button 
+                          className={styles.qtyBtn} 
+                          type="button" 
+                          onClick={() => handleQuantity(item.id, item.quantity + 1)}
+                          disabled={loading}
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                      
+                      <div className={styles.subtotal}>
+                        <span className={styles.subtotalLabel}>Subtotal:</span>
+                        <span className={styles.subtotalAmount}>${item.subtotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.summaryCard}>
+              <h2 className={styles.summaryTitle}>Order Summary</h2>
+              
+              <div className={styles.summaryRow}>
+                <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
+                <span className={styles.summaryAmount}>${totalAmount.toFixed(2)}</span>
+              </div>
+              
+              <hr className={styles.summaryDivider} />
+              
+              <form className={styles.promoForm} onSubmit={handlePromo}>
+                <label className={styles.promoLabel}>Promo Code</label>
+                <div className={styles.promoRow}>
+                  <input 
+                    className={styles.promoInput} 
+                    type="text" 
+                    value={promo} 
+                    onChange={e => setPromo(e.target.value)}
+                    placeholder="Enter promo code"
+                  />
+                  <button className={styles.promoBtn} type="submit" disabled={!promo.trim()}>
+                    Apply
                   </button>
                 </div>
+              </form>
+              
+              <hr className={styles.summaryDivider} />
+              
+              <div className={styles.summaryRow}>
+                <span>Estimated Shipping</span>
+                <span className={styles.summaryAmount}>${shipping.toFixed(2)}</span>
               </div>
-            ))}
+              
+              <hr className={styles.summaryDivider} />
+              
+              <div className={styles.summaryTotalRow}>
+                <span className={styles.totalLabel}>Total</span>
+                <span className={styles.summaryTotal}>${total.toFixed(2)}</span>
+              </div>
+              
+              <div className={styles.checkoutActions}>
+                <button 
+                  className={styles.checkoutBtn} 
+                  type="button" 
+                  disabled={loading || items.length === 0}
+                >
+                  {loading ? 'Processing...' : 'Proceed to Checkout'}
+                </button>
+                
+                <Link href={`/${currentLocale}/products`} className={styles.continueBtn}>
+                  Continue Shopping
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className={styles.summaryCard}>
-            <div className={styles.summaryTitle}>Order Summary</div>
-            <div className={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <hr className={styles.summaryDivider} />
-            <form className={styles.promoForm} onSubmit={handlePromo}>
-              <div>
-                <label className={styles.promoLabel}>Promo Code</label>
-              </div>
-              <div className={styles.promoRow}>
-                <input className={styles.promoInput} type="text" value={promo} onChange={e => setPromo(e.target.value)} />
-                <button className={styles.promoBtn} type="submit">Apply</button>
-              </div>
-            </form>
-            <hr className={styles.summaryDivider} />
-            <div className={styles.summaryRow}>
-              <span>Estimated Shipping</span>
-              <span>${shipping.toFixed(2)}</span>
-            </div>
-            <hr className={styles.summaryDivider} />
-            <div className={styles.summaryTotalRow}>
-              <span>Total</span>
-              <span className={styles.summaryTotal}>${total.toFixed(2)}</span>
-            </div>
-            <button className={styles.checkoutBtn} type="button">Proceed to Checkout</button>
-            <button className={styles.continueBtn} type="button">Continue Shopping</button>
-          </div>
-        </div>
+        )}
       </main>
       <Footer />
     </div>

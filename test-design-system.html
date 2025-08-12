@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System Preview</title>
+    <link rel="stylesheet" href="./app/globals.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header style="margin: var(--spacing-8) 0;">
+            <h1>Design System Preview</h1>
+            <p>Testing the updated design tokens and components</p>
+        </header>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Typography Scale</h2>
+            <div style="display: grid; gap: var(--spacing-4);">
+                <h1>Heading 1 - Display Large</h1>
+                <h2>Heading 2 - Display Medium</h2>
+                <h3>Heading 3 - Display Small</h3>
+                <h4>Heading 4 - Heading Large</h4>
+                <h5>Heading 5 - Heading Medium</h5>
+                <h6>Heading 6 - Heading Small</h6>
+                <p>Body paragraph text with proper line height and spacing. This demonstrates the readable typography scale.</p>
+                <p class="text-sm">Small text size for captions and labels</p>
+                <p class="text-xs">Extra small text for fine print</p>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Color Palette</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4);">
+                <div class="card">
+                    <div style="background: var(--color-primary); height: 60px; border-radius: var(--border-radius-md); margin-bottom: var(--spacing-3);"></div>
+                    <h6>Primary</h6>
+                    <p class="text-sm text-muted">Main brand color</p>
+                </div>
+                <div class="card">
+                    <div style="background: var(--color-accent); height: 60px; border-radius: var(--border-radius-md); margin-bottom: var(--spacing-3);"></div>
+                    <h6>Accent</h6>
+                    <p class="text-sm text-muted">Call-to-action color</p>
+                </div>
+                <div class="card">
+                    <div style="background: var(--color-surface); height: 60px; border-radius: var(--border-radius-md); margin-bottom: var(--spacing-3); border: 1px solid var(--color-border);"></div>
+                    <h6>Surface</h6>
+                    <p class="text-sm text-muted">Background surface</p>
+                </div>
+                <div class="card">
+                    <div style="background: var(--color-background); height: 60px; border-radius: var(--border-radius-md); margin-bottom: var(--spacing-3); border: 1px solid var(--color-border);"></div>
+                    <h6>Background</h6>
+                    <p class="text-sm text-muted">Card backgrounds</p>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Button Variants</h2>
+            <div style="display: flex; gap: var(--spacing-4); flex-wrap: wrap;">
+                <button class="btn-primary">Primary Button</button>
+                <button class="btn-secondary">Secondary Button</button>
+                <button class="btn-outline">Outline Button</button>
+                <button class="btn-ghost">Ghost Button</button>
+                <button class="btn-primary" disabled>Disabled Button</button>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Form Elements</h2>
+            <div style="display: grid; gap: var(--spacing-6); max-width: 400px;">
+                <div>
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <div>
+                    <label for="message">Message</label>
+                    <textarea id="message" placeholder="Enter your message"></textarea>
+                </div>
+                <div>
+                    <label for="country">Country</label>
+                    <select id="country">
+                        <option>Select a country</option>
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Cards & Spacing</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-6);">
+                <div class="card">
+                    <h4>Standard Card</h4>
+                    <p>This is a standard card with proper padding, border radius, and shadow.</p>
+                    <button class="btn-primary">Learn More</button>
+                </div>
+                <div class="card card-compact">
+                    <h5>Compact Card</h5>
+                    <p class="text-sm">A more compact version with less padding.</p>
+                    <button class="btn-outline">Action</button>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Utility Classes</h2>
+            <div style="display: grid; gap: var(--spacing-4);">
+                <p class="text-center">Centered text</p>
+                <p class="text-left font-bold">Left aligned bold text</p>
+                <p class="text-right text-light">Right aligned light text</p>
+                <p class="text-accent font-semibold">Accent colored semibold text</p>
+                <div class="p-4 mb-4" style="background: var(--color-surface); border-radius: var(--border-radius-md);">
+                    Padding and margin utilities
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: var(--spacing-12);">
+            <h2>Animation Classes</h2>
+            <div style="display: flex; gap: var(--spacing-4); flex-wrap: wrap;">
+                <div class="card fade-in">
+                    <p class="text-sm">Fade In Animation</p>
+                </div>
+                <div class="card slide-in-up">
+                    <p class="text-sm">Slide In Up Animation</p>
+                </div>
+                <div class="card bounce-in">
+                    <p class="text-sm">Bounce In Animation</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

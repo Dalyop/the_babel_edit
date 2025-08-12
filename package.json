@@ -15,8 +15,10 @@
     "next-i18next": "^15.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.6.1",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

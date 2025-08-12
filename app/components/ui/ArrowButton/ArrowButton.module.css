@@ -2,40 +2,66 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-full);
+    background: var(--color-background);
+    border: 1px solid var(--color-border-light);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    color: #333;
-    transition: all 0.2s ease;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    transition: var(--transition-all);
     z-index: 10;
+    outline: none;
 }
 
-.arrowButton:hover {
-    background: #f5f5f5;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.arrowButton:hover:not(:disabled) {
+    background: var(--color-surface-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-50%) scale(1.05);
+    border-color: var(--color-accent);
 }
 
 .arrowButton:active {
     transform: translateY(-50%) scale(0.95);
 }
 
+.arrowButton:focus {
+    box-shadow: var(--shadow-sm), 0 0 0 3px var(--color-accent-light);
+}
+
 .left {
-    left: 0px;
+    left: var(--spacing-2);
 }
 
 .right {
-    right: 0px;
+    right: var(--spacing-2);
 }
 
 .arrowButton:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
-} 
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .arrowButton {
+        width: 32px;
+        height: 32px;
+        font-size: var(--font-size-sm);
+    }
+    
+    .left {
+        left: var(--spacing-1);
+    }
+    
+    .right {
+        right: var(--spacing-1);
+    }
+}

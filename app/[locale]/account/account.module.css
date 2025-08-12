@@ -1,33 +1,36 @@
 .accountBg {
   min-height: 100vh;
-  /* background: linear-gradient(135deg, #e8ded6 0%, #e3d3d2 100%); */
+  background-color: var(--color-surface);
+  padding-top: var(--spacing-20);
 }
 
 .accountMain {
   display: flex;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 3rem 1.5rem 2rem 1.5rem;
-  gap: 2.5rem;
+  padding: var(--spacing-8) var(--spacing-6);
+  gap: var(--spacing-8);
 }
 
 .sidebar {
-  background: #fff;
-  border-radius: 16px;
-  padding: 2.5rem 2rem 2rem 2rem;
+  background: var(--color-background);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-8) var(--spacing-6);
   min-width: 260px;
   max-width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
-  box-shadow: 0 2px 12px rgba(34,34,34,0.06);
+  gap: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border-light);
   height: fit-content;
 }
 
 .sidebarTitle {
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-6);
 }
 
 .sidebarMenu {
@@ -36,23 +39,30 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--spacing-4);
 }
 
 .sidebarMenu li {
-  font-size: 1.15rem;
-  color: #232323;
+  font-size: var(--font-size-base);
+  color: var(--color-text-light);
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: var(--transition-colors);
+}
+
+.sidebarMenu li:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
 }
 
 .sidebarMenu .active {
-  color: #ff2d17;
-  font-weight: 700;
-  position: relative;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  font-weight: 600;
 }
 
 .sidebarMenu .active::before {
@@ -61,8 +71,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ff2d17;
-  margin-right: 0.7rem;
+  background: var(--color-accent);
+  margin-right: var(--spacing-2);
 }
 
 .logout {
@@ -271,9 +281,12 @@
 }
 
 @media (max-width: 900px) {
+  .accountBg {
+    padding-top: 80px;
+  }
   .accountMain {
     flex-direction: column;
-    padding: 1.5rem 0.5rem;
+    padding: 1rem;
     gap: 1.5rem;
   }
   .sidebar {
@@ -284,4 +297,4 @@
   .profileContent {
     padding: 1.5rem 1rem;
   }
-} 
+}

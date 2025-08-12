@@ -6,11 +6,13 @@ import { IMAGES } from '@/app/constants/constants';
 import SearchInput from '@/app/components/ui/SearchInput/SearchInput';
 import styles from './Navbar.module.css';
 // icon imports
-import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X } from 'lucide-react';
+import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X, Search, Heart } from 'lucide-react';
 import Select from '../../ui/Select/Select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import en from '@/locales/en/common.json';
 import fr from '@/locales/fr/common.json';
+import { useCartStore, useWishlistStore } from '@/app/store';
+import { useNavigationLoading } from '@/app/hooks/useNavigationLoading';
 
 const options = [
   { value: 'en', label: 'English' },
@@ -18,6 +20,7 @@ const options = [
 ];
 
 function Navbar() {
+  const { navigateWithLoading } = useNavigationLoading();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -25,6 +28,11 @@ function Navbar() {
   const currentLocale = pathname.split('/')[1] || 'en';
   const [selectOption, setSelectedOption] = useState(currentLocale);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  // Store integration
+  const cartItemCount = useCartStore(state => state.totalItems);
+  const wishlistCount = useWishlistStore(state => state.getWishlistCount());
 
   const translations: Record<string, Record<string, string>> = { en, fr };
   const t = (key: string) => (translations[currentLocale] || translations['en'])[key] || key;
@@ -33,19 +41,74 @@ function Navbar() {
     setSelectedOption(locale);
     const segments = pathname.split('/');
     segments[1] = locale;
-    router.push(segments.join('/'));
+    navigateWithLoading(segments.join('/'), 'Changing language...');
   };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
 
+  const closeSearch = () => {
+    setIsSearchOpen(false);
+  };
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`, 'Searching products...');
+      setIsSearchOpen(false);
+    }
+  };
+
+  // Navigation items with their icons and routes
+  const navigationItems = [
+    { 
+      icon: <Shirt className="h-3.5 w-3.5" />, 
+      label: t('clothes'), 
+      href: `/${currentLocale}/products?category=clothes`,
+      category: 'clothes'
+    },
+    { 
+      icon: <Footprints className="h-3.5 w-3.5" />, 
+      label: t('shoes'), 
+      href: `/${currentLocale}/products?category=shoes`,
+      category: 'shoes'
+    },
+    { 
+      icon: <BriefcaseBusiness className="h-3.5 w-3.5" />, 
+      label: t('bags'), 
+      href: `/${currentLocale}/products?category=bags`,
+      category: 'bags'
+    },
+    { 
+      icon: <Gem className="h-3.5 w-3.5" />, 
+      label: t('accessories'), 
+      href: `/${currentLocale}/products?category=accessories`,
+      category: 'accessories'
+    },
+    { 
+      icon: <PlaneLanding className="h-3.5 w-3.5" />, 
+      label: t('newArrivals'), 
+      href: `/${currentLocale}/products?category=new-arrivals`,
+      category: 'new-arrivals'
+    },
+    { 
+      icon: <Tag className="h-3.5 w-3.5" />, 
+      label: t('sale'), 
+      href: `/${currentLocale}/products?category=sale`,
+      category: 'sale'
+    }
+  ];
+
   return (
-    <nav>
+    <nav className={styles.navbar_container}>
       {/* Top Navigation - Desktop */}
       <div className={`${styles.top_nav} ${styles.desktop_only}`}>
         <Select
@@ -54,179 +117,212 @@ function Navbar() {
           onChange={handleLanguageChange}
           placeholder="Language"
         />
-        <Link href={`/${currentLocale}/account`}>{t('account')}</Link>
-        <Link href={`/${currentLocale}/wishlist`}>{t('wishlist')}</Link>
-        <div style={{ display: 'flex' }}>
-          <Link href={`/${currentLocale}/cart`}>{t('cart')}</Link>
-          <ShoppingBasket color='black' />
-        </div>
-      </div>
-
-      {/* Mobile Top Bar */}
-      <div className={`${styles.mobile_top_bar} ${styles.mobile_only}`}>
-        <Link href={`/${currentLocale}/dashboard`}>
-          <div className={styles.mobile_brand}>
-            <Image
-              src={IMAGES.LOGO_WHITE}
-              alt="logo"
-              width={60}
-              height={60}
-            />
-          </div>
+        <Link href={`/${currentLocale}/account`} className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+          {t('account')}
         </Link>
-        
-        <button 
-          className={styles.hamburger_btn}
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <Link href={`/${currentLocale}/wishlist`} className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+          {t('wishlist')}
+        </Link>
+        <Link href={`/${currentLocale}/cart`} className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors">
+          <span>{t('cart')}</span>
+          <ShoppingBasket className="h-3 w-3" />
+        </Link>
       </div>
-
-      {/* Mobile Hamburger Menu */}
-      <div className={`${styles.mobile_menu} ${isMenuOpen ? styles.menu_open : ''}`}>
-        <div className={styles.mobile_menu_content}>
-          <div className={styles.mobile_menu_item}>
-            <Select
-              options={options}
-              value={selectOption}
-              onChange={handleLanguageChange}
-              placeholder="Language"
-            />
-          </div>
-          <Link 
-            href={`/${currentLocale}/account`} 
-            className={styles.mobile_menu_item}
-            onClick={closeMenu}
-          >
-            {t('account')}
-          </Link>
-          <Link 
-            href={`/${currentLocale}/wishlist`} 
-            className={styles.mobile_menu_item}
-            onClick={closeMenu}
-          >
-            {t('wishlist')}
-          </Link>
-          <Link 
-            href={`/${currentLocale}/cart`} 
-            className={styles.mobile_menu_item}
-            onClick={closeMenu}
-          >
-            <div className={styles.cart_item}>
-              {t('cart')}
-              <ShoppingBasket size={20} />
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div 
-          className={styles.menu_overlay} 
-          onClick={closeMenu}
-        />
-      )}
 
       {/* Main Navbar */}
       <div className={styles.navbar}>
-        {/* Desktop Logo */}
-        <Link href={`/${currentLocale}/dashboard`} className={styles.desktop_only}>
+        {/* Logo - Far Left */}
+        <Link href={`/${currentLocale}/dashboard`} className={styles.logo_container}>
           <div className="brand">
             <Image
-              src={IMAGES.LOGO_WHITE}
+              src={IMAGES.LOGO_WHITE_RM}
               alt="logo"
-              width={100}
-              height={100}
+              width={120}
+              height={40}
+              className={styles.desktop_only}
+            />
+            <Image
+              src={IMAGES.LOGO_DARK_RM}
+              alt="logo"
+              width={35}
+              height={35}
+              className={styles.mobile_only}
             />
           </div>
         </Link>
 
-        {/* Links Section */}
-        <div className={styles.nav_links}>
-          <div className={styles.links}>
-            <Shirt color="black" />
-            <Link
-              href={`/${currentLocale}/products?category=clothes`}
-              className={category === 'clothes' ? styles.activeLink : ''}
-            >
-              {t('clothes')}
-            </Link>
-          </div>
-
-          <div className={styles.links}>
-            <Footprints color="black" />
-            <Link
-              href={`/${currentLocale}/products?category=shoes`}
-              className={category === 'shoes' ? styles.activeLink : ''}
-            >
-              {t('shoes')}
-            </Link>
-          </div>
-
-          <div className={styles.links}>
-            <BriefcaseBusiness />
-            <Link
-              href={`/${currentLocale}/products?category=bags`}
-              className={category === 'bags' ? styles.activeLink : ''}
-            >
-              {t('bags')}
-            </Link>
-          </div>
-
-          <div className={styles.links}>
-            <Gem color="black" />
-            <Link
-              href={`/${currentLocale}/products?category=accessories`}
-              className={category === 'accessories' ? styles.activeLink : ''}
-            >
-              {t('accessories')}
-            </Link>
-          </div>
-
-          <div className={styles.links}>
-            <PlaneLanding />
-            <Link
-              href={`/${currentLocale}/products?category=new-arrivals`}
-              className={category === 'new-arrivals' ? styles.activeLink : ''}
-            >
-              {t('newArrivals')}
-            </Link>
-          </div>
-
-          <div className={styles.links}>
-            <Tag color="black" />
-            <Link
-              href={`/${currentLocale}/products?category=sale`}
-              className={category === 'sale' ? styles.activeLink : ''}
-            >
-              {t('sale')}
-            </Link>
-          </div>
+        {/* Desktop Navigation */}
+        <div className={`${styles.nav_links} ${styles.desktop_only}`}>
+          {navigationItems.map((item, index) => (
+            <div key={index} className={styles.links}>
+              {item.icon}
+              <Link
+                href={item.href}
+                className={category === item.category ? styles.activeLink : ''}
+              >
+                {item.label}
+              </Link>
+            </div>
+          ))}
         </div>
 
-        {/* Search Input */}
-        <div className={`${styles.search} ${styles.desktop_only}`}>
-          <SearchInput
-            onSearch={() => {
-              console.log('This is a test');
-            }}
-            placeholder={t('searchPlaceholder')}
-          />
+        {/* Desktop Icons & Search */}
+        <div className={`flex items-center space-x-4 ${styles.desktop_only}`}>
+          <div className={styles.search}>
+            <SearchInput
+              onSearch={handleSearch}
+              placeholder={t('searchPlaceholder')}
+            />
+          </div>
+          <Link href={`/${currentLocale}/wishlist`} className="relative">
+            <Heart className="h-4 w-4 text-gray-600 cursor-pointer hover:text-gray-900 transition-colors" />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+          <Link href={`/${currentLocale}/cart`} className="relative">
+            <ShoppingBasket className="h-4 w-4 text-gray-600 cursor-pointer hover:text-gray-900 transition-colors" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            )}
+          </Link>
+        </div>
+
+        {/* Mobile Icons - Far Right */}
+        <div className={`${styles.mobile_icons} ${styles.mobile_only}`}>
+          <button
+            onClick={toggleSearch}
+            className={styles.icon_button}
+            aria-label="Toggle search"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          
+          <Link href={`/${currentLocale}/cart`} className={`${styles.icon_button} relative`}>
+            <ShoppingBasket className="h-4 w-4" />
+            {cartItemCount > 0 && (
+              <span className={styles.cart_badge}>
+                {cartItemCount}
+              </span>
+            )}
+          </Link>
+
+          <button
+            onClick={toggleMenu}
+            className={styles.hamburger_btn}
+            aria-label="Toggle menu"
+          >
+            <div className={styles.hamburger_icon}>
+              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_top : ''}`}></span>
+              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_middle : ''}`}></span>
+              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_bottom : ''}`}></span>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Mobile Search */}
-      <div className={`${styles.mobile_search} ${styles.mobile_only}`}>
-        <SearchInput
-          onSearch={() => {
-            console.log('This is a test');
+      {/* Mobile Search Overlay */}
+      {isSearchOpen && (
+        <div className={`${styles.mobile_search} ${styles.mobile_only}`}>
+          <div className="flex items-center space-x-3">
+            <div className="flex-1">
+              <SearchInput
+                onSearch={(query) => {
+                  handleSearch(query);
+                  closeSearch();
+                }}
+                placeholder={t('searchPlaceholder')}
+              />
+            </div>
+            <button
+              onClick={closeSearch}
+              className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <div className={`${styles.mobile_menu} ${styles.menu_open}`}>
+          <div className={styles.mobile_menu_content}>
+            {/* Mobile Icons Row */}
+            <div className="flex justify-around py-4 border-b border-gray-200">
+              <Link href={`/${currentLocale}/wishlist`} className="flex flex-col items-center space-y-1" onClick={closeMenu}>
+                <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors relative">
+                  <Heart className="h-4 w-4 text-gray-600" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-gray-600">{t('wishlist')}</span>
+              </Link>
+              <Link href={`/${currentLocale}/account`} className="flex flex-col items-center space-y-1" onClick={closeMenu}>
+                <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                  <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <span className="text-xs text-gray-600">{t('account')}</span>
+              </Link>
+            </div>
+
+            {/* Language Selector */}
+            <div className={`${styles.mobile_menu_item} py-2 border-b border-gray-200`}>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                <Select
+                  options={options}
+                  value={selectOption}
+                  onChange={handleLanguageChange}
+                  placeholder="Select Language"
+                />
+              </div>
+            </div>
+
+            {/* Mobile Menu Items */}
+            <div className="space-y-1">
+              {navigationItems.map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className={`${styles.mobile_menu_item} flex items-center space-x-3 px-4 py-3 text-base font-medium hover:bg-gray-50 rounded-lg transition-colors ${
+                    category === item.category ? 'text-blue-600 bg-blue-50 font-semibold border-l-4 border-blue-600' : 'text-gray-800'
+                  }`}
+                >
+                  <div className={`p-2 rounded-full ${category === item.category ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                    {React.cloneElement(item.icon, { 
+                      className: `h-3.5 w-3.5 ${category === item.category ? 'text-blue-600' : 'text-gray-600'}` 
+                    })}
+                  </div>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Menu Overlay */}
+      {(isMenuOpen || isSearchOpen) && (
+        <div 
+          className={styles.menu_overlay}
+          onClick={() => {
+            closeMenu();
+            closeSearch();
           }}
-          placeholder={t('searchPlaceholder')}
         />
-      </div>
+      )}
     </nav>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styles from "./account.module.css";
 import Navbar from "@/app/components/features/Navbar/Navbar";
 import Footer from "@/app/components/features/Footer/Footer";
@@ -8,7 +9,16 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
 import Loading from "@/app/components/ui/Loading/Loading";
 
-type Address = { type: string; address: string };
+type Address = { 
+  id?: string;
+  type: string; 
+  address: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+};
+
 type Profile = {
   name: string;
   email: string;
@@ -23,10 +33,15 @@ export default function AccountPage() {
   const router = useRouter();
   const { user, loading, authenticatedFetch, updateUser, logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('profile');
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [newAddress, setNewAddress] = useState({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
+  const [editingAddress, setEditingAddress] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
   
   // Use ref to track if we've already fetched data
   const hasFetchedRef = useRef(false);
@@ -159,10 +174,412 @@ export default function AccountPage() {
     }
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setNewAddress(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+    
+    setSaving(true);
+    setError('');
+    
+    try {
+      await authenticatedFetch('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      alert('Password changed successfully!');
+    } catch (err: any) {
+      setError(`Failed to change password: ${err.message || err}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddressSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    
+    try {
+      const method = editingAddress !== null ? 'PUT' : 'POST';
+      const endpoint = editingAddress !== null 
+        ? `/user/addresses/${editingAddress}` 
+        : '/user/addresses';
+      
+      const response = await authenticatedFetch(endpoint, {
+        method,
+        body: JSON.stringify(newAddress),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      // Refresh profile to get updated addresses
+      await fetchProfile();
+      
+      setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
+      setEditingAddress(null);
+      setShowAddressForm(false);
+      alert(`Address ${editingAddress !== null ? 'updated' : 'added'} successfully!`);
+    } catch (err: any) {
+      setError(`Failed to ${editingAddress !== null ? 'update' : 'add'} address: ${err.message || err}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string | number) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    
+    setSaving(true);
+    setError('');
+    
+    try {
+      await authenticatedFetch(`/user/addresses/${addressId}`, {
+        method: 'DELETE'
+      });
+      
+      // Refresh profile to get updated addresses
+      await fetchProfile();
+      alert('Address deleted successfully!');
+    } catch (err: any) {
+      setError(`Failed to delete address: ${err.message || err}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditAddress = (address: Address, index: number) => {
+    setNewAddress({
+      type: address.type,
+      address: address.address,
+      city: address.city || '',
+      state: address.state || '',
+      zipCode: address.zipCode || '',
+      country: address.country || ''
+    });
+    setEditingAddress(index);
+    setShowAddressForm(true);
+  };
+
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       // Use the logout method from auth context instead of manual cleanup
       logout();
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'profile':
+        return (
+          <form className={styles.profileForm} onSubmit={handleSubmit}>
+            <h2 className={styles.tabTitle}>Profile Settings</h2>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>👤</span> Full Name
+              </span>
+              <input 
+                type="text" 
+                name="name" 
+                value={form.name} 
+                onChange={handleChange} 
+                placeholder="Your full name" 
+                required
+                className={styles.formInput}
+              />
+            </label>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>✉️</span> Email Address
+              </span>
+              <input 
+                type="email" 
+                name="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                placeholder="your.email@example.com" 
+                required
+                className={styles.formInput}
+              />
+            </label>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>📞</span> Phone Number
+              </span>
+              <input 
+                type="tel" 
+                name="phone" 
+                value={form.phone} 
+                onChange={handleChange} 
+                placeholder="+1 (555) 123-4567" 
+                className={styles.formInput}
+              />
+            </label>
+            
+            <button 
+              type="submit" 
+              className={styles.primaryBtn} 
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Update Profile'}
+            </button>
+          </form>
+        );
+
+      case 'addresses':
+        return (
+          <div className={styles.addressesTab}>
+            <div className={styles.tabHeader}>
+              <h2 className={styles.tabTitle}>Manage Addresses</h2>
+              <button 
+                className={styles.primaryBtn}
+                onClick={() => {
+                  setShowAddressForm(true);
+                  setEditingAddress(null);
+                  setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
+                }}
+              >
+                Add New Address
+              </button>
+            </div>
+            
+            <div className={styles.addressesList}>
+              {profile?.addresses?.map((addr, idx) => (
+                <div key={idx} className={styles.addressItem}>
+                  <div className={styles.addressDetails}>
+                    <span className={styles.addressType}>{addr.type}</span>
+                    <p className={styles.addressText}>{addr.address}</p>
+                    {(addr.city || addr.state || addr.zipCode) && (
+                      <p className={styles.addressMeta}>
+                        {[addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className={styles.addressActions}>
+                    <button 
+                      className={styles.editBtn}
+                      onClick={() => handleEditAddress(addr, idx)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteAddress(addr.id || idx)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )) || (
+                <div className={styles.emptyState}>
+                  <p>No addresses added yet. Click "Add New Address" to get started.</p>
+                </div>
+              )}
+            </div>
+            
+            {showAddressForm && (
+              <div className={styles.addressFormOverlay}>
+                <form className={styles.addressForm} onSubmit={handleAddressSubmit}>
+                  <h3>{editingAddress !== null ? 'Edit Address' : 'Add New Address'}</h3>
+                  
+                  <label>
+                    <span>Address Type</span>
+                    <select 
+                      name="type" 
+                      value={newAddress.type} 
+                      onChange={handleAddressChange}
+                      className={styles.formInput}
+                    >
+                      <option value="home">Home</option>
+                      <option value="work">Work</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+                  
+                  <label>
+                    <span>Street Address</span>
+                    <input 
+                      type="text" 
+                      name="address" 
+                      value={newAddress.address} 
+                      onChange={handleAddressChange}
+                      placeholder="123 Main Street"
+                      required
+                      className={styles.formInput}
+                    />
+                  </label>
+                  
+                  <div className={styles.addressRow}>
+                    <label>
+                      <span>City</span>
+                      <input 
+                        type="text" 
+                        name="city" 
+                        value={newAddress.city} 
+                        onChange={handleAddressChange}
+                        placeholder="New York"
+                        className={styles.formInput}
+                      />
+                    </label>
+                    
+                    <label>
+                      <span>State</span>
+                      <input 
+                        type="text" 
+                        name="state" 
+                        value={newAddress.state} 
+                        onChange={handleAddressChange}
+                        placeholder="NY"
+                        className={styles.formInput}
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className={styles.addressRow}>
+                    <label>
+                      <span>ZIP Code</span>
+                      <input 
+                        type="text" 
+                        name="zipCode" 
+                        value={newAddress.zipCode} 
+                        onChange={handleAddressChange}
+                        placeholder="10001"
+                        className={styles.formInput}
+                      />
+                    </label>
+                    
+                    <label>
+                      <span>Country</span>
+                      <input 
+                        type="text" 
+                        name="country" 
+                        value={newAddress.country} 
+                        onChange={handleAddressChange}
+                        placeholder="United States"
+                        className={styles.formInput}
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className={styles.formActions}>
+                    <button 
+                      type="button" 
+                      className={styles.cancelBtn}
+                      onClick={() => {
+                        setShowAddressForm(false);
+                        setEditingAddress(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      className={styles.primaryBtn}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : (editingAddress !== null ? 'Update Address' : 'Add Address')}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'security':
+        return (
+          <form className={styles.profileForm} onSubmit={handlePasswordSubmit}>
+            <h2 className={styles.tabTitle}>Change Password</h2>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>🔒</span> Current Password
+              </span>
+              <input 
+                type="password" 
+                name="currentPassword" 
+                value={passwordForm.currentPassword} 
+                onChange={handlePasswordChange} 
+                placeholder="Enter your current password" 
+                required
+                className={styles.formInput}
+              />
+            </label>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>🔑</span> New Password
+              </span>
+              <input 
+                type="password" 
+                name="newPassword" 
+                value={passwordForm.newPassword} 
+                onChange={handlePasswordChange} 
+                placeholder="Enter new password" 
+                required
+                minLength={8}
+                className={styles.formInput}
+              />
+            </label>
+            
+            <label>
+              <span className={styles.labelRow}>
+                <span className={styles.labelIcon}>✅</span> Confirm New Password
+              </span>
+              <input 
+                type="password" 
+                name="confirmPassword" 
+                value={passwordForm.confirmPassword} 
+                onChange={handlePasswordChange} 
+                placeholder="Confirm your new password" 
+                required
+                className={styles.formInput}
+              />
+            </label>
+            
+            <button 
+              type="submit" 
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? 'Changing Password...' : 'Change Password'}
+            </button>
+          </form>
+        );
+
+      case 'orders':
+        return (
+          <div className={styles.ordersTab}>
+            <h2 className={styles.tabTitle}>Order History</h2>
+            <div className={styles.emptyState}>
+              <p>No orders found. Start shopping to see your orders here!</p>
+              <Link href={`/${currentLocale}/products`} className={styles.primaryBtn}>
+                Browse Products
+              </Link>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -200,11 +617,13 @@ export default function AccountPage() {
         <div className={styles.sidebar}>
           <div className={styles.sidebarTitle}>My Account</div>
           <ul className={styles.sidebarMenu}>
-            <li>Orders</li>
-            <li>Track Orders</li>
-            <li>Payment Method</li>
-            <li>Wishlist</li>
-            <li className={styles.active}>Account Settings</li>
+            <li className={activeTab === 'profile' ? styles.active : ''} onClick={() => setActiveTab('profile')}>Profile Settings</li>
+            <li className={activeTab === 'orders' ? styles.active : ''} onClick={() => setActiveTab('orders')}>Orders</li>
+            <li className={activeTab === 'addresses' ? styles.active : ''} onClick={() => setActiveTab('addresses')}>Addresses</li>
+            <li className={activeTab === 'wishlist' ? styles.active : ''}>
+              <Link href={`/${currentLocale}/wishlist`}>Wishlist</Link>
+            </li>
+            <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>Security</li>
           </ul>
           <div className={styles.logout} onClick={handleLogout}>
             Logout
@@ -244,94 +663,8 @@ export default function AccountPage() {
             </div>
           </div>
           
-          <form className={styles.profileForm} onSubmit={handleSubmit}>
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>🔑</span> Name
-              </span>
-              <input 
-                type="text" 
-                name="name" 
-                value={form.name} 
-                onChange={handleChange} 
-                placeholder="Name" 
-                required
-              />
-            </label>
-            
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>✉️</span> Email
-              </span>
-              <input 
-                type="email" 
-                name="email" 
-                value={form.email} 
-                onChange={handleChange} 
-                placeholder="Email" 
-                required
-              />
-            </label>
-            
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>📞</span> Phone Number
-              </span>
-              <input 
-                type="tel" 
-                name="phone" 
-                value={form.phone} 
-                onChange={handleChange} 
-                placeholder="Phone Number" 
-              />
-            </label>
-            
-            <div className={styles.addressSection}>
-              <div className={styles.addressTitile}>
-                <span className={styles.labelIcon}>🏠</span> Address
-              </div>
-              {profile?.addresses?.map((addr: Address, idx: number) => (
-                <div className={styles.addressCard} key={idx}>
-                  <span className={styles.addressType}>{addr.type}</span>
-                  <span className={styles.addressText}>{addr.address}</span>
-                  <span className={styles.addressArrow}>›</span>
-                </div>
-              ))}
-              <button className={styles.addAddressBtn} type="button">
-                Add New Address
-              </button>
-            </div>
-            
-            <div className={styles.sectionBox}>
-              <div className={styles.sectionTitle}>
-                <span className={styles.labelIcon}>📦</span> Returns & Exchanges
-              </div>
-              <button className={styles.sectionBtn} type="button">
-                View Returns & Exchanges
-              </button>
-            </div>
-            
-            <div className={styles.sectionBox}>
-              <div className={styles.sectionTitle}>
-                <span className={styles.labelIcon}>👤</span> Account Management
-              </div>
-              <button className={styles.sectionBtn} type="button">
-                Change Password
-              </button>
-              <button className={styles.sectionBtn} type="button">
-                Delete Account
-              </button>
-            </div>
-            
-            <button 
-              type="submit" 
-              className={styles.editProfileBtn} 
-              disabled={saving} 
-              style={{ marginTop: 16 }}
-            >
-              {saving ? 'Saving...' : 'Update Profile'}
-            </button>
-          </form>
+          {/* Tab Content */}
+          {renderTabContent()}
         </div>
       </main>
       <Footer />

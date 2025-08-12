@@ -1,266 +1,608 @@
 'use client';
 
-import React, { useRef, useState } from 'react'
-import styles from './dashboard.module.css';
+import React, { useRef, useState, useEffect } from 'react';
+import { Menu, X, ShoppingBag, Search, User, Heart, Star } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+// Your original components would be imported here
 import Navbar from '@/app/components/features/Navbar/Navbar'
 import Carousel from '@/app/components/features/Carousel/Carousel';
-import TextDivider from '@/app/components/ui/TextDivider/TextDivider';
-import TransparentImageCard from '@/app/components/features/Transparent ImageCard/TransparentImageCard';
-import ProductCard from '@/app/components/features/ProductCard/ProductCard';
-import ArrowButton from '@/app/components/ui/ArrowButton/ArrowButton';
+// import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import Footer from '@/app/components/features/Footer/Footer';
-import en from '@/locales/en/common.json';
-import fr from '@/locales/fr/common.json';
-import { useParams } from 'next/navigation';
+import { useProductStore, useCartStore, useWishlistStore, Product } from '@/app/store';
 
-function dashboard() {
-    const { locale } = useParams();
-    const translations: Record<string, Record<string, string>> = { en, fr };
-    const t = (key: string, vars?: Record<string, any>) => {
-        let str = (translations[locale as string] || translations['en'])[key] || key;
-        if (vars) {
-            Object.entries(vars).forEach(([k, v]) => {
-                str = str.replace(`{{${k}}}`, v);
-            });
-        }
-        return str;
+const TextDivider = ({ text }: { text: string }) => (
+  <div className="flex items-center justify-center py-8">
+    <div className="flex-grow h-px bg-gray-300"></div>
+    <h2 className="mx-8 text-2xl md:text-3xl font-bold text-gray-900">{text}</h2>
+    <div className="flex-grow h-px bg-gray-300"></div>
+  </div>
+);
+
+const TransparentImageCard = ({ backgroundImage, title, subtitle, description, className }: {
+  backgroundImage: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  className: string;
+}) => (
+  <div className={`relative group overflow-hidden rounded-xl ${className}`}>
+    <img
+      src={backgroundImage}
+      alt={title}
+      className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-300"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+      <div className="p-6 text-white">
+        <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
+        <p className="text-sm opacity-90">{description}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// Square Product Card specifically for "Popular This Week" section
+const SquareProductCard = ({ product }: { product: Product }) => {
+  const { addToCart } = useCartStore();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
+  
+  const isProductInWishlist = isInWishlist(product.id);
+  const isProductInCart = useCartStore(state => state.isInCart(product.id));
+  
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await addToCart(product.id, 1);
+      toast.success(`${product.name} added to cart!`, {
+        duration: 3000,
+        position: 'top-right',
+      });
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      toast.error('Failed to add to cart. Please try again.', {
+        duration: 3000,
+        position: 'top-right',
+      });
+    }
+  };
+  
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (isProductInWishlist) {
+        await removeFromWishlist(product.id);
+        toast.success(`${product.name} removed from wishlist`, {
+          duration: 2000,
+        });
+      } else {
+        await addToWishlist(product.id);
+        toast.success(`${product.name} added to wishlist!`, {
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle wishlist:', error);
+      toast.error(`Failed to ${isProductInWishlist ? 'remove from' : 'add to'} wishlist`, {
+        duration: 3000,
+      });
+    }
+  };
+  
+  return (
+    <div className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+      {/* Square Image Container */}
+      <div className="relative w-full h-72 overflow-hidden bg-gray-100">
+        <img
+          src={product.imageUrl || product.images?.[0] || '/placeholder-product.jpg'}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        {product.isOnSale && product.discountPercentage > 0 && (
+          <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-semibold">
+            -{product.discountPercentage}%
+          </div>
+        )}
+        {product.isFeatured && (
+          <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+            Featured
+          </div>
+        )}
+        
+        {/* Wishlist Button */}
+        <button 
+          onClick={handleToggleWishlist}
+          className="absolute top-3 right-3 bg-white bg-opacity-90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:shadow-lg"
+        >
+          <Heart className={`w-4 h-4 ${isProductInWishlist ? 'fill-pink-500 text-pink-500' : 'text-gray-700'}`} />
+        </button>
+        
+        {/* Add to Cart Button */}
+        <button 
+          onClick={handleAddToCart}
+          disabled={isProductInCart || !product.isInStock}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ShoppingBag className="w-5 h-5 text-gray-900" />
+        </button>
+      </div>
+    
+    {/* Product Info */}
+    <div className="p-4">
+      <div className="mb-2">
+        <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
+          {product.name}
+        </h3>
+        {product.collection && (
+          <p className="text-xs text-gray-500">{product.collection.name}</p>
+        )}
+      </div>
+      
+      {/* Rating */}
+      {product.avgRating > 0 && (
+        <div className="flex items-center gap-1 mb-2">
+          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+          <span className="text-xs text-gray-600">{product.avgRating}</span>
+          <span className="text-xs text-gray-400">({product.reviewCount})</span>
+        </div>
+      )}
+      
+      {/* Price */}
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-gray-900 text-lg">
+          ${product.price}
+        </span>
+        {product.comparePrice && (
+          <span className="text-sm text-gray-400 line-through">
+            ${product.comparePrice}
+          </span>
+        )}
+      </div>
+      
+      {/* Stock Status */}
+      <div className="mt-2">
+        <span className={`text-xs px-2 py-1 rounded-full ${
+          product.isInStock 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {product.isInStock ? 'In Stock' : 'Out of Stock'}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+}
+const ArrowButton = ({ direction, onClick, className }: {
+  direction: 'left' | 'right';
+  onClick: () => void;
+  className?: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={`absolute top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow ${
+      direction === 'left' ? 'left-4' : 'right-4'
+    } ${className}`}
+  >
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={2} 
+        d={direction === 'left' ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
+      />
+    </svg>
+  </button>
+);
+
+function Dashboard() {
+  const { locale = 'en' } = { locale: 'en' }; // Mock useParams
+  
+  // Store integration
+  const {
+    fetchFeaturedProducts,
+    fetchProducts,
+    featuredProducts,
+    products,
+    loading,
+    error
+  } = useProductStore();
+  
+  // Additional state for collections/categories
+  const [collections, setCollections] = useState<any[]>([]);
+  const [heroSlides, setHeroSlides] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Fetch featured products from backend
+    fetchFeaturedProducts(8); // Get 8 featured products
+    
+    // Fetch collections for the highlight cards
+    fetchCollections();
+    
+    // Fetch hero carousel data
+    fetchHeroData();
+  }, [fetchFeaturedProducts]);
+  
+  // Fetch collections for the highlight section
+  const fetchCollections = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/collections`);
+      if (response.ok) {
+        const data = await response.json();
+        setCollections(data.collections || data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    }
+  };
+  
+  // Fetch hero carousel data (you might want to create an endpoint for this)
+  const fetchHeroData = async () => {
+    // For now, using default slides, but you could create an API endpoint for this
+    const defaultSlides = [
+      {
+        id: '1',
+        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop',
+        alt: 'Fashion Collection',
+        description: 'Discover the latest fashion trends'
+      },
+      {
+        id: '2',
+        image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&h=600&fit=crop',
+        alt: 'Luxury Shopping',
+        description: 'Experience luxury like never before'
+      },
+      {
+        id: '3',
+        image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=1200&h=600&fit=crop',
+        alt: 'Summer Collection',
+        description: 'New summer arrivals are here'
+      },
+      {
+        id: '4',
+        image: 'https://images.unsplash.com/photo-1565084888279-aca607ecce0c?w=1200&h=600&fit=crop',
+        alt: 'Forest path with tall trees',
+        description: 'Walk through ancient forests and connect with nature'
+      }
+    ];
+    setHeroSlides(defaultSlides);
+  };
+  
+  // Your original translation function
+  const t = (key: string, vars?: { [key: string]: string | number }) => {
+    const translations: { [locale: string]: { [key: string]: string } } = {
+      en: {
+        thisWeeksHighlight: "This Week's Highlight",
+        exclusiveShoes: "Exclusive Collection",
+        exquisiteStyles: "Exquisite Styles",
+        priceOff: `Special Offer ${vars?.percent || 20}% off`,
+        popularThisWeek: "Popular This Week",
+        brandsForYou: "Brands For You",
+        newArrivals: "New Arrivals",
+        exclusiveItems: "Exclusive Items"
+      }
     };
-    const productsWrapperRef = useRef<HTMLDivElement>(null);
-    const [currentPosition, setCurrentPosition] = useState(0);
+    let str = translations[locale]?.[key] || translations['en'][key] || key;
+    if (vars) {
+      Object.entries(vars).forEach(([k, v]) => {
+        str = str.replace(`{{${k}}}`, String(v));
+      });
+    }
+    return str;
+  };
 
-    const scrollProducts = (direction: 'left' | 'right') => {
-        if (!productsWrapperRef.current) return;
+  const productsWrapperRef = useRef<HTMLDivElement>(null);
+  const [currentPosition, setCurrentPosition] = useState(0);
 
-        const cardWidth = 320; // Width of each card
-        const gap = 24; // Gap between cards (1.5rem = 24px)
-        const scrollAmount = cardWidth + gap;
-        const containerWidth = productsWrapperRef.current.parentElement?.clientWidth || 0;
-        const totalWidth = productsWrapperRef.current.scrollWidth;
-        const maxScroll = -(totalWidth - containerWidth);
+  const scrollProducts = (direction: 'left' | 'right') => {
+    if (!productsWrapperRef.current) return;
 
-        if (direction === 'left') {
-            setCurrentPosition(prev => Math.min(0, prev + scrollAmount));
-        } else {
-            setCurrentPosition(prev => Math.max(maxScroll, prev - scrollAmount));
-        }
-    };
+    const cardWidth = 288; // Width of square cards (w-72 = 18rem = 288px)
+    const gap = 24; // Gap between cards (1.5rem = 24px)
+    const scrollAmount = cardWidth + gap;
+    const containerWidth = productsWrapperRef.current.parentElement?.clientWidth || 0;
+    const totalWidth = productsWrapperRef.current.scrollWidth;
+    const maxScroll = -(totalWidth - containerWidth);
 
-    const slides = [
-        {
-            id: '1',
-            image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            alt: 'Mountain landscape at sunset',
-            description: 'Discover breathtaking mountain landscapes and hiking trails'
-        },
-        {
-            id: '2',
-            image: 'https://images.unsplash.com/photo-1559563458-527698bf5295?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            alt: 'Tropical beach with palm trees',
-            description: 'Relax on pristine beaches with crystal clear waters'
-        },
-        {
-            id: '3',
-            image: 'https://plus.unsplash.com/premium_photo-1683121266311-04c92a01f5e6?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            alt: 'City skyline at night',
-            description: 'Experience the vibrant energy of metropolitan cities'
-        },
-        {
-            id: '4',
-            image: 'https://images.unsplash.com/photo-1565084888279-aca607ecce0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            alt: 'Forest path with tall trees',
-            description: 'Walk through ancient forests and connect with nature'
-        }
+    if (direction === 'left') {
+      setCurrentPosition(prev => Math.min(0, prev + scrollAmount));
+    } else {
+      setCurrentPosition(prev => Math.max(maxScroll, prev - scrollAmount));
+    }
+  };
+
+  // Create highlight cards from collections
+  const getHighlightCards = () => {
+    const defaultCards = [
+      {
+        title: t('exclusiveShoes'),
+        description: t('priceOff', { percent: 20 }),
+        image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=500&fit=crop'
+      },
+      {
+        title: t('exquisiteStyles'),
+        description: t('priceOff', { percent: 15 }),
+        image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&h=500&fit=crop'
+      },
+      {
+        title: t('newArrivals'),
+        description: t('priceOff', { percent: 25 }),
+        image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400&h=500&fit=crop'
+      },
+      {
+        title: t('exclusiveItems'),
+        description: t('priceOff', { percent: 30 }),
+        image: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop'
+      }
     ];
 
-    return (
-        <div className={styles.container}>
-            <header className={styles.navbar}>
-                <Navbar />
-            </header>
-            <section className={styles.carousel}>
-                <Carousel
-                    slides={slides}
-                    height="500px"
-                />
-            </section>
-            <TextDivider text={t('thisWeeksHighlight')} />
+    // If we have collections from API, use them
+    if (collections.length > 0) {
+      return collections.slice(0, 4).map((collection, index) => ({
+        title: collection.name || defaultCards[index]?.title,
+        description: collection.description || defaultCards[index]?.description,
+        image: collection.imageUrl || defaultCards[index]?.image
+      }));
+    }
 
-            <section className={styles.section}>
-                <article className={styles.cards}>
-                    <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1593032465175-d0d1d3bb2f8e?auto=format&fit=crop&w=800&q=80"
-                        title={t('exclusiveShoes')}
-                        subtitle={t('exclusiveShoes')}
-                        description={t('priceOff', { percent: 20 })}
-                        className={styles.card1}
-                    />
-                    <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1536849249743-0f1d4f014aa1?auto=format&fit=crop&w=800&q=80"
-                        title={t('exquisiteStyles')}
-                        subtitle={t('exquisiteStyles')}
-                        description={t('priceOff', { percent: 20 })}
-                        className={styles.card2}
-                    />
-                </article>
-                <article className={styles.cards}>
-                    <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1585238342028-96629ef3c72f?auto=format&fit=crop&w=800&q=80"
-                        title="New Arrivals"
-                        subtitle="New Arrivals"
-                        description="Price 20% off"
-                        className={styles.card2}
-                    />
-                    <TransparentImageCard
-                        backgroundImage="https://images.unsplash.com/photo-1612423284934-a7e8e6e06cbe?auto=format&fit=crop&w=800&q=80"
-                        title="Exclusive Items"
-                        subtitle="Exclusive Items"
-                        description="Price 20% off"
-                        className={styles.card1}
-                    />
-                </article>
-            </section>
-            <TextDivider
-                text={t('popularThisWeek')}
+    return defaultCards;
+  };
+
+  const highlightCards = getHighlightCards();
+
+  return (
+    <div className="min-h-screen bg-white">
+      <header>
+        <Navbar />
+      </header>
+      
+      <section>
+        <Carousel
+          slides={heroSlides}
+          height="500px"
+        />
+      </section>
+      
+      <TextDivider text={t('thisWeeksHighlight')} />
+
+      <section className="py-8 px-4 max-w-7xl mx-auto">
+        {/* Desktop: Your original asymmetric layout, Mobile: 2-column grid */}
+        <article className="hidden md:flex justify-center gap-4 mb-4">
+          <TransparentImageCard
+            backgroundImage={highlightCards[0]?.image}
+            title={highlightCards[0]?.title}
+            subtitle={highlightCards[0]?.title}
+            description={highlightCards[0]?.description}
+            className="flex-[0_0_30%] min-w-[250px]"
+          />
+          <TransparentImageCard
+            backgroundImage={highlightCards[1]?.image}
+            title={highlightCards[1]?.title}
+            subtitle={highlightCards[1]?.title}
+            description={highlightCards[1]?.description}
+            className="flex-[0_0_60%] min-w-[250px]"
+          />
+        </article>
+        
+        <article className="hidden md:flex justify-center gap-4">
+          <TransparentImageCard
+            backgroundImage={highlightCards[2]?.image}
+            title={highlightCards[2]?.title}
+            subtitle={highlightCards[2]?.title}
+            description={highlightCards[2]?.description}
+            className="flex-[0_0_60%] min-w-[250px]"
+          />
+          <TransparentImageCard
+            backgroundImage={highlightCards[3]?.image}
+            title={highlightCards[3]?.title}
+            subtitle={highlightCards[3]?.title}
+            description={highlightCards[3]?.description}
+            className="flex-[0_0_30%] min-w-[250px]"
+          />
+        </article>
+
+        {/* Mobile: 2x2 Grid */}
+        <div className="md:hidden grid grid-cols-2 gap-4">
+          {highlightCards.map((card, index) => (
+            <TransparentImageCard
+              key={index}
+              backgroundImage={card.image}
+              title={card.title}
+              subtitle={card.title}
+              description={card.description}
+              className=""
             />
-
-            <section className={styles.productsSection}>
-                <ArrowButton
-                    direction="left"
-                    onClick={() => scrollProducts('left')}
-                    className={currentPosition === 0 ? styles.hidden : ''}
-                />
-                <div className={styles.productsContainer}>
-                    <div
-                        ref={productsWrapperRef}
-                        className={styles.productsWrapper}
-                        style={{ transform: `translateX(${currentPosition}px)` }}
-                    >
-                        <ProductCard
-                            imageSrc="https://images.unsplash.com/photo-1542291026-7eec264c27ff"
-                            imageAlt="Red Nike Sneakers"
-                            title="Nike Red Sneakers"
-                            currentPrice={99.99}
-                            originalPrice={129.99}
-                            onAddToBasket={() => console.log('Added to basket')}
-                        />
-                        <ProductCard
-                            imageSrc="https://images.unsplash.com/photo-1608231387042-66d1773070a5"
-                            imageAlt="Black Adidas Shoes"
-                            title="Adidas Black Ultraboost"
-                            currentPrice={149.99}
-                            originalPrice={179.99}
-                            onAddToBasket={() => console.log('Added to basket')}
-                        />
-                        <ProductCard
-                            imageSrc="https://images.unsplash.com/photo-1600269452121-4f2416e55c28"
-                            imageAlt="White Puma Shoes"
-                            title="Puma White Runner"
-                            currentPrice={79.99}
-                            originalPrice={99.99}
-                            onAddToBasket={() => console.log('Added to basket')}
-                        />
-                        <ProductCard
-                            imageSrc="https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb"
-                            imageAlt="Blue New Balance"
-                            title="New Balance Blue Classic"
-                            currentPrice={89.99}
-                            originalPrice={119.99}
-                            onAddToBasket={() => console.log('Added to basket')}
-                        />
-                        <ProductCard
-                            imageSrc="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519"
-                            imageAlt="Green Reebok"
-                            title="Reebok Green Sport"
-                            currentPrice={69.99}
-                            originalPrice={89.99}
-                            onAddToBasket={() => console.log('Added to basket')}
-                        />
-                    </div>
-                </div>
-                <ArrowButton
-                    direction="right"
-                    onClick={() => scrollProducts('right')}
-                    className={currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) + (productsWrapperRef.current?.parentElement?.clientWidth || 0) ? styles.hidden : ''}
-                />
-            </section>
-
-            <TextDivider
-                text={t('brandsForYou')}
-            />
-            <section className={styles.section}>
-                <div className={styles.brands}>
-                    <img src="https://1000logos.net/wp-content/uploads/2021/06/Chanel-logo.png" alt="Chanel" className={styles.brandLogo} />
-                    <img src="https://1000logos.net/wp-content/uploads/2020/03/Dolce-Gabbana-Logo.png" alt="D&G" className={styles.brandLogo} />
-                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Dior-logo.png" alt="Dior" className={styles.brandLogo} />
-                    <img src="https://1000logos.net/wp-content/uploads/2021/06/Versace-logo.png" alt="Versace" className={styles.brandLogo} />
-                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Zara-Logo.png" alt="Zara" className={styles.brandLogo} />
-                    <img src="https://1000logos.net/wp-content/uploads/2017/05/Gucci-Logo.png" alt="Gucci" className={styles.brandLogo} />
-                </div>
-            </section>
-            <section className={styles.section}>
-                <div
-                    className={styles.promoSection}
-                    style={{
-                        backgroundImage: `url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80')`
-                    }}
-                >
-                    <div className={styles.promoOverlay}>
-                        <h2 className={styles.promoTitle}>SUMMER COLLECTIONS</h2>
-                        <button className={styles.promoButton}>SHOP NOW &rarr;</button>
-                        <div className={styles.promoCountdown}>
-                            <div className={styles.promoCountdownItem}>
-                                <div className={styles.promoCountdownItemValue}>07</div>
-                                <div className={styles.promoCountdownLabel}>Days</div>
-                            </div>
-                            <div className={styles.promoCountdownSeparator}>:</div>
-                            <div className={styles.promoCountdownItem}>
-                                <div className={styles.promoCountdownItemValue}>08</div>
-                                <div className={styles.promoCountdownLabel}>Hours</div>
-                            </div>
-                            <div className={styles.promoCountdownSeparator}>:</div>
-                            <div className={styles.promoCountdownItem}>
-                                <div className={styles.promoCountdownItemValue}>04</div>
-                                <div className={styles.promoCountdownLabel}>Minutes</div>
-                            </div>
-                            <div className={styles.promoCountdownSeparator}>:</div>
-                            <div className={styles.promoCountdownItem}>
-                                <div className={styles.promoCountdownItemValue}>05</div>
-                                <div className={styles.promoCountdownLabel}>Seconds</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <section>
-                <div className={styles.testimonialsWrapper}>
-                    <div className={styles.testimonialsTopBg}></div>
-                    <div className={styles.testimonialsContent}>
-                        <div className={styles.testimonialsHeader}>
-                            <div className={styles.testimonialsTitleScript}>Testimonials</div>
-                            <div className={styles.testimonialsTitleMain}>THEY SAYS</div>
-                            <div className={styles.testimonialsSubtitle}>OUR HAPPY CLIENTS</div>
-                        </div>
-                        <div className={styles.testimonialsText}>
-                            <em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Scelerisque eget cras commodo amet, vel praesent cras turpis vestibulum. Sodales nisl nunc dolor sem tellus cursus consequat. A quam nulla nec at. Pulvinar.</em>
-                        </div>
-                        <div className={styles.testimonialsClientRow}>
-                            <span className={styles.testimonialsClientName}>JOHNY DEEP</span>
-                            <span className={styles.testimonialsClientCountry}>POLANDIA</span>
-                        </div>
-                        <img
-                            className={styles.testimonialsShoesImg}
-                            src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80"
-                            alt="Shoes testimonial"
-                        />
-                    </div>
-                    <div className={styles.testimonialsBottomBg}></div>
-                </div>
-            </section>
-            <section>
-                <Footer />
-            </section>
+          ))}
         </div>
-    )
-}
+      </section>
+      
+      <TextDivider text={t('popularThisWeek')} />
 
-export default dashboard
+      <section className="py-12 bg-gray-50 relative max-w-full">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Desktop: Arrow navigation */}
+          <ArrowButton
+            direction="left"
+            onClick={() => scrollProducts('left')}
+            className={`hidden md:flex ${currentPosition === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          />
+          
+          {/* Products Container */}
+          <div className="overflow-x-auto md:overflow-hidden px-4 md:px-16">
+            <div
+              ref={productsWrapperRef}
+              className="flex gap-6 md:transition-transform md:duration-300 ease-in-out pb-4"
+              style={{ 
+                transform: typeof window !== 'undefined' && window.innerWidth >= 768 
+                  ? `translateX(${currentPosition}px)` 
+                  : 'none' 
+              }}
+            >
+              {loading ? (
+                // Loading skeleton cards - Square shaped
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div className="w-72 h-72 bg-gray-200 animate-pulse" />
+                    <div className="p-4">
+                      <div className="h-4 bg-gray-200 animate-pulse rounded mb-2" />
+                      <div className="h-3 bg-gray-200 animate-pulse rounded mb-2" />
+                      <div className="h-5 bg-gray-200 animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))
+              ) : error ? (
+                // Error state
+                <div className="flex flex-col items-center justify-center py-16 px-4 w-full">
+                  <div className="text-6xl mb-4">⚠️</div>
+                  <h3 className="text-xl font-semibold text-red-700 mb-2">Unable to Load Products</h3>
+                  <p className="text-gray-600 text-center max-w-md mb-4">
+                    {error.includes('Failed to fetch') ? 
+                      'Unable to connect to backend. Make sure your backend server is running.' :
+                      error
+                    }
+                  </p>
+                  <div className="text-sm text-gray-500 mb-4">
+                    Backend URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}
+                  </div>
+                  <button 
+                    onClick={() => fetchFeaturedProducts(8, true)}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Retry Loading
+                  </button>
+                </div>
+              ) : featuredProducts.length > 0 ? (
+                // Real products from backend - Using square cards
+                featuredProducts.map((product) => (
+                  <SquareProductCard key={product.id} product={product} />
+                ))
+              ) : (
+                // Empty state when no products
+                <div className="flex flex-col items-center justify-center py-16 px-4 w-full">
+                  <div className="text-6xl mb-4">📦</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Featured Products</h3>
+                  <p className="text-gray-600 text-center max-w-md">
+                    No featured products available at the moment. Check back later or browse our full catalog.
+                  </p>
+                  <button 
+                    onClick={() => fetchFeaturedProducts(8, true)}
+                    className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Refresh Products
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <ArrowButton
+            direction="right"
+            onClick={() => scrollProducts('right')}
+            className={`hidden md:flex ${
+              currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) + 
+              (productsWrapperRef.current?.parentElement?.clientWidth || 0) 
+                ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          />
+        </div>
+      </section>
+
+      <TextDivider text={t('brandsForYou')} />
+      
+      <section className="py-8 px-4 max-w-7xl mx-auto">
+        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+          {[
+            { name: "Chanel", src: "https://1000logos.net/wp-content/uploads/2021/06/Chanel-logo.png" },
+            { name: "Dior", src: "https://1000logos.net/wp-content/uploads/2017/05/Dior-logo.png" },
+            { name: "Gucci", src: "https://1000logos.net/wp-content/uploads/2017/05/Gucci-Logo.png" },
+            { name: "Versace", src: "https://1000logos.net/wp-content/uploads/2021/06/Versace-logo.png" },
+            { name: "Zara", src: "https://1000logos.net/wp-content/uploads/2017/05/Zara-Logo.png" },
+            { name: "H&M", src: "https://1000logos.net/wp-content/uploads/2020/04/HM-Logo.png" }
+          ].map((brand, index) => (
+            <div key={index} className="grayscale hover:grayscale-0 transition-all duration-300 hover:scale-110">
+              <img
+                src={brand.src}
+                alt={brand.name}
+                className="h-12 md:h-16 w-16 md:w-20 object-contain opacity-70 hover:opacity-100"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><text y="25" font-family="Arial" font-size="12" fill="#666">${brand.name}</text></svg>`)}`;
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+      
+      <section className="py-8 px-4 max-w-7xl mx-auto">
+        <div
+          className="relative min-h-[400px] md:min-h-[500px] bg-cover bg-center rounded-2xl overflow-hidden"
+          style={{
+            backgroundImage: `url('https://images.pexels.com/photos/934070/pexels-photo-934070.jpeg?auto=compress&cs=tinysrgb&w=1200')`
+          }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-40" />
+          <div className="relative h-full flex items-center justify-center md:justify-start">
+            <div className="text-center md:text-left bg-black bg-opacity-50 p-8 md:p-12 rounded-2xl m-6 max-w-md">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">SUMMER COLLECTIONS</h2>
+              <button className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors mb-8">
+                SHOP NOW &rarr;
+              </button>
+              <div className="flex justify-center md:justify-start items-center space-x-4 text-white">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">07</div>
+                  <div className="text-sm opacity-80">Days</div>
+                </div>
+                <div className="text-2xl font-bold">:</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">08</div>
+                  <div className="text-sm opacity-80">Hours</div>
+                </div>
+                <div className="text-2xl font-bold">:</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">04</div>
+                  <div className="text-sm opacity-80">Minutes</div>
+                </div>
+                <div className="text-2xl font-bold">:</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">05</div>
+                  <div className="text-sm opacity-80">Seconds</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-gradient-to-b from-pink-50 to-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <div className="mb-8">
+            <p className="text-pink-600 font-script text-xl mb-2">Testimonials</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">THEY SAYS</h2>
+            <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
+          </div>
+          <blockquote className="text-lg md:text-xl text-gray-600 italic mb-8 max-w-2xl mx-auto">
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Scelerisque eget cras commodo amet, vel praesent cras turpis vestibulum. Sodales nisl nunc dolor sem tellus cursus consequat."
+          </blockquote>
+          <div className="flex justify-center items-center space-x-4 mb-8">
+            <span className="font-bold text-gray-900">JOHNY DEEP</span>
+            <span className="w-px h-4 bg-gray-300"></span>
+            <span className="text-gray-500">POLAND</span>
+          </div>
+          <img
+            src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
+            alt="Red sneakers testimonial"
+            className="mx-auto w-64 md:w-80 rounded-lg"
+          />
+        </div>
+      </section>
+
+      <footer>
+        <Footer />
+      </footer>
+    </div>
+  );
+};
+
+export default Dashboard;

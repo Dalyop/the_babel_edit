@@ -7,6 +7,7 @@ import ProductImageGallery from './ProductImageGallery';
 import ProductOptions from './ProductOptions';
 import ProductTabs from './ProductTabs';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
+import { Product } from '@/app/store';
 import styles from './ProductDetail.module.css';
 import en from '@/locales/en/common.json';
 import fr from '@/locales/fr/common.json';
@@ -21,41 +22,86 @@ const productImages = [
 const sizes = ['XS', 'S', 'M', 'L', 'XL'];
 const colors = ['black', 'red', 'green', 'white', 'blue', 'purple'];
 
-const youMayAlsoLike = [
+const youMayAlsoLike: Product[] = [
   {
-    imageSrc: '/images/babel_logo_black.jpg',
-    imageAlt: 'Shirt',
-    title: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
-    currentPrice: 90.0,
+    id: 'similar-1',
+    name: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
+    description: 'Elegant striped blouse with flutter sleeves',
+    price: 90.0,
     originalPrice: 100.0,
+    category: 'clothing',
+    images: ['/images/babel_logo_black.jpg'],
+    stock: 10,
+    rating: 4.5,
+    reviews: 89,
+    isOnSale: true,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
-    imageSrc: '/images/babel_logo_white.jpg',
-    imageAlt: 'Bag',
-    title: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
-    currentPrice: 90.0,
+    id: 'similar-2',
+    name: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
+    description: 'Stylish white striped blouse',
+    price: 90.0,
     originalPrice: 100.0,
+    category: 'clothing',
+    images: ['/images/babel_logo_white.jpg'],
+    stock: 8,
+    rating: 4.3,
+    reviews: 67,
+    isOnSale: true,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
-    imageSrc: '/images/babel_logo_black.jpg',
-    imageAlt: 'Bag',
-    title: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
-    currentPrice: 90.0,
+    id: 'similar-3',
+    name: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
+    description: 'Classic black striped blouse',
+    price: 90.0,
     originalPrice: 100.0,
+    category: 'clothing',
+    images: ['/images/babel_logo_black.jpg'],
+    stock: 15,
+    rating: 4.7,
+    reviews: 123,
+    isOnSale: true,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
-    imageSrc: '/images/babel_logo_white.jpg',
-    imageAlt: 'Accessories',
-    title: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
-    currentPrice: 90.0,
+    id: 'similar-4',
+    name: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
+    description: 'Trendy white accessories blouse',
+    price: 90.0,
     originalPrice: 100.0,
+    category: 'clothing',
+    images: ['/images/babel_logo_white.jpg'],
+    stock: 5,
+    rating: 4.1,
+    reviews: 34,
+    isOnSale: true,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
-    imageSrc: '/images/babel_logo_black.jpg',
-    imageAlt: 'Accessories',
-    title: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
-    currentPrice: 90.0,
+    id: 'similar-5',
+    name: 'Striped Flutter Sleeve Overlap Collar Peplum Hem Blouse',
+    description: 'Modern black accessories blouse',
+    price: 90.0,
     originalPrice: 100.0,
+    category: 'clothing',
+    images: ['/images/babel_logo_black.jpg'],
+    stock: 12,
+    rating: 4.6,
+    reviews: 78,
+    isOnSale: true,
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
 ];
 
@@ -149,17 +195,13 @@ export default function ProductDetailPage() {
         <div className={styles.likeSection}>
           <div className={styles.likeTitle}>{t('youMayAlsoLike')}</div>
           <div className={styles.likeList}>
-            {youMayAlsoLike.map((item, idx) => (
+            {youMayAlsoLike.map((product) => (
               <ProductCard
-                key={idx}
-                imageSrc={item.imageSrc}
-                imageAlt={item.imageAlt}
-                title={item.title}
-                currentPrice={item.currentPrice}
-                originalPrice={item.originalPrice}
-                onAddToBasket={() => {}}
+                key={product.id}
+                product={product}
                 className={`${styles.likeCard} smallCard`}
                 imageContainerClassName="smallImageContainer"
+                variant="small"
               />
             ))}
           </div>

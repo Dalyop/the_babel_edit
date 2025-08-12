@@ -12,11 +12,21 @@ export default function AboutPage() {
       <div className={styles.container}>
         <h1 className={styles.header}>About Us</h1>
         <div className={styles.subheader}>
-          At Babel, we believe in the power of fashion to express individuality while respecting our planet. Our mission is to make second-hand fashion accessible and desirable, offering a curated selection of high-quality, pre-loved clothing that tells a story and reduces environmental impact.
+          At Babel, we believe clothing is more than just what you wear — it’s a language of identity, culture, and connection. Inspired by the ancient city that brought together people of many tongues, Babel blends eras, styles, and stories into one expressive wardrobe.
+
+          We thoughtfully curate high-quality, pre-loved pieces from around the world — garments that are not only stylish and sustainable but also rich in history and soul. Whether you’re rediscovering vintage treasures or exploring a new sense of style, Babel invites you to express yourself through fashion that transcends trends and time.
         </div>
         <div className={styles.sectionTitle}>Our Story</div>
-        <div className={styles.story}>
-          Babel was founded in 2020 by Nkem Sky, a fashion enthusiast with a passion for sustainability. Frustrated by the wastefulness of fast fashion, she envisioned a platform where unique, pre-owned pieces could find new homes and continue their journey. What started as a small online shop has grown into a thriving community of conscious consumers who share a love for style and sustainability.
+        <div className={`${styles.subheader}`}>
+          Babel began as a dream in 2022 — born from a love of sustainability, cultural richness, and the timeless beauty of antiques. What started as a quiet idea soon grew into a vision: to create a space where fashion could tell stories, preserve history, and celebrate individuality.
+
+          After years of curating, planning, and building with intention, Babel came to life in 2025. It was more than the launch of a brand — it was the fulfillment of a passion to merge style with meaning.
+
+          Rooted in the belief that fashion should honor both people and the planet, Babel brings together pre-loved pieces from around the world. Each item is handpicked for its uniqueness, soul, and connection to culture — not mass-produced trends.
+
+          Babel exists to create, connect, and give back — to share beauty with the community, and to offer a wardrobe that reflects who you are and what you value.
+
+          This is more than clothing. This is our story — and we’re so glad it’s now part of yours.
         </div>
         <div className={styles.sectionTitle}>Our Value</div>
         <div className={styles.valuesRow}>
