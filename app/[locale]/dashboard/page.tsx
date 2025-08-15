@@ -273,7 +273,7 @@ function Dashboard() {
         setCollections([]);
       }
     } catch (error) {
-      console.warn('Backend not available, using fallback collections:', error.message);
+      console.warn('Backend not available, using fallback collections:');
       // Set empty collections array so the page still renders with default cards
       setCollections([]);
     }
