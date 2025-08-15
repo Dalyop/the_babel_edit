@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter, useParams } from 'next/navigation';
 
 // Your original components would be imported here
-import Navbar from '@/app/components/features/Navbar/Navbar'
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense'
 import Carousel from '@/app/components/features/Carousel/Carousel';
 // import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import Footer from '@/app/components/features/Footer/Footer';
@@ -396,7 +396,7 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-white">
       <header>
-        <Navbar />
+        <NavbarWithSuspense />
       </header>
       
       <section>

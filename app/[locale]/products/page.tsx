@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './products.module.css';
-import Navbar from '@/app/components/features/Navbar/Navbar';
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import { useProductStore, FilterOptions } from '@/app/store';
@@ -57,7 +57,7 @@ const ProductsPage = () => {
   };
   return (
     <div className={styles.pageBg}>
-      <Navbar />
+      <NavbarWithSuspense />
       {/* Full width flash sale banner */}
       <div className={styles.catalogHeader}>
         <div className={styles.catalogTitleBox}>

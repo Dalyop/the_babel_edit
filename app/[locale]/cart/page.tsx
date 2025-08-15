@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCartStore } from '@/app/store/useCartStore';
-import Navbar from '@/app/components/features/Navbar/Navbar';
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
 import styles from "./cart.module.css";
 
@@ -48,7 +48,7 @@ export default function CartPage() {
   if (loading) {
     return (
       <div className={styles.cartBg}>
-        <Navbar />
+        <NavbarWithSuspense />
         <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.heading}>Shopping Cart</h1>
           <div className={styles.cartContainer}>
@@ -65,7 +65,7 @@ export default function CartPage() {
   if (error) {
     return (
       <div className={styles.cartBg}>
-        <Navbar />
+        <NavbarWithSuspense />
         <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.heading}>Shopping Cart</h1>
           <div className={styles.cartContainer}>
@@ -81,7 +81,7 @@ export default function CartPage() {
 
   return (
     <div className={styles.cartBg}>
-      <Navbar />
+      <NavbarWithSuspense />
       <main className="py-8 px-4 max-w-7xl mx-auto">
         <h1 className={styles.heading}>Shopping Cart</h1>
         
