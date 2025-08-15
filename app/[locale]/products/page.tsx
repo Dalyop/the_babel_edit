@@ -58,15 +58,16 @@ const ProductsPage = () => {
   return (
     <div className={styles.pageBg}>
       <Navbar />
-      <main className={styles.catalogMain}>
-        <div className={styles.catalogHeader}>
-          <div className={styles.catalogTitleBox}>
-            <div className={styles.catalogTitle}>{getCategoryTitle()}</div>
-            <div className={styles.catalogSubtitle}>
-              Slash Sales begins in April. Get up to 80% Discount on all products <a href="#">Read More</a>
-            </div>
+      {/* Full width flash sale banner */}
+      <div className={styles.catalogHeader}>
+        <div className={styles.catalogTitleBox}>
+          <div className={styles.catalogTitle}>{getCategoryTitle()}</div>
+          <div className={styles.catalogSubtitle}>
+            Slash Sales begins in April. Get up to 80% Discount on all products <a href="#">Read More</a>
           </div>
         </div>
+      </div>
+      <main className="py-8 px-4 max-w-7xl mx-auto">
         <div className={styles.catalogBar}>
           <div>{loading ? 'Loading...' : `${displayProducts.length} products found`}</div>
           <div className={styles.catalogSort}>Sort by: 
@@ -74,7 +75,7 @@ const ProductsPage = () => {
               id="sort"
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={styles.sortSelect}
             >
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low to High</option>

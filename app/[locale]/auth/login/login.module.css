@@ -1,38 +1,39 @@
 .loginBg {
   min-height: 100vh;
-  margin: 1.5rem 0;
-  /* background: linear-gradient(135deg, #e8ded6 0%, #e3d3d2 100%); */
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--spacing-4);
 }
 
 .loginCard {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 16px rgba(34,34,34,0.08);
-  padding: 3rem 2.5rem 2.5rem 2.5rem;
+  background: var(--color-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-12) var(--spacing-10) var(--spacing-10) var(--spacing-10);
   max-width: 480px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: var(--spacing-5);
   align-items: stretch;
 }
 
 .title {
-  font-size: 2.3rem;
-  font-weight: 700;
-  color: #232323;
-  text-align: left;
-  margin-bottom: 0.2rem;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: var(--spacing-1);
 }
 
 .subtitle {
-  color: #444;
-  font-size: 1.1rem;
-  margin-bottom: 1.2rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-5);
   line-height: 1.5;
+  text-align: center;
 }
 
 .inputLabel {
@@ -63,20 +64,20 @@
 .input[type="email"],
 .input[type="tel"],
 .input[type="password"] {
-  padding: 1.5rem 1rem;
-  border: 1.5px solid #e3d3d2;
-  border-radius: 7px;
-  font-size: 1.08rem;
-  color: #232323;
+  padding: var(--spacing-6) var(--spacing-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
   outline: none;
-  transition: border 0.2s;
+  transition: var(--transition-colors);
 }
 
 .input[type="text"]:focus,
 .input[type="email"]:focus,
 .input[type="tel"]:focus,
 .input[type="password"]:focus {
-  border: 1.5px solid #ff2d17;
+  border: 1.5px solid var(--color-accent);
 }
 
 .checkRow {
@@ -89,18 +90,18 @@
 }
 
 .checkRow input[type="checkbox"] {
-  accent-color: #ff2d17;
+  accent-color: var(--color-accent);
   width: 1.1rem;
   height: 1.1rem;
 }
 
 .forgotLink {
-  color: #ff2d17;
-  font-size: 1.02rem;
-  font-weight: 500;
+  color: var(--color-accent);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   margin-left: auto;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: var(--transition-colors);
 }
 
 .forgotLink:hover {
@@ -109,21 +110,21 @@
 }
 
 .signinBtn {
-  background: #ff2d17;
-  color: #fff;
+  background: var(--color-accent);
+  color: var(--color-background);
   border: none;
-  border-radius: 3px;
+  border-radius: var(--border-radius-sm);
   height: 43px;
-  font-size: 1.18rem;
-  font-weight: 700;
-  margin-top: 0.7rem;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-top: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition-colors);
 }
 
 .signinBtn:hover {
-  background: #d92613;
+  background: var(--color-accent-dark);
 }
 
 .dividerRow {
@@ -136,8 +137,8 @@
 .divider {
   flex: 1;
   height: 1.5px;
-  background: #e3d3d2;
-  border-radius: 2px;
+  background: var(--color-border);
+  border-radius: var(--border-radius-sm);
 }
 
 .orText {
@@ -154,23 +155,23 @@
 }
 
 .socialBtn {
-  background: #fff;
-  border: 1.5px solid #e3d3d2;
-  border-radius: 8px;
-  padding: 0.7rem 1.2rem;
-  font-size: .8rem;
-  font-weight: 700;
-  color: #232323;
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-3) var(--spacing-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--spacing-2);
   cursor: pointer;
-  transition: border 0.2s, background 0.2s;
+  transition: var(--transition-colors);
 }
 
 .socialBtn:hover {
-  border: 1.5px solid #ff2d17;
-  background: #f6f1ef;
+  border: 1.5px solid var(--color-accent);
+  background: var(--color-background-hover);
 }
 
 .socialBtn img {
@@ -186,13 +187,13 @@
 }
 
 .signupLink {
-  color: #ff2d17;
-  font-weight: 700;
-  margin-left: 0.3rem;
+  color: var(--color-accent);
+  font-weight: var(--font-weight-bold);
+  margin-left: var(--spacing-1);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--spacing-1);
 }
 
 .lockIcon {
@@ -200,9 +201,100 @@
   margin-right: 0.1rem;
 }
 
-@media (max-width: 600px) {
-  .loginCard {
-    padding: 1.2rem 0.5rem;
-    max-width: 98vw;
+@media (max-width: 768px) {
+  .loginBg {
+    padding: var(--spacing-2);
+    align-items: flex-start;
+    padding-top: var(--spacing-8);
   }
-} 
+
+  .loginCard {
+    padding: var(--spacing-6) var(--spacing-4);
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    gap: var(--spacing-4);
+  }
+
+  .title {
+    font-size: var(--font-size-xl);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .input[type="text"],
+  .input[type="email"],
+  .input[type="tel"],
+  .input[type="password"] {
+    padding: var(--spacing-4) var(--spacing-3);
+    font-size: var(--font-size-base);
+  }
+
+  .socialRow {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  .socialBtn {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .checkRow {
+    font-size: var(--font-size-sm);
+  }
+
+  .signinBtn {
+    height: var(--height-lg);
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .loginBg {
+    padding: var(--spacing-1);
+  }
+
+  .loginCard {
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+
+  .title {
+    font-size: var(--font-size-lg);
+  }
+
+  .labelRow {
+    font-size: var(--font-size-sm);
+  }
+}
+
+.errorMessage {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #fcc;
+  margin-bottom: 16px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.checkbox {
+  width: auto;
+  margin-right: 8px;
+}
+
+.signinBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input:disabled,
+.socialBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

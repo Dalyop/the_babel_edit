@@ -49,7 +49,7 @@ export default function CartPage() {
     return (
       <div className={styles.cartBg}>
         <Navbar />
-        <main className={styles.cartMain}>
+        <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.heading}>Shopping Cart</h1>
           <div className={styles.cartContainer}>
             <div className={styles.cartItemsSection}>
@@ -66,7 +66,7 @@ export default function CartPage() {
     return (
       <div className={styles.cartBg}>
         <Navbar />
-        <main className={styles.cartMain}>
+        <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.heading}>Shopping Cart</h1>
           <div className={styles.cartContainer}>
             <div className={styles.cartItemsSection}>
@@ -82,7 +82,7 @@ export default function CartPage() {
   return (
     <div className={styles.cartBg}>
       <Navbar />
-      <main className={styles.cartMain}>
+      <main className="py-8 px-4 max-w-7xl mx-auto">
         <h1 className={styles.heading}>Shopping Cart</h1>
         
         {items.length === 0 ? (

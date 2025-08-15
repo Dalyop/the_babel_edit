@@ -18,6 +18,7 @@ interface WishlistActions {
   // Data management
   fetchWishlist: () => Promise<void>;
   loadFromStorage: () => void;
+  syncWithBackend: () => Promise<void>;
   
   // Getters
   isInWishlist: (productId: string) => boolean;
@@ -183,5 +184,56 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   getWishlistCount: () => {
     const { items } = get();
     return items.length;
+  },
+
+  syncWithBackend: async () => {
+    const { items } = get();
+    
+    // Only sync if user is authenticated and has items
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') || localStorage.getItem('token') : null;
+    if (!token) {
+      console.log('No auth token found, skipping wishlist sync');
+      return;
+    }
+    
+    if (items.length === 0) {
+      console.log('No wishlist items to sync');
+      return;
+    }
+    
+    set({ loading: true, error: null });
+    
+    try {
+      console.log('Syncing wishlist with backend...', items.length, 'items');
+      
+      // Sync local wishlist items with backend
+      let syncedCount = 0;
+      for (const item of items) {
+        // Only sync offline items (items created without backend)
+        if (item.id.startsWith('offline-wishlist-')) {
+          try {
+            await apiRequest(API_ENDPOINTS.WISHLIST.ADD, {
+              method: 'POST',
+              requireAuth: true,
+              body: { productId: item.productId },
+            });
+            syncedCount++;
+          } catch (itemError) {
+            console.error('Failed to sync wishlist item:', item.id, itemError);
+          }
+        }
+      }
+      
+      console.log(`Synced ${syncedCount} wishlist items with backend`);
+      
+      // After syncing, fetch the updated wishlist from backend
+      await get().fetchWishlist();
+      
+    } catch (error) {
+      console.error('Failed to sync wishlist with backend:', error);
+      set({ error: error instanceof Error ? error.message : 'Failed to sync wishlist' });
+    } finally {
+      set({ loading: false });
+    }
   },
 }));

@@ -9,9 +9,9 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
 import Loading from "@/app/components/ui/Loading/Loading";
 
-type Address = { 
+type Address = {
   id?: string;
-  type: string; 
+  type: string;
   address: string;
   city?: string;
   state?: string;
@@ -42,7 +42,7 @@ export default function AccountPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
-  
+
   // Use ref to track if we've already fetched data
   const hasFetchedRef = useRef(false);
 
@@ -57,20 +57,20 @@ export default function AccountPage() {
   // Memoize the fetchProfile function to prevent recreating it on every render
   const fetchProfile = useCallback(async () => {
     if (!authenticatedFetch || hasFetchedRef.current) return;
-    
+
     setProfileLoading(true);
     setError('');
     hasFetchedRef.current = true;
-    
+
     try {
       const endpoint = `/auth/profile`;
       console.log('Fetching profile from:', endpoint);
-      
+
       const data = await authenticatedFetch(endpoint);
       console.log('Profile fetch successful:', data);
-      
+
       const userData = data.user || data.data || data;
-      
+
       if (userData) {
         const profileData = {
           name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
@@ -79,14 +79,14 @@ export default function AccountPage() {
           avatar: userData.avatar || '',
           addresses: userData.addresses || []
         };
-        
+
         setProfile(profileData);
         setForm({
           name: profileData.name,
           email: profileData.email,
           phone: profileData.phone,
         });
-        
+
         // Update the user context with fresh data
         updateUser(userData);
       } else {
@@ -110,9 +110,10 @@ export default function AccountPage() {
         email: user.email || '',
         phone: user.phone || '',
         avatar: user.avatar || '',
-        addresses: user.addresses || []
+        addresses: user.addresses || [],
+        role: user.role || ''
       };
-      
+
       setProfile(userData);
       setForm({
         name: userData.name,
@@ -137,7 +138,7 @@ export default function AccountPage() {
     e.preventDefault();
     setSaving(true);
     setError('');
-    
+
     try {
       console.log('Submitting form data:', form);
       const updated = await authenticatedFetch(`/auth/profile`, {
@@ -145,25 +146,26 @@ export default function AccountPage() {
         body: JSON.stringify(form),
         headers: { "Content-Type": "application/json" },
       });
-      
+
       console.log('Update successful:', updated);
       const userData = updated.user || updated.data || updated;
-      
+
       if (userData) {
         const profileData = {
           name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
           email: userData.email || '',
           phone: userData.phone || '',
           avatar: userData.avatar || '',
-          addresses: userData.addresses || []
+          addresses: userData.addresses || [],
+          role: userData.role || ''
         };
-        
+
         setProfile(profileData);
-        
+
         // Update the global user context
         updateUser(userData);
       }
-      
+
       alert('Profile updated successfully!');
     } catch (err: any) {
       console.error('Update error:', err);
@@ -188,10 +190,10 @@ export default function AccountPage() {
       setError('New passwords do not match');
       return;
     }
-    
+
     setSaving(true);
     setError('');
-    
+
     try {
       await authenticatedFetch('/auth/change-password', {
         method: 'PUT',
@@ -201,7 +203,7 @@ export default function AccountPage() {
         }),
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       alert('Password changed successfully!');
     } catch (err: any) {
@@ -215,22 +217,22 @@ export default function AccountPage() {
     e.preventDefault();
     setSaving(true);
     setError('');
-    
+
     try {
       const method = editingAddress !== null ? 'PUT' : 'POST';
-      const endpoint = editingAddress !== null 
-        ? `/user/addresses/${editingAddress}` 
+      const endpoint = editingAddress !== null
+        ? `/user/addresses/${editingAddress}`
         : '/user/addresses';
-      
+
       const response = await authenticatedFetch(endpoint, {
         method,
         body: JSON.stringify(newAddress),
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       // Refresh profile to get updated addresses
       await fetchProfile();
-      
+
       setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
       setEditingAddress(null);
       setShowAddressForm(false);
@@ -244,15 +246,15 @@ export default function AccountPage() {
 
   const handleDeleteAddress = async (addressId: string | number) => {
     if (!window.confirm('Are you sure you want to delete this address?')) return;
-    
+
     setSaving(true);
     setError('');
-    
+
     try {
       await authenticatedFetch(`/user/addresses/${addressId}`, {
         method: 'DELETE'
       });
-      
+
       // Refresh profile to get updated addresses
       await fetchProfile();
       alert('Address deleted successfully!');
@@ -289,54 +291,53 @@ export default function AccountPage() {
         return (
           <form className={styles.profileForm} onSubmit={handleSubmit}>
             <h2 className={styles.tabTitle}>Profile Settings</h2>
-            
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>👤</span> Full Name
               </span>
-              <input 
-                type="text" 
-                name="name" 
-                value={form.name} 
-                onChange={handleChange} 
-                placeholder="Your full name" 
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Your full name"
                 required
                 className={styles.formInput}
               />
             </label>
-            
+
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>✉️</span> Email Address
               </span>
-              <input 
-                type="email" 
-                name="email" 
-                value={form.email} 
-                onChange={handleChange} 
-                placeholder="your.email@example.com" 
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="your.email@example.com"
                 required
                 className={styles.formInput}
               />
             </label>
-            
+
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>📞</span> Phone Number
               </span>
-              <input 
-                type="tel" 
-                name="phone" 
-                value={form.phone} 
-                onChange={handleChange} 
-                placeholder="+1 (555) 123-4567" 
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+1 (555) 123-4567"
                 className={styles.formInput}
               />
             </label>
-            
-            <button 
-              type="submit" 
-              className={styles.primaryBtn} 
+
+            <button
+              type="submit"
+              className={styles.primaryBtn}
               disabled={saving}
             >
               {saving ? 'Saving...' : 'Update Profile'}
@@ -349,7 +350,7 @@ export default function AccountPage() {
           <div className={styles.addressesTab}>
             <div className={styles.tabHeader}>
               <h2 className={styles.tabTitle}>Manage Addresses</h2>
-              <button 
+              <button
                 className={styles.primaryBtn}
                 onClick={() => {
                   setShowAddressForm(true);
@@ -360,7 +361,7 @@ export default function AccountPage() {
                 Add New Address
               </button>
             </div>
-            
+
             <div className={styles.addressesList}>
               {profile?.addresses?.map((addr, idx) => (
                 <div key={idx} className={styles.addressItem}>
@@ -374,13 +375,13 @@ export default function AccountPage() {
                     )}
                   </div>
                   <div className={styles.addressActions}>
-                    <button 
+                    <button
                       className={styles.editBtn}
                       onClick={() => handleEditAddress(addr, idx)}
                     >
                       Edit
                     </button>
-                    <button 
+                    <button
                       className={styles.deleteBtn}
                       onClick={() => handleDeleteAddress(addr.id || idx)}
                     >
@@ -389,22 +390,22 @@ export default function AccountPage() {
                   </div>
                 </div>
               )) || (
-                <div className={styles.emptyState}>
-                  <p>No addresses added yet. Click "Add New Address" to get started.</p>
-                </div>
-              )}
+                  <div className={styles.emptyState}>
+                    <p>No addresses added yet. Click "Add New Address" to get started.</p>
+                  </div>
+                )}
             </div>
-            
+
             {showAddressForm && (
               <div className={styles.addressFormOverlay}>
                 <form className={styles.addressForm} onSubmit={handleAddressSubmit}>
                   <h3>{editingAddress !== null ? 'Edit Address' : 'Add New Address'}</h3>
-                  
+
                   <label>
                     <span>Address Type</span>
-                    <select 
-                      name="type" 
-                      value={newAddress.type} 
+                    <select
+                      name="type"
+                      value={newAddress.type}
                       onChange={handleAddressChange}
                       className={styles.formInput}
                     >
@@ -413,75 +414,75 @@ export default function AccountPage() {
                       <option value="other">Other</option>
                     </select>
                   </label>
-                  
+
                   <label>
                     <span>Street Address</span>
-                    <input 
-                      type="text" 
-                      name="address" 
-                      value={newAddress.address} 
+                    <input
+                      type="text"
+                      name="address"
+                      value={newAddress.address}
                       onChange={handleAddressChange}
                       placeholder="123 Main Street"
                       required
                       className={styles.formInput}
                     />
                   </label>
-                  
+
                   <div className={styles.addressRow}>
                     <label>
                       <span>City</span>
-                      <input 
-                        type="text" 
-                        name="city" 
-                        value={newAddress.city} 
+                      <input
+                        type="text"
+                        name="city"
+                        value={newAddress.city}
                         onChange={handleAddressChange}
                         placeholder="New York"
                         className={styles.formInput}
                       />
                     </label>
-                    
+
                     <label>
                       <span>State</span>
-                      <input 
-                        type="text" 
-                        name="state" 
-                        value={newAddress.state} 
+                      <input
+                        type="text"
+                        name="state"
+                        value={newAddress.state}
                         onChange={handleAddressChange}
                         placeholder="NY"
                         className={styles.formInput}
                       />
                     </label>
                   </div>
-                  
+
                   <div className={styles.addressRow}>
                     <label>
                       <span>ZIP Code</span>
-                      <input 
-                        type="text" 
-                        name="zipCode" 
-                        value={newAddress.zipCode} 
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={newAddress.zipCode}
                         onChange={handleAddressChange}
                         placeholder="10001"
                         className={styles.formInput}
                       />
                     </label>
-                    
+
                     <label>
                       <span>Country</span>
-                      <input 
-                        type="text" 
-                        name="country" 
-                        value={newAddress.country} 
+                      <input
+                        type="text"
+                        name="country"
+                        value={newAddress.country}
                         onChange={handleAddressChange}
                         placeholder="United States"
                         className={styles.formInput}
                       />
                     </label>
                   </div>
-                  
+
                   <div className={styles.formActions}>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className={styles.cancelBtn}
                       onClick={() => {
                         setShowAddressForm(false);
@@ -490,8 +491,8 @@ export default function AccountPage() {
                     >
                       Cancel
                     </button>
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       className={styles.primaryBtn}
                       disabled={saving}
                     >
@@ -508,55 +509,55 @@ export default function AccountPage() {
         return (
           <form className={styles.profileForm} onSubmit={handlePasswordSubmit}>
             <h2 className={styles.tabTitle}>Change Password</h2>
-            
+
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>🔒</span> Current Password
               </span>
-              <input 
-                type="password" 
-                name="currentPassword" 
-                value={passwordForm.currentPassword} 
-                onChange={handlePasswordChange} 
-                placeholder="Enter your current password" 
+              <input
+                type="password"
+                name="currentPassword"
+                value={passwordForm.currentPassword}
+                onChange={handlePasswordChange}
+                placeholder="Enter your current password"
                 required
                 className={styles.formInput}
               />
             </label>
-            
+
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>🔑</span> New Password
               </span>
-              <input 
-                type="password" 
-                name="newPassword" 
-                value={passwordForm.newPassword} 
-                onChange={handlePasswordChange} 
-                placeholder="Enter new password" 
+              <input
+                type="password"
+                name="newPassword"
+                value={passwordForm.newPassword}
+                onChange={handlePasswordChange}
+                placeholder="Enter new password"
                 required
                 minLength={8}
                 className={styles.formInput}
               />
             </label>
-            
+
             <label>
               <span className={styles.labelRow}>
                 <span className={styles.labelIcon}>✅</span> Confirm New Password
               </span>
-              <input 
-                type="password" 
-                name="confirmPassword" 
-                value={passwordForm.confirmPassword} 
-                onChange={handlePasswordChange} 
-                placeholder="Confirm your new password" 
+              <input
+                type="password"
+                name="confirmPassword"
+                value={passwordForm.confirmPassword}
+                onChange={handlePasswordChange}
+                placeholder="Confirm your new password"
                 required
                 className={styles.formInput}
               />
             </label>
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               className={styles.primaryBtn}
               disabled={saving}
             >
@@ -629,15 +630,15 @@ export default function AccountPage() {
             Logout
           </div>
         </div>
-        
+
         <div className={styles.profileContent}>
           {/* Show error message if there's an error */}
           {error && (
-            <div style={{ 
-              padding: '1rem', 
-              background: '#fee', 
-              border: '1px solid #fcc', 
-              borderRadius: '4px', 
+            <div style={{
+              padding: '1rem',
+              background: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: '4px',
               color: '#c33',
               marginBottom: '1rem'
             }}>
@@ -646,12 +647,12 @@ export default function AccountPage() {
               <small>Check the browser console for more details.</small>
             </div>
           )}
-          
+
           <div className={styles.profileHeader}>
-            <img 
-              src={profile?.avatar || user?.avatar || "/images/babel_logo_black.jpg"} 
-              alt="avatar" 
-              className={styles.avatar} 
+            <img
+              src={profile?.avatar || user?.avatar || "/images/babel_logo_black.jpg"}
+              alt="avatar"
+              className={styles.avatar}
             />
             <div>
               <div className={styles.profileName}>
@@ -662,7 +663,7 @@ export default function AccountPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Tab Content */}
           {renderTabContent()}
         </div>

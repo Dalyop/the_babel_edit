@@ -16,10 +16,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f8f9fa;
+    background-color: #ffffff;
     padding: var(--spacing-3) var(--spacing-6);
     color: var(--color-text);
-    max-width: 1280px;
+    max-width: var(--max-width-6xl);
     margin: 0 auto;
     min-height: 60px;
 }
@@ -34,26 +34,26 @@
 }
 
 .top_nav {
-    background-color: #f8f9fa;
-    padding: 8px 24px;
-    color: black;
+    background-color: #ffffff;
+    padding: var(--spacing-2) var(--spacing-6);
+    color: var(--color-text);
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 3rem;
-    border-bottom: 1px solid #e5e7eb;
+    gap: var(--spacing-12);
+    border-bottom: 1px solid var(--color-border-light);
     margin: 0 auto;
 }
 
 .top_nav a {
-    color: black;
+    color: var(--color-text-secondary);
     text-decoration: none;
-    font-size: var(--font-size-md);
-    transition: color 0.2s ease;
+    font-size: var(--font-size-sm);
+    transition: var(--transition-colors);
 }
 
 .top_nav a:hover {
-    color: var(--color-primary);
+    color: #ef4444;
 }
 
 .top_nav > div {
@@ -68,18 +68,30 @@
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     border-radius: 8px;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .links:hover {
-    background-color: #f3f4f6;
+    background-color: var(--color-background-hover);
+}
+
+.links:focus {
+    background-color: #fef2f2;
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+}
+
+.links a:focus {
+    color: #ef4444 !important;
+    outline: none;
 }
 
 .links svg {
   width: 0.875rem;
   height: 0.875rem;
-  color: #4a4a4a;
+  color: var(--color-text-secondary);
 }
 
 .top_nav svg {
@@ -89,7 +101,7 @@
 }
 
 .activeLink {
-    color: #FF2200 !important;
+    color: #ef4444 !important;
     font-weight: 600;
 }
 
@@ -123,8 +135,8 @@
 }
 
 .icon_button:hover {
-    background-color: #f3f4f6;
-    color: #374151;
+    background-color: var(--color-background-hover);
+    color: var(--color-text);
 }
 
 .cart_badge {
@@ -171,7 +183,7 @@
 }
 
 .hamburger_btn:hover {
-    background-color: #f3f4f6;
+    background-color: var(--color-background-hover);
 }
 
 .hamburger_icon {
@@ -239,7 +251,7 @@
 }
 
 .mobile_menu_item:hover {
-    color: var(--color-primary, #FF2200);
+    color: var(--color-accent);
 }
 
 .mobile_menu_item:last-child {

@@ -39,10 +39,10 @@ export default function WishlistPage() {
     return (
       <div>
         <Navbar />
-        <div className={styles.container}>
+        <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.header}>My Wish List</h1>
           <div style={{ textAlign: 'center', padding: '2rem' }}>Loading wishlist...</div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -52,10 +52,10 @@ export default function WishlistPage() {
     return (
       <div>
         <Navbar />
-        <div className={styles.container}>
+        <main className="py-8 px-4 max-w-7xl mx-auto">
           <h1 className={styles.header}>My Wish List</h1>
           <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>Error: {error}</div>
-        </div>
+        </main>
         <Footer />
       </div>
     );
@@ -64,7 +64,7 @@ export default function WishlistPage() {
   return (
     <div>
       <Navbar />
-      <div className={styles.container}>
+      <main className="py-8 px-4 max-w-7xl mx-auto">
         <h1 className={styles.header}>My Wish List</h1>
         {items.length === 0 ? (
           <div className={styles.emptyState}>
@@ -80,11 +80,11 @@ export default function WishlistPage() {
                   alt={item.product?.name || 'Product'} 
                 />
                 <div className={styles.productTitle}>{item.product?.name}</div>
-                <div className={styles.productBrand}>{item.product?.brand}</div>
+                <div className={styles.productBrand}>{item.product?.collection?.name || 'Product'}</div>
                 <div className={styles.priceRow}>
                   <span className={styles.currentPrice}>${item.product?.price?.toFixed(2)}</span>
-                  {item.product?.originalPrice && item.product?.originalPrice > item.product?.price && (
-                    <span className={styles.originalPrice}>${item.product?.originalPrice.toFixed(2)}</span>
+                  {item.product?.comparePrice && item.product?.comparePrice > item.product?.price && (
+                    <span className={styles.originalPrice}>${item.product?.comparePrice.toFixed(2)}</span>
                   )}
                 </div>
                 <div className={styles.cardActions}>
@@ -107,7 +107,7 @@ export default function WishlistPage() {
             ))}
           </div>
         )}
-      </div>
+      </main>
       <Footer />
     </div>
   );

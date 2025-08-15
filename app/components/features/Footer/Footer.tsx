@@ -138,19 +138,25 @@ const Footer = () => {
       {/* Payment Methods */}
       <div className={styles.footerPaymentsBottom}>
         <h4>{t('weAccept')}</h4>
-        <div className={styles.paymentIconsBottom}>
-          <span className={styles.iconMastercard}></span>
-          <span className={styles.iconPaypal}></span>
-          <span className={styles.iconEbay}></span>
-          <span className={styles.iconGpay}></span>
-          <span className={styles.iconApplepay}></span>
-          <span className={styles.iconAmex}></span>
-          <span className={styles.iconAmazon}></span>
-          <span className={styles.iconAlipay}></span>
-          <span className={styles.iconBitcoin}></span>
-          <span className={styles.iconDiscover}></span>
-          <span className={styles.iconWesterunion}></span>
-          <span className={styles.iconPayoneer}></span>
+        <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto">
+          {[
+            { name: "Mastercard", src: "https://cdn.worldvectorlogo.com/logos/mastercard-2.svg" },
+            { name: "Visa", src: "https://cdn.worldvectorlogo.com/logos/visa-10.svg" },
+            { name: "PayPal", src: "https://cdn.worldvectorlogo.com/logos/paypal-3.svg" },
+            { name: "Apple Pay", src: "https://cdn.worldvectorlogo.com/logos/apple-pay-payment-mark-logo.svg" }
+          ].map((payment, index) => (
+            <div key={index} className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-300">
+              <img
+                src={payment.src}
+                alt={payment.name}
+                className="h-5 w-auto object-contain"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"><rect width="60" height="30" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="6"/><text x="30" y="20" font-family="Arial, sans-serif" font-size="8" fill="#6b7280" text-anchor="middle">${payment.name}</text></svg>`)}`;
+                }}
+              />
+            </div>
+          ))}
         </div>
       </div>
 

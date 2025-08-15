@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Menu, X, ShoppingBag, Search, User, Heart, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useRouter, useParams } from 'next/navigation';
 
 // Your original components would be imported here
 import Navbar from '@/app/components/features/Navbar/Navbar'
@@ -10,6 +11,7 @@ import Carousel from '@/app/components/features/Carousel/Carousel';
 // import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import Footer from '@/app/components/features/Footer/Footer';
 import { useProductStore, useCartStore, useWishlistStore, Product } from '@/app/store';
+import { useAuth } from '@/app/context/AuthContext';
 
 const TextDivider = ({ text }: { text: string }) => (
   <div className="flex items-center justify-center py-8">
@@ -45,13 +47,32 @@ const TransparentImageCard = ({ backgroundImage, title, subtitle, description, c
 const SquareProductCard = ({ product }: { product: Product }) => {
   const { addToCart } = useCartStore();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
+  const { user } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string || 'en';
   
   const isProductInWishlist = isInWishlist(product.id);
   const isProductInCart = useCartStore(state => state.isInCart(product.id));
   
+  const handleProductClick = () => {
+    router.push(`/${locale}/products/${product.id}`);
+  };
+  
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('Please sign in to add items to cart', {
+        duration: 3000,
+        position: 'top-right',
+      });
+      router.push(`/${locale}/auth/login`);
+      return;
+    }
+    
     try {
       await addToCart(product.id, 1);
       toast.success(`${product.name} added to cart!`, {
@@ -70,6 +91,17 @@ const SquareProductCard = ({ product }: { product: Product }) => {
   const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('Please sign in to add items to wishlist', {
+        duration: 3000,
+        position: 'top-right',
+      });
+      router.push(`/${locale}/auth/login`);
+      return;
+    }
+    
     try {
       if (isProductInWishlist) {
         await removeFromWishlist(product.id);
@@ -91,7 +123,10 @@ const SquareProductCard = ({ product }: { product: Product }) => {
   };
   
   return (
-    <div className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
+    <div 
+      className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
+      onClick={handleProductClick}
+    >
       {/* Square Image Container */}
       <div className="relative w-full h-72 overflow-hidden bg-gray-100">
         <img
@@ -197,7 +232,8 @@ const ArrowButton = ({ direction, onClick, className }: {
 );
 
 function Dashboard() {
-  const { locale = 'en' } = { locale: 'en' }; // Mock useParams
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
   
   // Store integration
   const {
@@ -222,7 +258,7 @@ function Dashboard() {
     
     // Fetch hero carousel data
     fetchHeroData();
-  }, [fetchFeaturedProducts]);
+  }, []); // Empty dependency array to prevent infinite loops
   
   // Fetch collections for the highlight section
   const fetchCollections = async () => {
@@ -231,9 +267,15 @@ function Dashboard() {
       if (response.ok) {
         const data = await response.json();
         setCollections(data.collections || data || []);
+      } else {
+        // Backend not available, use fallback data
+        console.warn('Backend not available, using fallback collections');
+        setCollections([]);
       }
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      console.warn('Backend not available, using fallback collections:', error.message);
+      // Set empty collections array so the page still renders with default cards
+      setCollections([]);
     }
   };
   
@@ -511,23 +553,25 @@ function Dashboard() {
       <TextDivider text={t('brandsForYou')} />
       
       <section className="py-8 px-4 max-w-7xl mx-auto">
-        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-4 items-center">
           {[
-            { name: "Chanel", src: "https://1000logos.net/wp-content/uploads/2021/06/Chanel-logo.png" },
-            { name: "Dior", src: "https://1000logos.net/wp-content/uploads/2017/05/Dior-logo.png" },
-            { name: "Gucci", src: "https://1000logos.net/wp-content/uploads/2017/05/Gucci-Logo.png" },
-            { name: "Versace", src: "https://1000logos.net/wp-content/uploads/2021/06/Versace-logo.png" },
-            { name: "Zara", src: "https://1000logos.net/wp-content/uploads/2017/05/Zara-Logo.png" },
-            { name: "H&M", src: "https://1000logos.net/wp-content/uploads/2020/04/HM-Logo.png" }
+            { name: "Nike", src: "https://logos-world.net/wp-content/uploads/2020/04/Nike-Logo.png" },
+            { name: "Adidas", src: "https://logos-world.net/wp-content/uploads/2020/04/Adidas-Logo.png" },
+            { name: "Gucci", src: "https://logos-world.net/wp-content/uploads/2020/04/Gucci-Logo.png" },
+            { name: "Louis Vuitton", src: "https://logos-world.net/wp-content/uploads/2020/04/Louis-Vuitton-Logo.png" },
+            { name: "Zara", src: "https://logos-world.net/wp-content/uploads/2020/04/Zara-Logo.png" },
+            { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/H&M-Logo.png" },
+            { name: "Puma", src: "https://logos-world.net/wp-content/uploads/2020/04/Puma-Logo.png" },
+            { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2020/09/Uniqlo-Logo.png" }
           ].map((brand, index) => (
-            <div key={index} className="grayscale hover:grayscale-0 transition-all duration-300 hover:scale-110">
+            <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
               <img
                 src={brand.src}
                 alt={brand.name}
-                className="h-12 md:h-16 w-16 md:w-20 object-contain opacity-70 hover:opacity-100"
+                className="h-6 md:h-8 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300 filter grayscale group-hover:grayscale-0"
                 onError={(e) => {
                   // Fallback if image fails to load
-                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><text y="25" font-family="Arial" font-size="12" fill="#666">${brand.name}</text></svg>`)}`;
+                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 30"><rect width="80" height="30" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="4"/><text x="40" y="20" font-family="Arial, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">${brand.name}</text></svg>`)}`;
                 }}
               />
             </div>
@@ -539,7 +583,7 @@ function Dashboard() {
         <div
           className="relative min-h-[400px] md:min-h-[500px] bg-cover bg-center rounded-2xl overflow-hidden"
           style={{
-            backgroundImage: `url('https://images.pexels.com/photos/934070/pexels-photo-934070.jpeg?auto=compress&cs=tinysrgb&w=1200')`
+            backgroundImage: `url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop&crop=center')`
           }}
         >
           <div className="absolute inset-0 bg-black bg-opacity-40" />

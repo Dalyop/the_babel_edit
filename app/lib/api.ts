@@ -194,6 +194,14 @@ export const API_ENDPOINTS = {
     SEARCH: '/products',
     SUGGESTIONS: '/search/suggestions',
     FILTER_OPTIONS: '/filter-options',
+    // Admin endpoints
+    ADMIN: {
+      LIST: '/admin/products',
+      BY_ID: (id: string) => `/admin/products/${id}`,
+      CREATE: '/admin/products',
+      UPDATE: (id: string) => `/admin/products/${id}`,
+      DELETE: (id: string) => `/admin/products/${id}`,
+    },
   },
   // Collections
   COLLECTIONS: {
@@ -232,5 +240,13 @@ export const API_ENDPOINTS = {
     CREATE: '/addresses',
     UPDATE: (id: string) => `/addresses/${id}`,
     DELETE: (id: string) => `/addresses/${id}`,
+  },
+  // Users (Admin)
+  USERS: {
+    LIST: '/auth/admin/users',
+    BY_ID: (id: string) => `/auth/admin/users/${id}`,
+    UPDATE_ROLE: (id: string) => `/auth/admin/users/${id}/role`,
+    DELETE: (id: string) => `/auth/admin/users/${id}`,
+    STATS: '/auth/admin/users/stats',
   },
 } as const;

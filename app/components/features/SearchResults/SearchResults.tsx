@@ -19,25 +19,25 @@ const SearchResults: React.FC<SearchResultsProps> = ({ locale }) => {
     searchResults,
     loading,
     error,
-    clearSearchResults
+    setSearchResults
   } = useProductStore();
 
   useEffect(() => {
     if (searchQuery) {
       searchProducts(searchQuery);
     } else {
-      clearSearchResults();
+      setSearchResults([]);
     }
-  }, [searchQuery, searchProducts, clearSearchResults]);
+  }, [searchQuery, searchProducts, setSearchResults]);
 
   // Clear results when leaving search page
   useEffect(() => {
     return () => {
       if (!pathname.includes('/products')) {
-        clearSearchResults();
+        setSearchResults([]);
       }
     };
-  }, [pathname, clearSearchResults]);
+  }, [pathname, setSearchResults]);
 
   if (!searchQuery) {
     return null;

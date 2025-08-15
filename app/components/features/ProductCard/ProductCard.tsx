@@ -89,19 +89,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <h3 className={styles.title}>{product.name}</h3>
         
         {/* Rating if available */}
-        {product.rating && (
+        {product.avgRating > 0 && (
           <div className="flex items-center gap-1 text-sm text-gray-500">
             <span>⭐</span>
-            <span>{product.rating}</span>
-            {product.reviews && <span>({product.reviews})</span>}
+            <span>{product.avgRating}</span>
+            {product.reviewCount > 0 && <span>({product.reviewCount})</span>}
           </div>
         )}
         
         <div className={styles.bottomRow}>
           <div className={styles.priceContainer}>
             <span className={styles.currentPrice}>${product.price}</span>
-            {product.originalPrice && (
-              <span className={styles.originalPrice}>${product.originalPrice}</span>
+            {product.comparePrice && (
+              <span className={styles.originalPrice}>${product.comparePrice}</span>
             )}
           </div>
           

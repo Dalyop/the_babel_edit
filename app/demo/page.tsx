@@ -95,14 +95,14 @@ export default function DemoPage() {
               {cartItems.map(item => (
                 <div key={item.id} className="border-b last:border-b-0 p-4 flex items-center gap-4">
                   <img 
-                    src={item.product.images[0]} 
-                    alt={item.product.name}
+                    src={item.imageUrl || '/placeholder-product.jpg'} 
+                    alt={item.name}
                     className="w-16 h-16 object-cover rounded"
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium">{item.product.name}</h3>
+                    <h3 className="font-medium">{item.name}</h3>
                     <p className="text-gray-600">Quantity: {item.quantity}</p>
-                    <p className="font-semibold">${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
                   </div>
                 </div>
               ))}

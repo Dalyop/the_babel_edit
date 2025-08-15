@@ -338,9 +338,23 @@
 
 @media (max-width: 640px) {
   .cartBg {
-    padding-top: 80px; /* Consistent mobile padding */
+    padding: 0;
+    margin: 0;
+  }
+  .cartMain {
+    margin: 0;
+    padding: 0 10%;
+  }
+  .cartItemsSection {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+  .cartContainer {
+    align-items: center;
   }
   .cartItemCard {
+    width: 100%;  
     flex-direction: column;
     text-align: center;
     gap: 1rem;

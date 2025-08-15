@@ -9,7 +9,7 @@ export default function AboutPage() {
   return (
     <div>
       <Navbar />
-      <div className={styles.container}>
+      <main className="py-8 px-4 max-w-7xl mx-auto">
         <h1 className={styles.header}>About Us</h1>
         <div className={styles.subheader}>
           At Babel, we believe clothing is more than just what you wear — it’s a language of identity, culture, and connection. Inspired by the ancient city that brought together people of many tongues, Babel blends eras, styles, and stories into one expressive wardrobe.
@@ -80,7 +80,7 @@ export default function AboutPage() {
             <li className={styles.howItem}><span className={styles.howDot}></span><span><b>Shipping</b><br />We ship your order with eco-friendly packaging and fast delivery.</span></li>
           </ul>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

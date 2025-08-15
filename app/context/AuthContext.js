@@ -88,6 +88,9 @@ export const AuthProvider = ({ children }) => {
         setUser(storedUser);
         setAccessToken(storedToken);
         
+        // Set user role cookie for middleware access
+        setCookie('userRole', storedUser.role, 1);
+        
         // Verify the stored credentials are still valid
         const isValid = await verifyStoredAuth(storedToken);
         if (!isValid) {
@@ -124,6 +127,8 @@ export const AuthProvider = ({ children }) => {
         if (data.user) {
           setUser(data.user);
           setUserData(data.user);
+          // Update role cookie if user data changed
+          setCookie('userRole', data.user.role, 1);
         }
         return true;
       }
@@ -188,6 +193,8 @@ export const AuthProvider = ({ children }) => {
         if (data.user) {
           setUser(data.user);
           setUserData(data.user);
+          // Update role cookie
+          setCookie('userRole', data.user.role, 1);
         }
         
         return data.accessToken;
@@ -214,6 +221,8 @@ export const AuthProvider = ({ children }) => {
         setUser(userData.user);
         setUserData(userData.user); // Store in localStorage
         setAccessToken(token);
+        // Set role cookie for middleware
+        setCookie('userRole', userData.user.role, 1);
       } else if (response.status === 401) {
         clearAuthData();
       }
@@ -250,6 +259,9 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setUserData(data.user); // Store in localStorage
       
+      // ✨ KEY ADDITION: Set user role cookie for middleware access
+      setCookie('userRole', data.user.role, 1);
+      
       toast.success("Login successful!");
       
       return { success: true };
@@ -284,6 +296,9 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setUserData(data.user); // Store in localStorage
       
+      // ✨ KEY ADDITION: Set user role cookie for middleware access
+      setCookie('userRole', data.user.role, 1);
+      
       return { success: true };
     } catch (error) {
       console.error('Signup error:', error);
@@ -295,6 +310,7 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null);
     setUser(null);
     deleteCookie('accessToken');
+    deleteCookie('userRole'); // ✨ Clear role cookie too
     clearUserData(); // Clear from localStorage
   };
 
@@ -338,6 +354,8 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (userData) => {
     setUser(userData);
     setUserData(userData);
+    // Update role cookie when user data changes
+    setCookie('userRole', userData.role, 1);
   };
 
   const value = {
