@@ -1,12 +1,11 @@
 .accountBg {
   min-height: 100vh;
-  /* background-color: var(--color-surface); */
 }
 
 .accountMain {
   display: flex;
   max-width: 1280px;
-  margin: 0 10%;
+  margin: 0 5%;
   padding: var(--spacing-8) var(--spacing-6);
   gap: var(--spacing-8);
 }
@@ -278,6 +277,124 @@
   color: #fff;
   border: 1.5px solid #ff2d17;
 }
+/* Address form overlay (centered modal-like feel) */
+.addressFormOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 30, 30, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* Address form container */
+.addressForm {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: fadeInUp 0.25s ease-in-out;
+  z-index: 10000;
+}
+
+/* Form title */
+.addressForm h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #222;
+  text-align: center;
+}
+
+/* Labels and inputs */
+.addressForm label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #444;
+  gap: 0.35rem;
+}
+
+.formInput {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.formInput:focus {
+  border-color: #111827; /* dark gray */
+  box-shadow: 0 0 0 2px rgba(17,24,39,0.15);
+}
+
+/* Address rows (2-column layout) */
+.addressRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Form actions */
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.cancelBtn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: #e5e7eb;
+}
+
+.primaryBtn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  background: #111827;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.primaryBtn:hover {
+  background: #1f2937; /* slightly lighter dark */
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 @media (max-width: 900px) {
   .accountBg {

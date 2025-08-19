@@ -8,6 +8,15 @@ import Footer from "@/app/components/features/Footer/Footer";
 import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
 import Loading from "@/app/components/ui/Loading/Loading";
+import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type Address = {
   id?: string;
@@ -42,6 +51,9 @@ export default function AccountPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<string | number | null>(null);
 
   // Use ref to track if we've already fetched data
   const hasFetchedRef = useRef(false);
@@ -166,11 +178,11 @@ export default function AccountPage() {
         updateUser(userData);
       }
 
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (err: any) {
       console.error('Update error:', err);
       setError(`Failed to update profile: ${err.message || err}`);
-      alert('Failed to update profile. Please try again.');
+      toast.error('Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -188,6 +200,7 @@ export default function AccountPage() {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setError('New passwords do not match');
+      toast.error('New passwords do not match');
       return;
     }
 
@@ -205,9 +218,10 @@ export default function AccountPage() {
       });
 
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      alert('Password changed successfully!');
+      toast.success('Password changed successfully!');
     } catch (err: any) {
       setError(`Failed to change password: ${err.message || err}`);
+      toast.error(`Failed to change password: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
@@ -236,54 +250,49 @@ export default function AccountPage() {
       setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
       setEditingAddress(null);
       setShowAddressForm(false);
-      alert(`Address ${editingAddress !== null ? 'updated' : 'added'} successfully!`);
+      toast.success(`Address ${editingAddress !== null ? 'updated' : 'added'} successfully!`);
     } catch (err: any) {
       setError(`Failed to ${editingAddress !== null ? 'update' : 'add'} address: ${err.message || err}`);
+      toast.error(`Failed to ${editingAddress !== null ? 'update' : 'add'} address: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteAddress = async (addressId: string | number) => {
-    if (!window.confirm('Are you sure you want to delete this address?')) return;
+  // open dialog instead of deleting immediately
+  const handleDeleteAddress = (addressId: string | number) => {
+    setAddressToDelete(addressId);
+    setDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteAddress = async () => {
+    if (!addressToDelete) return;
     setSaving(true);
-    setError('');
-
     try {
-      await authenticatedFetch(`/user/addresses/${addressId}`, {
-        method: 'DELETE'
+      await authenticatedFetch(`/user/addresses/${addressToDelete}`, {
+        method: "DELETE",
       });
-
-      // Refresh profile to get updated addresses
       await fetchProfile();
-      alert('Address deleted successfully!');
+      toast.success("Address deleted successfully!");
     } catch (err: any) {
-      setError(`Failed to delete address: ${err.message || err}`);
+      toast.error(`Failed to delete address: ${err.message || err}`);
     } finally {
       setSaving(false);
+      setDeleteDialogOpen(false);
+      setAddressToDelete(null);
     }
-  };
-
-  const handleEditAddress = (address: Address, index: number) => {
-    setNewAddress({
-      type: address.type,
-      address: address.address,
-      city: address.city || '',
-      state: address.state || '',
-      zipCode: address.zipCode || '',
-      country: address.country || ''
-    });
-    setEditingAddress(index);
-    setShowAddressForm(true);
   };
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      // Use the logout method from auth context instead of manual cleanup
-      logout();
-    }
+    setLogoutDialogOpen(true);
   };
+
+
+  const handleConfirm = () => {
+    logout();
+    setLogoutDialogOpen(false);
+  };
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -666,6 +675,56 @@ export default function AccountPage() {
 
           {/* Tab Content */}
           {renderTabContent()}
+
+          {/* Logout Confirmation Dialog */}
+          <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirm Logout</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to logout?
+              </p>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={handleConfirm}>
+                  Logout
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Address Confirmation Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Address</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this address? This action cannot be undone.
+              </p>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setAddressToDelete(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDeleteAddress}
+                  disabled={saving}
+                >
+                  {saving ? 'Deleting...' : 'Delete'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
       <Footer />
