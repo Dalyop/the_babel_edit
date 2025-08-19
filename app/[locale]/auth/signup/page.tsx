@@ -196,8 +196,7 @@ export default function SignupPage() {
         <form className={styles.signupCard} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Create Your Account</h1>
           <p className={styles.subtitle}>
-            Sign up to enjoy faster checkout, track orders,<br />
-            and save favorites.
+            Sign up for peak experience
           </p>
 
           <label className={styles.inputLabel}>
