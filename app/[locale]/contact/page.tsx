@@ -13,11 +13,11 @@ export default function ContactPage() {
     message: '',
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     // Handle form submission (e.g., send to API or show success message)
     console.log('Form submitted:', form);
