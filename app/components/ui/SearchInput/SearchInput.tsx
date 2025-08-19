@@ -42,19 +42,23 @@ const SearchInput: React.FC<SearchInputProps> = ({
   minSearchLength = 0,
 }) => {
   const [query, setQuery] = useState('');
+  const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedQuery = useDebounce(query, debounceMs);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Trigger search when debounced query changes
+  // Trigger search when debounced query changes, but only after user interaction
   useEffect(() => {
+    if (!hasInteracted) return; // Don't search on mount/initial render
+    
     if (debouncedQuery.length >= minSearchLength) {
       onSearch(debouncedQuery);
     } else if (debouncedQuery.length === 0) {
       onSearch(''); // Clear results when input is empty
     }
-  }, [debouncedQuery, onSearch, minSearchLength]);
+  }, [debouncedQuery, onSearch, minSearchLength, hasInteracted]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!hasInteracted) setHasInteracted(true);
     setQuery(e.target.value);
   };
 
@@ -64,8 +68,12 @@ const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!hasInteracted) setHasInteracted(true);
     if (e.key === 'Escape') {
       handleClear();
+    } else if (e.key === 'Enter') {
+      // Force search on Enter, even if below minimum length
+      onSearch(query);
     }
   };
 

@@ -9,6 +9,7 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     transition: var(--transition-shadow);
+    background-color: #fff;
 }
 
 /* Main navbar */
@@ -288,6 +289,18 @@
     display: block;
 }
 
+/* Mobile search bar container */
+.mobile_search_container {
+    display: none;
+    flex: 1;
+    max-width: 300px;
+    margin: 0 16px;
+}
+
+.mobile_search_bar {
+    width: 100%;
+}
+
 /* Visibility helpers */
 .desktop_only {
     display: flex;
@@ -335,11 +348,34 @@
     }
     
     .icon_button {
-        padding: 8px;
+        padding: 12px;
+        min-width: 44px;
+        min-height: 44px;
     }
     
     .hamburger_btn {
-        padding: 8px;
+        padding: 12px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .cart_badge {
+        font-size: 0.875rem;
+        width: 22px;
+        height: 22px;
+        top: -6px;
+        right: -6px;
+    }
+    
+    .hamburger_icon {
+        width: 28px;
+        height: 28px;
+        gap: 4px;
+    }
+    
+    .hamburger_line {
+        height: 3px;
+        width: 22px;
     }
 }
 
@@ -372,11 +408,15 @@
     }
     
     .icon_button {
-        padding: 6px;
+        padding: 10px;
+        min-width: 44px;
+        min-height: 44px;
     }
     
     .hamburger_btn {
-        padding: 6px;
+        padding: 10px;
+        min-width: 44px;
+        min-height: 44px;
     }
     
     .logo_container img {

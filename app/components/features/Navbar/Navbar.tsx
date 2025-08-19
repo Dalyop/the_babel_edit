@@ -192,18 +192,20 @@ function Navbar() {
           </Link>
         </div>
 
+        {/* Mobile Search Bar - Always Visible */}
+        <div className={`${styles.mobile_search_container} ${styles.mobile_only}`}>
+          <div className={styles.mobile_search_bar}>
+            <SearchInput
+              onSearch={handleSearch}
+              placeholder={t('searchPlaceholder')}
+            />
+          </div>
+        </div>
+
         {/* Mobile Icons - Far Right */}
         <div className={`${styles.mobile_icons} ${styles.mobile_only}`}>
-          <button
-            onClick={toggleSearch}
-            className={styles.icon_button}
-            aria-label="Toggle search"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-          
           <Link href={`/${currentLocale}/cart`} className={`${styles.icon_button} relative`}>
-            <ShoppingBasket className="h-4 w-4" />
+            <ShoppingBasket className="h-5 w-5" />
             {cartItemCount > 0 && (
               <span className={styles.cart_badge}>
                 {cartItemCount}

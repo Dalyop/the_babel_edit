@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import styles from './Footer.module.css';
 import en from '@/locales/en/common.json';

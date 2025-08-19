@@ -56,7 +56,7 @@
   --spacing-20: 5rem;    /* 80px */
   --spacing-24: 6rem;    /* 96px */
 
-  /* Typography Scale - Standard sizes */
+  /* Typography Scale - Standard sizes for desktop, enhanced on mobile */
   --font-size-xs: 0.75rem;   /* 12px */
   --font-size-sm: 0.875rem;  /* 14px */
   --font-size-base: 0.875rem;    /* 14px - smaller base */
@@ -152,7 +152,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--color-text);
   line-height: var(--line-height-normal);
-  background-color: var(--color-surface);
+  background: linear-gradient(180deg, #e8e0d1 0%, #e8e0d1 100%);
+  /* background-color: var(--color-surface); */
   margin: 0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -160,7 +161,6 @@ body {
   font-size: var(--font-size-sm);
 }
 
-/* Layout - Remove conflicting main styles - padding-top removed for consistency */
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
@@ -301,7 +301,7 @@ a:hover {
 
 /* Main content centering */
 .main-content {
-  min-height: calc(100vh - 140px); /* Account for header/footer */
+  min-height: calc(100vh - 140px); 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -530,4 +530,38 @@ li {
 ::selection {
   background-color: var(--color-accent-light);
   color: var(--color-text);
+}
+
+/* Mobile Font Size Enhancements */
+@media (max-width: 768px) {
+  html {
+    font-size: 16px; /* Increased from 14px for mobile */
+  }
+  
+  body {
+    font-size: 1rem; /* 16px - increased from 14px */
+  }
+  
+  /* Enhanced mobile typography */
+  .text-xs { font-size: 0.875rem; } /* 14px - increased from 12px */
+  .text-sm { font-size: 1rem; }     /* 16px - increased from 14px */
+  .text-base { font-size: 1rem; }   /* 16px - increased from 14px */
+  .text-lg { font-size: 1.125rem; } /* 18px - increased from 16px */
+  .text-xl { font-size: 1.25rem; }  /* 20px - same as desktop */
+  .text-2xl { font-size: 1.5rem; }  /* 24px - same as desktop */
+  
+  /* Mobile menu items */
+  .mobile_menu_item {
+    font-size: 1.125rem !important; /* 18px - increased from 16px */
+  }
+  
+  /* Button text */
+  button {
+    font-size: 1rem !important; /* 16px minimum for mobile */
+  }
+  
+  /* Form inputs on mobile */
+  input, select, textarea {
+    font-size: 1rem !important; /* 16px to prevent zoom on iOS */
+  }
 }
