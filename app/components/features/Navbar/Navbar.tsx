@@ -62,7 +62,8 @@ function Navbar() {
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
-      navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`, 'Searching products...');
+      navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`);
+      // navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`, 'Searching products...');
       setIsSearchOpen(false);
     }
   };
@@ -107,6 +108,7 @@ function Navbar() {
     }
   ];
 
+
   return (
     <nav className={styles.navbar_container}>
       {/* Top Navigation - Desktop */}
@@ -117,23 +119,32 @@ function Navbar() {
           onChange={handleLanguageChange}
           placeholder="Language"
         />
-        <Link href={`/${currentLocale}/account`} className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+        <button
+          onClick={() => navigateWithLoading(`/${currentLocale}/account`)}
+          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+        >
           {t('account')}
-        </Link>
-        <Link href={`/${currentLocale}/wishlist`} className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+        </button>
+        <button
+          onClick={() => navigateWithLoading(`/${currentLocale}/wishlist`)}
+          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+        >
           {t('wishlist')}
-        </Link>
-        <Link href={`/${currentLocale}/cart`} className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors">
+        </button>
+        <button
+          onClick={() => navigateWithLoading(`/${currentLocale}/cart`)}
+          className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+        >
           <span>{t('cart')}</span>
           <ShoppingBasket className="h-3 w-3" />
-        </Link>
+        </button>
       </div>
 
       {/* Main Navbar */}
       <div className={styles.navbar}>
         {/* Logo - Far Left */}
-        <Link href={`/${currentLocale}/dashboard`} className={styles.logo_container}>
-          <div className="brand">
+        <div className={styles.logo_container}>
+          <button onClick={() => navigateWithLoading('/')} className="brand">
             <Image
               src={IMAGES.LOGO_WHITE_RM}
               alt="logo"
@@ -148,20 +159,22 @@ function Navbar() {
               height={35}
               className={styles.mobile_only}
             />
-          </div>
-        </Link>
+          </button>
+        </div>
 
         {/* Desktop Navigation */}
         <div className={`${styles.nav_links} ${styles.desktop_only}`}>
           {navigationItems.map((item, index) => (
             <div key={index} className={styles.links}>
               {item.icon}
-              <Link
-                href={item.href}
-                className={category === item.category ? styles.activeLink : ''}
+              <button
+                onClick={() => navigateWithLoading(item.href)}
+                className={
+                  category === item.category ? styles.activeLink : ''
+                }
               >
                 {item.label}
-              </Link>
+              </button>
             </div>
           ))}
         </div>
@@ -174,26 +187,34 @@ function Navbar() {
               placeholder={t('searchPlaceholder')}
             />
           </div>
-          <Link href={`/${currentLocale}/wishlist`} className="relative">
+          <button
+            onClick={() => navigateWithLoading(`/${currentLocale}/wishlist`)}
+            className="relative"
+          >
             <Heart className="h-4 w-4 text-gray-600 cursor-pointer hover:text-gray-900 transition-colors" />
             {wishlistCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                 {wishlistCount}
               </span>
             )}
-          </Link>
-          <Link href={`/${currentLocale}/cart`} className="relative">
+          </button>
+          <button
+            onClick={() => navigateWithLoading(`/${currentLocale}/cart`)}
+            className="relative"
+          >
             <ShoppingBasket className="h-4 w-4 text-gray-600 cursor-pointer hover:text-gray-900 transition-colors" />
             {cartItemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                 {cartItemCount}
               </span>
             )}
-          </Link>
+          </button>
         </div>
 
-        {/* Mobile Search Bar - Always Visible */}
-        <div className={`${styles.mobile_search_container} ${styles.mobile_only}`}>
+        {/* Mobile Search Bar */}
+        <div
+          className={`${styles.mobile_search_container} ${styles.mobile_only}`}
+        >
           <div className={styles.mobile_search_bar}>
             <SearchInput
               onSearch={handleSearch}
@@ -202,16 +223,17 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Icons - Far Right */}
+        {/* Mobile Icons */}
         <div className={`${styles.mobile_icons} ${styles.mobile_only}`}>
-          <Link href={`/${currentLocale}/cart`} className={`${styles.icon_button} relative`}>
+          <button
+            onClick={() => navigateWithLoading(`/${currentLocale}/cart`)}
+            className={`${styles.icon_button} relative`}
+          >
             <ShoppingBasket className="h-5 w-5" />
             {cartItemCount > 0 && (
-              <span className={styles.cart_badge}>
-                {cartItemCount}
-              </span>
+              <span className={styles.cart_badge}>{cartItemCount}</span>
             )}
-          </Link>
+          </button>
 
           <button
             onClick={toggleMenu}
@@ -219,9 +241,21 @@ function Navbar() {
             aria-label="Toggle menu"
           >
             <div className={styles.hamburger_icon}>
-              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_top : ''}`}></span>
-              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_middle : ''}`}></span>
-              <span className={`${styles.hamburger_line} ${isMenuOpen ? styles.line_bottom : ''}`}></span>
+              <span
+                className={`${styles.hamburger_line} ${
+                  isMenuOpen ? styles.line_top : ''
+                }`}
+              ></span>
+              <span
+                className={`${styles.hamburger_line} ${
+                  isMenuOpen ? styles.line_middle : ''
+                }`}
+              ></span>
+              <span
+                className={`${styles.hamburger_line} ${
+                  isMenuOpen ? styles.line_bottom : ''
+                }`}
+              ></span>
             </div>
           </button>
         </div>
@@ -257,7 +291,13 @@ function Navbar() {
           <div className={styles.mobile_menu_content}>
             {/* Mobile Icons Row */}
             <div className="flex justify-around py-4 border-b border-gray-200">
-              <Link href={`/${currentLocale}/wishlist`} className="flex flex-col items-center space-y-1" onClick={closeMenu}>
+              <button
+                onClick={() => {
+                  navigateWithLoading(`/${currentLocale}/wishlist`);
+                  closeMenu();
+                }}
+                className="flex flex-col items-center space-y-1"
+              >
                 <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors relative">
                   <Heart className="h-4 w-4 text-gray-600" />
                   {wishlistCount > 0 && (
@@ -267,21 +307,41 @@ function Navbar() {
                   )}
                 </div>
                 <span className="text-xs text-gray-600">{t('wishlist')}</span>
-              </Link>
-              <Link href={`/${currentLocale}/account`} className="flex flex-col items-center space-y-1" onClick={closeMenu}>
+              </button>
+              <button
+                onClick={() => {
+                  navigateWithLoading(`/${currentLocale}/account`);
+                  closeMenu();
+                }}
+                className="flex flex-col items-center space-y-1"
+              >
                 <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                  <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="h-4 w-4 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <span className="text-xs text-gray-600">{t('account')}</span>
-              </Link>
+              </button>
             </div>
 
             {/* Language Selector */}
-            <div className={`${styles.mobile_menu_item} py-2 border-b border-gray-200`}>
+            <div
+              className={`${styles.mobile_menu_item} py-2 border-b border-gray-200`}
+            >
               <div className="bg-gray-50 p-3 rounded-lg">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Language
+                </label>
                 <Select
                   options={options}
                   value={selectOption}
@@ -294,21 +354,33 @@ function Navbar() {
             {/* Mobile Menu Items */}
             <div className="space-y-1">
               {navigationItems.map((item, index) => (
-                <Link
+                <button
                   key={index}
-                  href={item.href}
-                  onClick={closeMenu}
+                  onClick={() => {
+                    navigateWithLoading(item.href);
+                    closeMenu();
+                  }}
                   className={`${styles.mobile_menu_item} flex items-center space-x-3 px-4 py-3 text-base font-medium hover:bg-gray-50 rounded-lg transition-colors ${
-                    category === item.category ? 'text-blue-600 bg-blue-50 font-semibold border-l-4 border-blue-600' : 'text-gray-800'
+                    category === item.category
+                      ? 'text-blue-600 bg-blue-50 font-semibold border-l-4 border-blue-600'
+                      : 'text-gray-800'
                   }`}
                 >
-                  <div className={`p-2 rounded-full ${category === item.category ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                    {React.cloneElement(item.icon, { 
-                      className: `h-3.5 w-3.5 ${category === item.category ? 'text-blue-600' : 'text-gray-600'}` 
+                  <div
+                    className={`p-2 rounded-full ${
+                      category === item.category ? 'bg-blue-100' : 'bg-gray-100'
+                    }`}
+                  >
+                    {React.cloneElement(item.icon, {
+                      className: `h-3.5 w-3.5 ${
+                        category === item.category
+                          ? 'text-blue-600'
+                          : 'text-gray-600'
+                      }`,
                     })}
                   </div>
                   <span>{item.label}</span>
-                </Link>
+                </button>
               ))}
             </div>
           </div>
@@ -317,7 +389,7 @@ function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {(isMenuOpen || isSearchOpen) && (
-        <div 
+        <div
           className={styles.menu_overlay}
           onClick={() => {
             closeMenu();
@@ -327,6 +399,6 @@ function Navbar() {
       )}
     </nav>
   );
-}
+};
 
 export default Navbar;
