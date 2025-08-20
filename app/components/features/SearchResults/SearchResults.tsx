@@ -13,7 +13,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   className = ""
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSearchRef = useRef<string>('');
 
   // Debounced search handler
