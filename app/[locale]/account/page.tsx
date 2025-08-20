@@ -46,7 +46,7 @@ export default function AccountPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [newAddress, setNewAddress] = useState({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
-  const [editingAddress, setEditingAddress] = useState<number | null>(null);
+  const [editingAddress, setEditingAddress] = useState<string | number | null>(null);
   const [saving, setSaving] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -226,6 +226,20 @@ export default function AccountPage() {
       setSaving(false);
     }
   };
+
+  const handleEditAddress = (address: Address, idx: number) => {
+    setEditingAddress(address.id || idx);
+    setNewAddress({
+      type: address.type || 'home',
+      address: address.address || '',
+      city: address.city || '',
+      state: address.state || '',
+      zipCode: address.zipCode || '',
+      country: address.country || '',
+    });
+    setShowAddressForm(true);
+  };
+
 
   const handleAddressSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

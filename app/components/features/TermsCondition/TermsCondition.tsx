@@ -2,9 +2,9 @@ import React from 'react';
 
 export default function TermsAndConditions() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Header */}
-      <div className="bg-neutral-50 border-b border-neutral-200">
+      <div className="border-b border-neutral-200">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 mb-2">
             Terms and Conditions
@@ -21,7 +21,7 @@ export default function TermsAndConditions() {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="prose prose-neutral max-w-none">
-          
+
           {/* Section 1 */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold text-neutral-900 mb-6 pb-2 border-b border-neutral-200">
@@ -45,7 +45,7 @@ export default function TermsAndConditions() {
             <h2 className="text-2xl font-semibold text-neutral-900 mb-6 pb-2 border-b border-neutral-200">
               2. INFORMATION ABOUT US
             </h2>
-            <div className="space-y-4 text-neutral-700 leading-relaxed">
+            <div className="space-y-4 text-neutral-900 leading-relaxed">
               <p>
                 The Babel Edit is a small, independent business based in the United States, founded with the mission of curating sustainable, pre-loved fashion rich in history and culture. For inquiries, please contact us at:
               </p>
@@ -237,6 +237,30 @@ export default function TermsAndConditions() {
             </div>
           </section>
 
+          {/* Section 14 */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold text-neutral-900 mb-6 pb-2 border-b border-neutral-200">
+              14. AUTHENTICATION POLICY
+            </h2>
+            <div className="space-y-4 text-neutral-700 leading-relaxed">
+              <div>
+                <span className="font-medium">14.1 Pre-Listing Authentication</span>
+                <p className="mt-2">All designer goods listed for sale on The Babel Edit are authenticated prior to being made available on Our Site. This authentication is performed with diligence to ensure the legitimacy and quality of each item.</p>
+              </div>
+              <div>
+                <span className="font-medium">14.2 Customer-Initiated Re-Authentication</span>
+                <p className="mt-2">If a customer chooses to re-authenticate an item through a third-party service, they assume full responsibility for initiating and financing the process. The customer must email <a href="mailto:support@babeledit.com" className="text-neutral-900 underline hover:text-neutral-600 transition-colors">support@babeledit.com</a> with the full name and address of the selected authenticator.</p>
+              </div>
+              <div>
+                <span className="font-medium">14.3 Shipping to Authenticator</span>
+                <p className="mt-2">After receiving and confirming the authenticator's address and city, The Babel Edit will ship the item directly to the authenticator. Once authentication is complete, we will instruct the authenticator to send the item directly to the customer.</p>
+              </div>
+              <div>
+                <span className="font-medium">14.4 Customer Responsibility</span>
+                <p className="mt-2">The customer is responsible for all costs associated with re-authentication, including but not limited to third-party service fees and shipping from the authenticator to the final delivery address.</p>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* Footer Message */}

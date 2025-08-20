@@ -25,7 +25,7 @@ export default function LandingPage() {
         </div>
         <nav className={styles.nav}>
           <Link href={`/${currentLocale}/dashboard`} className={styles.navLink}>Shop now</Link>
-          <Link href={`/${currentLocale}/about`} className={styles.navLink}>About</Link>
+          <Link href={`/${currentLocale}/q  `} className={styles.navLink}>About</Link>
           <Link href={`/${currentLocale}/contact`} className={styles.navLink}>Contact</Link>
         </nav>
       </header>
@@ -33,7 +33,7 @@ export default function LandingPage() {
       <main className={styles.main}>
         <section className={styles.hero}>
           <div className={styles.heroContent}>
-            <h1 className={styles.title}>Welcome to Babel Edit</h1>
+            <h1 className={styles.title}>Welcome to the Babel Edit</h1>
             <p className={styles.subtitle}>Your Ultimate Fashion Destination</p>
             <Link href={`/${currentLocale}/dashboard`} className={styles.ctaButton}>
               Explore Collection

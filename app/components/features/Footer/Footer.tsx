@@ -84,10 +84,9 @@ const Footer = () => {
             <div className={`${styles.footerColContent} ${expandedSections.helpSupport ? styles.expanded : ''}`}>
               <ul>
                 <li><a href={`/${currentLocale}/contact`}>{t('shippingInfo')}</a></li>
-                <li><a href="#">{t('returns')}</a></li>
-                <li><a href="#">{t('howToOrder')}</a></li>
-                <li><a href="#">{t('howToTrack')}</a></li>
-                <li><a href="#">{t('sizeChart')}</a></li>
+                <li><a href={`/${currentLocale}/terms-condition`}>{t('returns')}</a></li>
+                <li><a href={`/${currentLocale}/terms-condition`}>{t('howToOrder')}</a></li>
+                <li><a href={`/${currentLocale}/terms-condition`}>{t('howToTrack')}</a></li>
               </ul>
             </div>
           </div>
@@ -131,7 +130,7 @@ const Footer = () => {
               <button type="submit" className={styles.newsletterButton}>{t('subscribe')}</button>
             </form>
             <div className={styles.privacyText}>
-              {t('privacyText')}<a href="#">{t('privacyCookiePolicy')}</a>
+              {t('privacyText')}<a href={`/${currentLocale}/privacy-policy`}>{t('privacyCookiePolicy')}</a>
             </div>
           </div>
         </div>
@@ -168,12 +167,11 @@ const Footer = () => {
           {t('allRightsReserved')}
         </div>
         <div className={styles.footerLegalLinks}>
-          <a href="#">{t('privacyCenter')}</a>
-          <a href="#">{t('privacyCookiePolicy')}</a>
-          <a href="#">{t('manageCookies')}</a>
-          <a href="#">{t('termsConditions')}</a>
+          <a href={`/${currentLocale}/privacy-policy`}>{t('privacyCenter')}</a>
+          <a href={`/${currentLocale}/cookie-policy`}>{t('privacyCookiePolicy')}</a>
+          <a href={`/${currentLocale}/terms-condition`}>{t('termsConditions')}</a>
           <a href="#">{t('copyrightNotice')}</a>
-          <a href="#">{t('imprint')}</a>
+          {/* <a href="#">{t('imprint')}</a> */}
         </div>
       </div>
     </footer>
