@@ -54,7 +54,7 @@ export const useNavigationLoading = () => {
     }
 
     // Don't show loading for same page navigation
-    if (window.location.pathname === url) {
+    if (typeof window !== 'undefined' && window.location.pathname === url) {
       return;
     }
 

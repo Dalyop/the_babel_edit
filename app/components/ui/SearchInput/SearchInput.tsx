@@ -45,17 +45,23 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedQuery = useDebounce(query, debounceMs);
   const inputRef = useRef<HTMLInputElement>(null);
+  const onSearchRef = useRef(onSearch);
+
+  // Keep the ref up to date with the latest callback
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
 
   // Trigger search when debounced query changes, but only after user interaction
   useEffect(() => {
     if (!hasInteracted) return; // Don't search on mount/initial render
     
     if (debouncedQuery.length >= minSearchLength) {
-      onSearch(debouncedQuery);
+      onSearchRef.current(debouncedQuery);
     } else if (debouncedQuery.length === 0) {
-      onSearch(''); // Clear results when input is empty
+      onSearchRef.current(''); // Clear results when input is empty
     }
-  }, [debouncedQuery, onSearch, minSearchLength, hasInteracted]);
+  }, [debouncedQuery, minSearchLength, hasInteracted]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!hasInteracted) setHasInteracted(true);

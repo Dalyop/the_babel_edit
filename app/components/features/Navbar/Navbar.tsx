@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { IMAGES } from '@/app/constants/constants';
@@ -60,13 +60,17 @@ function Navbar() {
     setIsSearchOpen(false);
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     if (query.trim()) {
       navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`);
-      // navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`, 'Searching products...');
       setIsSearchOpen(false);
     }
-  };
+  }, [navigateWithLoading, currentLocale]);
+
+  const handleMobileSearch = useCallback((query: string) => {
+    handleSearch(query);
+    closeSearch();
+  }, [handleSearch]);
 
   // Navigation items with their icons and routes
   const navigationItems = [
@@ -267,10 +271,7 @@ function Navbar() {
           <div className="flex items-center space-x-3">
             <div className="flex-1">
               <SearchInput
-                onSearch={(query) => {
-                  handleSearch(query);
-                  closeSearch();
-                }}
+                onSearch={handleMobileSearch}
                 placeholder={t('searchPlaceholder')}
               />
             </div>
