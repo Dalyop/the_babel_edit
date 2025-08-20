@@ -1,43 +1,3 @@
-// 'use client';
-// import { useEffect } from 'react';
-// import { useRouter, usePathname } from 'next/navigation';
-// import { useLoadingStore } from '@/app/store';
-
-// export const useNavigationLoading = () => {
-//   const router = useRouter();
-//   const pathname = usePathname();
-//   const { setLoading, clearLoading } = useLoadingStore();
-
-//   // Custom navigation function with loading
-//   const navigateWithLoading = (url: string, message?: string) => {
-//     setLoading(true, message || 'Loading...');
-//     router.push(url);
-//   };
-
-//   const replaceWithLoading = (url: string, message?: string) => {
-//     setLoading(true, message || 'Loading...');
-//     router.replace(url);
-//   };
-
-//   const backWithLoading = (message?: string) => {
-//     setLoading(true, message || 'Going back...');
-//     router.back();
-//   };
-
-//   // Clear loading when pathname changes (navigation complete)
-//   useEffect(() => {
-//     clearLoading();
-//   }, [pathname, clearLoading]);
-
-//   return {
-//     navigateWithLoading,
-//     replaceWithLoading,
-//     backWithLoading,
-//     router, // Original router for cases where loading isn't needed
-//   };
-// };
-
-// useNavigationLoading.ts
 import { useRouter } from 'next/navigation';
 import { useCallback, useRef } from 'react';
 import { useLoadingStore } from '@/app/store';
@@ -45,7 +5,8 @@ import { useLoadingStore } from '@/app/store';
 export const useNavigationLoading = () => {
   const router = useRouter();
   const { setLoading } = useLoadingStore();
-  const navigationTimeoutRef = useRef<NodeJS.Timeout>();
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 
   const navigateWithLoading = useCallback((url: string) => {
     // Clear any existing timeout
