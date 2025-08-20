@@ -41,7 +41,7 @@ function Navbar() {
     setSelectedOption(locale);
     const segments = pathname.split('/');
     segments[1] = locale;
-    navigateWithLoading(segments.join('/'), 'Changing language...');
+    navigateWithLoading(segments.join('/'));
   };
 
   const toggleMenu = () => {
