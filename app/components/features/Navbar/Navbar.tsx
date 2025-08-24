@@ -148,7 +148,7 @@ function Navbar() {
       <div className={styles.navbar}>
         {/* Logo - Far Left */}
         <div className={styles.logo_container}>
-          <button onClick={() => navigateWithLoading('/')} className="brand">
+          <button onClick={() => navigateWithLoading(`/${currentLocale}/dashboard`)} className="brand">
             <Image
               src={IMAGES.LOGO_WHITE_RM}
               alt="logo"
@@ -157,7 +157,7 @@ function Navbar() {
               className={styles.desktop_only}
             />
             <Image
-              src={IMAGES.LOGO_DARK_RM}
+              src={IMAGES.LOGO_ICON_BLACK}
               alt="logo"
               width={35}
               height={35}

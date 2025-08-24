@@ -5,6 +5,7 @@ export const IMAGES = {
   LOGO_DARK: '/images/babel_logo_black.jpg',
   LOGO_WHITE_RM: '/images/babel_logo_white-removebg.png',
   LOGO_DARK_RM: '/images/babel_logo_black-removebg.png',
+  LOGO_ICON_BLACK: '/images/babel_black_icon.png',
   
   // Hero/Header images
   HERO_BG: '/images/hero-bg.jpg',
