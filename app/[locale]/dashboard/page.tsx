@@ -258,7 +258,7 @@ function Dashboard() {
     
     // Fetch hero carousel data
     fetchHeroData();
-  }, []); // Empty dependency array to prevent infinite loops
+  }, []);
   
   // Fetch collections for the highlight section
   const fetchCollections = async () => {
@@ -269,7 +269,7 @@ function Dashboard() {
         setCollections(data.collections || data || []);
       } else {
         // Backend not available, use fallback data
-        console.warn('Backend not available, using fallback collections');
+        console.warn('Server unavailable, using fallback collections');
         setCollections([]);
       }
     } catch (error) {
@@ -279,9 +279,8 @@ function Dashboard() {
     }
   };
   
-  // Fetch hero carousel data (you might want to create an endpoint for this)
   const fetchHeroData = async () => {
-    // For now, using default slides, but you could create an API endpoint for this
+    // For now, using default slides, create an API endpoint for this later Isaac
     const defaultSlides = [
       {
         id: '1',

@@ -25,7 +25,7 @@ export default function LandingPage() {
         </div>
         <nav className={styles.nav}>
           <Link href={`/${currentLocale}/dashboard`} className={styles.navLink}>Shop now</Link>
-          <Link href={`/${currentLocale}/q  `} className={styles.navLink}>About</Link>
+          <Link href={`/${currentLocale}/about`} className={styles.navLink}>About</Link>
           <Link href={`/${currentLocale}/contact`} className={styles.navLink}>Contact</Link>
         </nav>
       </header>

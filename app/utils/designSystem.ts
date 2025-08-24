@@ -1,8 +1,3 @@
-/**
- * Design System Utilities
- * Centralized styling constants and utilities for consistent design
- */
-
 // Color palette
 export const colors = {
   primary: {
