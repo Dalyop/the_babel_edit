@@ -1,6 +1,13 @@
+'use client'
+
 import React from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function TermsAndConditions() {
+  const params = useParams();
+  const locale = params.locale as string || 'en';
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -154,7 +161,7 @@ export default function TermsAndConditions() {
                 <span className="font-medium">7.4</span> Shipping costs are non-refundable. Return shipping is the responsibility of the customer unless otherwise stated.
               </div>
               <p className="mt-4">
-                For details, please visit our <a href="/returns-policy" className="text-neutral-900 underline hover:text-neutral-600 transition-colors">Returns Policy</a>.
+                For details, please visit our <Link href={`/${locale}/returns-policy`} className="text-neutral-900 underline hover:text-neutral-600 transition-colors">Returns Policy</Link>.
               </p>
             </div>
           </section>

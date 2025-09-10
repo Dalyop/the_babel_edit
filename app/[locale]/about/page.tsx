@@ -50,7 +50,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className={styles.teamSection}>
+          {/* <div className={styles.teamSection}>
             <div className={styles.sectionTitle}>Meet the Team</div>
             <div className={styles.teamRow}>
               <div className={styles.teamMember}>
@@ -75,7 +75,7 @@ export default function AboutPage() {
                 <div className={styles.teamRole}>Customer Experience Manager</div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className={styles.howItWorks}>
             <div className={styles.sectionTitle}>How it works</div>

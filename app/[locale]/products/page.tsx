@@ -11,36 +11,36 @@ const ProductsPage = () => {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
   const search = searchParams.get('search');
-  
+
   const fetchProducts = useProductStore(state => state.fetchProducts);
   const searchProducts = useProductStore(state => state.searchProducts);
   const products = useProductStore(state => state.products);
   const searchResults = useProductStore(state => state.searchResults);
   const loading = useProductStore(state => state.loading);
   const error = useProductStore(state => state.error);
-  
+
   const [filters, setFilters] = useState<FilterOptions>({});
   const [sortBy, setSortBy] = useState<string>('newest');
-  
+
   // Determine which products to show
   const displayProducts = search ? searchResults : products;
-  
+
   useEffect(() => {
     const newFilters: FilterOptions = {
       ...filters,
       sortBy: sortBy as any,
     };
-    
+
     if (category) {
       newFilters.category = category;
     }
-    
+
     if (search) {
       searchProducts(search, newFilters);
     } else {
       fetchProducts(newFilters);
     }
-    
+
     setFilters(newFilters);
   }, [category, search, sortBy, fetchProducts, searchProducts]);
 
@@ -70,7 +70,7 @@ const ProductsPage = () => {
       <main className="py-8 px-4 max-w-7xl mx-auto">
         <div className={styles.catalogBar}>
           <div>{loading ? 'Loading...' : `${displayProducts.length} products found`}</div>
-          <div className={styles.catalogSort}>Sort by: 
+          <div className={styles.catalogSort}>Sort by:
             <select
               id="sort"
               value={sortBy}
@@ -89,18 +89,26 @@ const ProductsPage = () => {
         <div className={styles.catalogContent}>
           <aside className={styles.catalogSidebar}>
             <div className={styles.filterSection}>
-              <div className={styles.filterTitle}>FILTERS</div>
+              <div className={styles.filterTitle}>Gender</div>
               <label><input type="checkbox" /> Women</label>
-              <label><input type="checkbox" /> Ladies</label>
-            </div>
-            <div className={styles.filterSection}>
-              <div className={styles.filterTitle}>CATEGORIES</div>
-              <label><input type="checkbox" /> Dresses</label>
-              <label><input type="checkbox" /> Tops</label>
-              <label><input type="checkbox" /> Lingerie & Lounge Wear</label>
-              <label><input type="checkbox" /> Blouse</label>
-              <label><input type="checkbox" /> Vintage</label>
-              <div className={styles.filterMore}>+ 4 more</div>
+              <label><input type="checkbox" /> Men</label>
+              <label><input type="checkbox" /> Unisex</label>
+              <label><input type="checkbox" /> Kids</label>
+              <div className={styles.filterTitle}>Clothing type</div>
+              <label style={{ fontWeight: 'bold' }}>Tops</label>
+              <label><input type="checkbox" /> T-Shirts</label>
+              <label><input type="checkbox" /> Blouse & Skirts</label>
+              <label><input type="checkbox" /> Sweaters & Cardigans</label>
+              <label style={{ fontWeight: 'bold' }}>Bottoms</label>
+              <label><input type="checkbox" /> Jeans</label>
+              <label><input type="checkbox" /> Pants & Trousers</label>
+              <label><input type="checkbox" /> Skirts</label>
+              <label><input type="checkbox" /> Shorts</label>
+              <div className={styles.filterTitle}>Accessories</div>
+              <label><input type="checkbox" /> Bags</label>
+              <label><input type="checkbox" /> Hats</label>
+              <label><input type="checkbox" /> Scarves</label>
+              <label><input type="checkbox" /> Belts</label>
             </div>
           </aside>
           <section className={styles.catalogGrid}>
@@ -135,7 +143,7 @@ const ProductsPage = () => {
               <div className="text-center py-12">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Found</h3>
                 <p className="text-gray-600">
-                  {search 
+                  {search
                     ? `No products match your search for "${search}"`
                     : 'No products available in this category'
                   }
@@ -144,8 +152,8 @@ const ProductsPage = () => {
             )}
             {!loading && displayProducts.length > 0 && (
               displayProducts.map(product => (
-                <ProductCard 
-                  key={product.id} 
+                <ProductCard
+                  key={product.id}
                   product={product}
                   variant="default"
                 />

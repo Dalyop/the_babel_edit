@@ -1,4 +1,3 @@
-// Export all stores and types
 export { useProductStore } from './useProductStore';
 export { useCartStore } from './useCartStore';
 export { useWishlistStore } from './useWishlistStore';

@@ -152,7 +152,7 @@
 .catalogGrid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-8) var(--spacing-6);
   min-width: 0;
   width: 100%;
@@ -170,7 +170,7 @@
 }
 
 .pageBtn {
-  background: var(--color-background);
+  /* background: var(--color-background); */
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: var(--font-size-base);

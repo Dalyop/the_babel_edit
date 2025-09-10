@@ -1,4 +1,3 @@
-// localStorage utilities for state persistence
 export const STORAGE_KEYS = {
   PRODUCTS: 'babel_edit_products',
   CART: 'babel_edit_cart',

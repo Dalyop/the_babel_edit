@@ -29,18 +29,18 @@ const TransparentImageCard = ({ backgroundImage, title, subtitle, description, c
   className: string;
 }) => (
   <div className={`relative group overflow-hidden rounded-xl ${className}`}>
-    <img
-      src={backgroundImage}
-      alt={title}
-      className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-300"
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-      <div className="p-6 text-white">
-        <h3 className="text-xl md:text-2xl font-bold mb-2">{title}</h3>
-        <p className="text-sm opacity-90">{description}</p>
-      </div>
+  <img
+    src={backgroundImage}
+    alt={title}
+    className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-300"
+  />
+  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end">
+    <div className="w-full h-24 md:h-28 p-6 text-white bg-white/10 backdrop-blur-md backdrop-saturate-150 border-t border-white/20 flex flex-col justify-center">
+      <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-1">{title}</h3>
+      <p className="text-sm opacity-90 line-clamp-2">{description}</p>
     </div>
   </div>
+</div>
 );
 
 // Square Product Card specifically for "Popular This Week" section
@@ -124,11 +124,11 @@ const SquareProductCard = ({ product }: { product: Product }) => {
   
   return (
     <div 
-      className="flex-shrink-0 w-72 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
+      className="flex-shrink-0 w-72 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
       onClick={handleProductClick}
     >
       {/* Square Image Container */}
-      <div className="relative w-full h-72 overflow-hidden bg-gray-100">
+      <div className="relative w-full h-72 overflow-hidden">
         <img
           src={product.imageUrl || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.name}
@@ -393,7 +393,7 @@ function Dashboard() {
   const highlightCards = getHighlightCards();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <header>
         <NavbarWithSuspense />
       </header>
@@ -618,7 +618,7 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-b from-pink-50 to-white">
+      <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="mb-8">
             <p className="text-pink-600 font-script text-xl mb-2">Testimonials</p>

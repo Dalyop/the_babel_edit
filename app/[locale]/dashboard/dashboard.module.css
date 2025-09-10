@@ -3,6 +3,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 var(--spacing-6);
+        /* background-color: blue; */
     }
 
     .section {
@@ -64,12 +65,12 @@
     }
 
     .productsContainer::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        /* background: #f1f1f1; */
         border-radius: 4px;
     }
 
     .productsContainer::-webkit-scrollbar-thumb {
-        background: #888;
+        /* background: #888; */
         border-radius: 4px;
     }
 
@@ -86,7 +87,7 @@
         top: 50%;
         transform: translateY(-50%);
         z-index: 10;
-        background: var(--color-background);
+        /* background: var(--color-background); */
         box-shadow: var(--shadow-sm);
     }
 
@@ -136,7 +137,7 @@
         top: 50%;
         left: 0;
         transform: translateY(-50%);
-        background: rgba(0,0,0,0.35);
+        /* background: rgba(0,0,0,0.35); */
         color: white;
         padding: 2rem;
         border-radius: 8px;
@@ -203,7 +204,7 @@
 
     .testimonialsWrapper {
         position: relative;
-        background: #f8e3e1;
+        /* background: #f8e3e1; */
         padding: 0;
         margin: 0;
         width: 100%;

@@ -1,6 +1,5 @@
 .productDetailBg {
   min-height: 100vh;
-  background-color: var(--color-surface);
   display: flex;
   flex-direction: column;
 }

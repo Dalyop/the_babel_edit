@@ -14,36 +14,27 @@ import styles from './ProductDetail.module.css';
 import en from '@/locales/en/common.json';
 import fr from '@/locales/fr/common.json';
 
-const productImages = [
-  { src: '/images/babel_logo_black.jpg', alt: 'Causal Black T-Shirt 1' },
-  { src: '/images/babel_logo_white.jpg', alt: 'Causal Black T-Shirt 2' },
-  { src: '/images/babel_logo_black.jpg', alt: 'Causal Black T-Shirt 3' },
-  { src: '/images/babel_logo_white.jpg', alt: 'Causal Black T-Shirt 4' },
-];
-
 const sizes = ['XS', 'S', 'M', 'L', 'XL'];
 const colors = ['black', 'red', 'green', 'white', 'blue', 'purple'];
-
-// Mock data removed - now using real featured products from the store
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
   const locale = params.locale as string || 'en';
-  
+
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
-  
+
   // Product store
-  const { 
-    currentProduct, 
-    loading, 
-    error, 
+  const {
+    currentProduct,
+    loading,
+    error,
     fetchProductById,
     featuredProducts,
-    fetchFeaturedProducts 
+    fetchFeaturedProducts
   } = useProductStore();
 
   // Fetch product data
@@ -52,7 +43,7 @@ export default function ProductDetailPage() {
       fetchProductById(productId);
     }
   }, [productId]); // Only depend on productId, not the function
-  
+
   // Fetch featured products for recommendations if not already loaded
   useEffect(() => {
     if (featuredProducts.length === 0) {
@@ -72,7 +63,7 @@ export default function ProductDetailPage() {
     }
     return str;
   };
-
+  
   const handleAddToCart = () => {
     if (currentProduct) {
       // Here you would typically add the item to cart logic
@@ -84,7 +75,53 @@ export default function ProductDetailPage() {
 
   const tabs = [
     { label: t('description'), content: <div>{t('productDescription')}</div> },
-    { label: t('sizeGuide'), content: <div>{t('sizeGuideContent')}</div> },
+    { 
+      label: t('sizeGuide'), 
+      content: (
+        <div>
+          <h3 className="text-lg font-semibold mb-2">US & UK Size Guide</h3>
+          <table className="table-auto border-collapse border border-gray-300 text-sm">
+            <thead>
+              <tr>
+                <th className="border border-gray-300 px-3 py-2">Size</th>
+                <th className="border border-gray-300 px-3 py-2">US</th>
+                <th className="border border-gray-300 px-3 py-2">UK</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-gray-300 px-3 py-2">XS</td>
+                <td className="border border-gray-300 px-3 py-2">2</td>
+                <td className="border border-gray-300 px-3 py-2">6</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-3 py-2">S</td>
+                <td className="border border-gray-300 px-3 py-2">4</td>
+                <td className="border border-gray-300 px-3 py-2">8</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-3 py-2">M</td>
+                <td className="border border-gray-300 px-3 py-2">6</td>
+                <td className="border border-gray-300 px-3 py-2">10</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-3 py-2">L</td>
+                <td className="border border-gray-300 px-3 py-2">8</td>
+                <td className="border border-gray-300 px-3 py-2">12</td>
+              </tr>
+              <tr>
+                <td className="border border-gray-300 px-3 py-2">XL</td>
+                <td className="border border-gray-300 px-3 py-2">10</td>
+                <td className="border border-gray-300 px-3 py-2">14</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-3 text-gray-600 text-sm">
+            Sizes may vary slightly depending on the brand and fit.
+          </p>
+        </div>
+      ) 
+    },
     { label: t('reviewsWithCount', { count: 34 }), content: <div>{t('reviewsContent')}</div> },
     { label: t('shippingReturns'), content: <div>{t('shippingReturnsContent')}</div> },
   ];
@@ -118,7 +155,7 @@ export default function ProductDetailPage() {
               <p className="text-gray-600 mb-4">
                 {error || 'Product not found'}
               </p>
-              <button 
+              <button
                 onClick={() => router.push(`/${locale}/dashboard`)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
@@ -135,9 +172,9 @@ export default function ProductDetailPage() {
   // Product images - use actual product images or fallback to defaults
   const productImages = currentProduct.images?.length
     ? currentProduct.images.map((img, index) => ({
-        src: img,
-        alt: `${currentProduct.name} ${index + 1}`
-      }))
+      src: img,
+      alt: `${currentProduct.name} ${index + 1}`
+    }))
     : [{ src: currentProduct.imageUrl || '/images/babel_logo_black.jpg', alt: currentProduct.name }];
 
   // Extract product sizes and colors if available
@@ -197,7 +234,7 @@ export default function ProductDetailPage() {
           <div className={styles.likeTitle}>{t('youMayAlsoLike')}</div>
           <div className={styles.likeList}>
             {featuredProducts.slice(0, 5).map((product) => (
-              <div 
+              <div
                 key={product.id}
                 onClick={() => router.push(`/${locale}/products/${product.id}`)}
                 style={{ cursor: 'pointer' }}

@@ -55,7 +55,7 @@
   }
   
   .card:hover .overlay {
-    /* opacity: calc(var(--overlay-opacity) + 0.1); */
+    opacity: calc(var(--overlay-opacity) + 0.1);
   }
   
   .content {

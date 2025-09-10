@@ -116,7 +116,7 @@ export default function ContactPage() {
             
             <div className={styles.infoRow}>
               <span className={styles.infoIcon} role="img" aria-label="phone">📞</span>
-              <span className={styles.infoText}>(555) 123-4567</span>
+              <span className={styles.infoText}>+1 (469) 744-1336</span>
             </div>
             
             <div className={styles.infoRow}>
@@ -130,8 +130,8 @@ export default function ContactPage() {
             <div className={styles.infoRow}>
               <span className={styles.infoIcon} role="img" aria-label="location">📍</span>
               <div className={styles.infoText}>
-                123 Fashion Ave, Suite 100
-                <div className={styles.infoSubText}>New York, NY 10001</div>
+                United States.
+                <div className={styles.infoSubText}>Dallas Texas,</div>
               </div>
             </div>
             

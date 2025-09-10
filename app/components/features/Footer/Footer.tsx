@@ -6,6 +6,7 @@ import en from '@/locales/en/common.json';
 import fr from '@/locales/fr/common.json';
 import { useRouter, usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { SiTiktok, SiFacebook, SiInstagram } from '@icons-pack/react-simple-icons';
 
 const options = [
   { value: 'en', label: 'English' },
@@ -35,7 +36,7 @@ const Footer = () => {
     segments[1] = locale;
     router.push(segments.join('/'));
   };
-  
+
   type SectionKey = 'companyInfo' | 'helpSupport' | 'customerCare' | 'newsletter';
 
   const toggleSection = (section: SectionKey) => {
@@ -64,8 +65,7 @@ const Footer = () => {
             <div className={`${styles.footerColContent} ${expandedSections.companyInfo ? styles.expanded : ''}`}>
               <ul>
                 <li><a href={`/${currentLocale}/about`}>{t('about')}</a></li>
-                <li><a href="#">{t('socialResponsibility')}</a></li>
-                <li><a href="#">{t('fashionBlogger')}</a></li>
+                <li><a href={`/${currentLocale}/dispute-resolution`}>{t('Arbitration and dispute resolution')}</a></li>
               </ul>
             </div>
           </div>
@@ -83,10 +83,10 @@ const Footer = () => {
             </div>
             <div className={`${styles.footerColContent} ${expandedSections.helpSupport ? styles.expanded : ''}`}>
               <ul>
-                <li><a href={`/${currentLocale}/contact`}>{t('shippingInfo')}</a></li>
-                <li><a href={`/${currentLocale}/terms-condition`}>{t('returns')}</a></li>
-                <li><a href={`/${currentLocale}/terms-condition`}>{t('howToOrder')}</a></li>
-                <li><a href={`/${currentLocale}/terms-condition`}>{t('howToTrack')}</a></li>
+                <li><a href={`/${currentLocale}/faq`}>{t('FAQ')}</a></li>
+                <li><a href={`/${currentLocale}/contact`}>{t('contactUs')}</a></li>
+                <li><a href={`/${currentLocale}/returns-policy`}>{t('shipping')}</a></li>
+                <li><a href={`/${currentLocale}/returns-policy`}>{t('returns')}</a></li>
               </ul>
             </div>
           </div>
@@ -104,10 +104,10 @@ const Footer = () => {
             </div>
             <div className={`${styles.footerColContent} ${expandedSections.customerCare ? styles.expanded : ''}`}>
               <ul>
-                <li><a href={`/${currentLocale}/contact`}>{t('contactUs')}</a></li>
-                <li><a href="#">{t('payment')}</a></li>
-                <li><a href="#">{t('bonusPoint')}</a></li>
-                <li><a href="#">{t('notices')}</a></li>
+                {/* <li><a href={`/${currentLocale}/contact`}>{t('contactUs')}</a></li> */}
+                {/* <li><a href={`/${currentLocale}/payment`}>{t('payment')}</a></li> */}
+                {/* <li><a href={`/${currentLocale}/bonus-points`}>{t('bonusPoint')}</a></li>
+                <li><a href={`/${currentLocale}/notices`}>{t('notices')}</a></li> */}
               </ul>
             </div>
           </div>
@@ -130,8 +130,19 @@ const Footer = () => {
               <button type="submit" className={styles.newsletterButton}>{t('subscribe')}</button>
             </form>
             <div className={styles.privacyText}>
-              {t('privacyText')}<a href={`/${currentLocale}/privacy-policy`}>{t('privacyCookiePolicy')}</a>
+              {t('privacyText')}<a href={`/${currentLocale}/cookie-policy`}>{t('privacyCookiePolicy')}</a>
             </div>
+          </div>
+          <div className="socials flex gap-4 text-gray-600">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <SiTiktok size={24} style={{ color: '#E1306C' }} />
+            </a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <SiFacebook size={24} style={{ color: '#E1306C' }} />
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+              <SiInstagram size={24} style={{ color: '#E1306C' }} />
+            </a>
           </div>
         </div>
       </div>
