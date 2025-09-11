@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Product } from '@/app/store/types';
+import { Product, Collection } from '@/app/store/types';
 import Button from '@/app/components/ui/Button/Button';
+import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
+import { toast } from 'react-hot-toast';
 
 interface ProductFormProps {
   product: Partial<Product>;
@@ -15,22 +17,70 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     name: product.name || '',
     description: product.description || '',
     price: product.price || 0,
+    comparePrice: product.comparePrice || 0,
+    collectionId: product.collectionId || '',
     images: product.images || [],
     stock: product.stock ?? 0,
+    sizes: product.sizes || [],
+    colors: product.colors || [],
+    tags: product.tags || [],
+    weight: product.weight || 0,
+    dimensions: product.dimensions || '',
     isActive: product.isActive ?? true,
+    isFeatured: product.isFeatured ?? false,
   });
+
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    fetchCollections();
+  }, []);
 
   useEffect(() => {
     setFormData({
       name: product.name || '',
       description: product.description || '',
       price: product.price || 0,
+      comparePrice: product.comparePrice || 0,
+      collectionId: product.collectionId || '',
       images: product.images || [],
       stock: product.stock ?? 0,
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+      tags: product.tags || [],
+      weight: product.weight || 0,
+      dimensions: product.dimensions || '',
       isActive: product.isActive ?? true,
+      isFeatured: product.isFeatured ?? false,
     });
   }, [product]);
+
+  const fetchCollections = async () => {
+    setCollectionsLoading(true);
+    try {
+      const response = await apiRequest<{ collections: Collection[] }>(
+        API_ENDPOINTS.COLLECTIONS.LIST,
+        { requireAuth: true }
+      );
+      // Sort collections by sortOrder, then by name
+      const sortedCollections = response.collections
+        .filter(collection => collection.isActive)
+        .sort((a, b) => {
+          if (a.sortOrder !== b.sortOrder) {
+            return a.sortOrder - b.sortOrder;
+          }
+          return a.name.localeCompare(b.name);
+        });
+      setCollections(sortedCollections);
+    } catch (error) {
+      toast.error('Failed to fetch collections');
+      console.error('Error fetching collections:', error);
+    } finally {
+      setCollectionsLoading(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -38,36 +88,43 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' ? parseFloat(value) || 0 : value,
+      [name]: ['price', 'comparePrice', 'weight'].includes(name) 
+        ? parseFloat(value) || 0 
+        : ['stock'].includes(name)
+        ? parseInt(value) || 0
+        : value,
     }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      isActive: e.target.checked,
+      [name]: checked,
     }));
   };
 
-  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleArrayChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'images' | 'sizes' | 'colors' | 'tags') => {
     const value = e.target.value;
-    const imageArray = value
+    const arrayValue = value
       .split(',')
-      .map((url) => url.trim())
-      .filter((url) => url); // Remove empty strings
+      .map((item) => item.trim())
+      .filter((item) => item); // Remove empty strings
     setFormData((prev) => ({
       ...prev,
-      images: imageArray,
+      [field]: arrayValue,
     }));
-    setErrors((prev) => ({ ...prev, images: '' }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
+    
     if (!formData.name?.trim()) newErrors.name = 'Product name is required';
     if (!formData.description?.trim()) newErrors.description = 'Description is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be greater than 0';
+    if (!formData.collectionId) newErrors.collectionId = 'Please select a collection';
     if (!formData.images?.length) newErrors.images = 'At least one image URL is required';
 
     setErrors(newErrors);
@@ -86,19 +143,27 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       name: product.name || '',
       description: product.description || '',
       price: product.price || 0,
+      comparePrice: product.comparePrice || 0,
+      collectionId: product.collectionId || '',
       images: product.images || [],
       stock: product.stock ?? 0,
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+      tags: product.tags || [],
+      weight: product.weight || 0,
+      dimensions: product.dimensions || '',
       isActive: product.isActive ?? true,
+      isFeatured: product.isFeatured ?? false,
     });
     setErrors({});
     onCancel();
   };
 
-
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-6">
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+          {/* Product Name */}
           <div className="sm:col-span-4">
             <label htmlFor="product-name" className="block text-sm font-medium leading-6 text-gray-900">
               Product Name
@@ -118,6 +183,37 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             </div>
           </div>
 
+          {/* Collection Dropdown */}
+          <div className="sm:col-span-2">
+            <label htmlFor="collection" className="block text-sm font-medium leading-6 text-gray-900">
+              Collection
+            </label>
+            <div className="mt-2">
+              <select
+                name="collectionId"
+                id="collection"
+                value={formData.collectionId || ''}
+                onChange={handleChange}
+                disabled={collectionsLoading}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                required
+              >
+                <option value="">
+                  {collectionsLoading ? 'Loading collections...' : 'Select a collection'}
+                </option>
+                {collections.map((collection) => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </option>
+                ))}
+              </select>
+              {errors.collectionId && (
+                <p className="mt-1 text-sm text-red-600">{errors.collectionId}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="sm:col-span-6">
             <label htmlFor="description" className="block text-sm font-medium leading-6 text-gray-900">
               Description
@@ -129,7 +225,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 rows={3}
                 value={formData.description || ''}
                 onChange={handleChange}
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 placeholder="Enter product description"
                 required
               />
@@ -139,6 +235,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             </div>
           </div>
 
+          {/* Price and Compare Price */}
           <div className="sm:col-span-2">
             <label htmlFor="price" className="block text-sm font-medium leading-6 text-gray-900">
               Price
@@ -164,6 +261,32 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           </div>
 
           <div className="sm:col-span-2">
+            <label htmlFor="comparePrice" className="block text-sm font-medium leading-6 text-gray-900">
+              Compare Price (Optional)
+            </label>
+            <div className="mt-2">
+              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-600">
+                <span className="flex select-none items-center pl-3 text-gray-500 sm:text-sm">$</span>
+                <input
+                  type="number"
+                  name="comparePrice"
+                  id="comparePrice"
+                  value={formData.comparePrice || ''}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                  placeholder="0.00"
+                />
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Original price for discount display
+              </p>
+            </div>
+          </div>
+
+          {/* Stock */}
+          <div className="sm:col-span-2">
             <label htmlFor="stock" className="block text-sm font-medium leading-6 text-gray-900">
               Stock Quantity
             </label>
@@ -175,13 +298,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 value={formData.stock || ''}
                 onChange={handleChange}
                 min="0"
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 placeholder="0"
               />
-              {errors.stock && <p className="mt-1 text-sm text-red-600">{errors.stock}</p>}
             </div>
           </div>
 
+          {/* Images */}
           <div className="sm:col-span-6">
             <label htmlFor="images" className="block text-sm font-medium leading-6 text-gray-900">
               Images
@@ -192,9 +315,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 name="images"
                 id="images"
                 value={Array.isArray(formData.images) ? formData.images.join(', ') : ''}
-                onChange={handleImagesChange}
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Enter comma-separated image URLs (e.g., image1.jpg, image2.jpg)"
+                onChange={(e) => handleArrayChange(e, 'images')}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="Enter comma-separated image URLs"
                 required
               />
               {errors.images && <p className="mt-1 text-sm text-red-600">{errors.images}</p>}
@@ -204,7 +327,109 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             </div>
           </div>
 
-          <div className="sm:col-span-6">
+          {/* Sizes */}
+          <div className="sm:col-span-3">
+            <label htmlFor="sizes" className="block text-sm font-medium leading-6 text-gray-900">
+              Available Sizes
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="sizes"
+                id="sizes"
+                value={Array.isArray(formData.sizes) ? formData.sizes.join(', ') : ''}
+                onChange={(e) => handleArrayChange(e, 'sizes')}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="e.g., XS, S, M, L, XL"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Enter sizes separated by commas
+              </p>
+            </div>
+          </div>
+
+          {/* Colors */}
+          <div className="sm:col-span-3">
+            <label htmlFor="colors" className="block text-sm font-medium leading-6 text-gray-900">
+              Available Colors
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="colors"
+                id="colors"
+                value={Array.isArray(formData.colors) ? formData.colors.join(', ') : ''}
+                onChange={(e) => handleArrayChange(e, 'colors')}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="e.g., Red, Blue, Black, White"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Enter colors separated by commas
+              </p>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="sm:col-span-4">
+            <label htmlFor="tags" className="block text-sm font-medium leading-6 text-gray-900">
+              Product Tags
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="tags"
+                id="tags"
+                value={Array.isArray(formData.tags) ? formData.tags.join(', ') : ''}
+                onChange={(e) => handleArrayChange(e, 'tags')}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="e.g., summer, casual, trending"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Tags help customers find your product
+              </p>
+            </div>
+          </div>
+
+          {/* Weight */}
+          <div className="sm:col-span-1">
+            <label htmlFor="weight" className="block text-sm font-medium leading-6 text-gray-900">
+              Weight (lbs)
+            </label>
+            <div className="mt-2">
+              <input
+                type="number"
+                name="weight"
+                id="weight"
+                value={formData.weight || ''}
+                onChange={handleChange}
+                step="0.01"
+                min="0"
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="0.0"
+              />
+            </div>
+          </div>
+
+          {/* Dimensions */}
+          <div className="sm:col-span-1">
+            <label htmlFor="dimensions" className="block text-sm font-medium leading-6 text-gray-900">
+              Dimensions
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="dimensions"
+                id="dimensions"
+                value={formData.dimensions || ''}
+                onChange={handleChange}
+                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                placeholder="L×W×H"
+              />
+            </div>
+          </div>
+
+          {/* Status Checkboxes */}
+          <div className="sm:col-span-6 space-y-3">
             <div className="relative flex items-start">
               <div className="flex h-6 items-center">
                 <input
@@ -214,15 +439,35 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                   checked={formData.isActive ?? true}
                   onChange={handleCheckboxChange}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
-                  aria-describedby="isActive-description"
                 />
               </div>
               <div className="ml-3 text-sm leading-6">
                 <label htmlFor="isActive" className="font-medium text-gray-900">
                   Active Product
                 </label>
-                <p id="isActive-description" className="text-gray-500">
-                  Check if the product should be visible to customers
+                <p className="text-gray-500">
+                  Product is visible to customers and available for purchase
+                </p>
+              </div>
+            </div>
+
+            <div className="relative flex items-start">
+              <div className="flex h-6 items-center">
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  name="isFeatured"
+                  checked={formData.isFeatured ?? false}
+                  onChange={handleCheckboxChange}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                />
+              </div>
+              <div className="ml-3 text-sm leading-6">
+                <label htmlFor="isFeatured" className="font-medium text-gray-900">
+                  Featured Product
+                </label>
+                <p className="text-gray-500">
+                  Display this product in featured sections and homepage
                 </p>
               </div>
             </div>
@@ -230,6 +475,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         </div>
       </div>
 
+      {/* Form Actions */}
       <div className="flex items-center justify-end gap-x-4 border-t border-gray-200 pt-6 mt-6">
         <Button
           type="button"
