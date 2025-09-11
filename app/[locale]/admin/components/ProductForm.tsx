@@ -68,8 +68,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       const sortedCollections = response.collections
         .filter(collection => collection.isActive)
         .sort((a, b) => {
-          if (a.sortOrder !== b.sortOrder) {
-            return a.sortOrder - b.sortOrder;
+          const orderA = a.sortOrder ?? 0; // default to 0 if undefined/null
+          const orderB = b.sortOrder ?? 0;
+
+          if (orderA !== orderB) {
+            return orderA - orderB;
           }
           return a.name.localeCompare(b.name);
         });
@@ -88,11 +91,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: ['price', 'comparePrice', 'weight'].includes(name) 
-        ? parseFloat(value) || 0 
+      [name]: ['price', 'comparePrice', 'weight'].includes(name)
+        ? parseFloat(value) || 0
         : ['stock'].includes(name)
-        ? parseInt(value) || 0
-        : value,
+          ? parseInt(value) || 0
+          : value,
     }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
@@ -120,7 +123,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!formData.name?.trim()) newErrors.name = 'Product name is required';
     if (!formData.description?.trim()) newErrors.description = 'Description is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be greater than 0';

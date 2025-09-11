@@ -20,6 +20,9 @@ export interface Collection {
   description?: string;
   imageUrl?: string;
   isActive: boolean;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Product {
