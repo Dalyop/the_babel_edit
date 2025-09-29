@@ -134,7 +134,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {product.isOnSale && product.discountPercentage > 0 && (
+        {product.isActive && product.discountPercentage > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-semibold">
             -{product.discountPercentage}%
           </div>
@@ -156,7 +156,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
         {/* Add to Cart Button */}
         <button 
           onClick={handleAddToCart}
-          disabled={isProductInCart || !product.isInStock}
+          disabled={isProductInCart}
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingBag className="w-5 h-5 text-gray-900" />
@@ -196,7 +196,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       </div>
       
       {/* Stock Status */}
-      <div className="mt-2">
+      {/* <div className="mt-2">
         <span className={`text-xs px-2 py-1 rounded-full ${
           product.isInStock 
             ? 'bg-green-100 text-green-800' 
@@ -204,7 +204,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
         }`}>
           {product.isInStock ? 'In Stock' : 'Out of Stock'}
         </span>
-      </div>
+      </div> */}
     </div>
   </div>
 );

@@ -79,13 +79,13 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
         )}
 
         {/* Stock Status */}
-        {!product.isInStock && (
+        {/* {!product.isInStock && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-900">
               Out of Stock
             </span>
           </div>
-        )}
+        )} */}
 
         {/* Action Buttons - Hover Overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -171,7 +171,7 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
         </div>
 
         {/* Add to Cart Button */}
-        {onAddToCart && product.isInStock && (
+        {/* {onAddToCart && product.isInStock && (
           <Button
             onClick={handleAddToCart}
             className="w-full"
@@ -181,10 +181,10 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
           >
             {isInCart ? "In Cart" : "Add to Cart"}
           </Button>
-        )}
+        )} */}
 
         {/* Out of Stock Button */}
-        {!product.isInStock && (
+        {/* {!product.isInStock && (
           <Button
             className="w-full"
             variant="secondary"
@@ -193,7 +193,7 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
           >
             Out of Stock
           </Button>
-        )}
+        )} */}
       </div>
     </div>
   );
