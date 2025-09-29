@@ -19,7 +19,8 @@ export default function LandingPage() {
             src={IMAGES.LOGO_WHITE_RM}
             alt="Babel Edit Logo"
             width={120}
-            height={120}
+            height={40}
+            style={{ width: 'auto', height: '40px' }}
             priority
           />
         </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './ProductCard.module.css';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCartStore, useWishlistStore, Product } from '@/app/store';
 import { toast } from 'react-hot-toast';
@@ -11,6 +12,8 @@ interface ProductCardProps {
     className?: string;
     imageContainerClassName?: string;
     variant?: 'default' | 'small';
+    locale?: string;
+    currentCategory?: string | null;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -18,6 +21,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   className = '',
   imageContainerClassName = '',
   variant = 'default',
+  locale = 'en',
+  currentCategory = null,
 }) => {
   const addToCart = useCartStore(state => state.addToCart);
   const addToWishlist = useWishlistStore(state => state.addToWishlist);
@@ -76,13 +81,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </button>
 
-        <Image
-          src={product.images[0] || '/placeholder-product.jpg'}
-          alt={product.name}
-          fill
-          className={styles.image}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+        <Link 
+          href={`/${locale}/products/${product.id}`}
+          passHref
+        >
+          <div className="cursor-pointer relative w-full h-full">
+            <Image
+              src={product.images[0] || '/placeholder-product.jpg'}
+              alt={product.name}
+              fill
+              className={styles.image}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
+        </Link>
       </div>
       
       <div className={styles.content}>

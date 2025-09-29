@@ -30,6 +30,27 @@ export function PWAProvider({ children, showInstallPromptOnLoad = false }: PWAPr
     // Register service worker
     const initPWA = async () => {
       try {
+        // Pre-load and validate icons
+        const iconSizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        await Promise.all(
+          iconSizes.map(size => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = `/icons/icon-${size}x${size}.png`;
+          }))
+        );
+
+        // Pre-load and validate screenshots
+        await Promise.all(
+          ['/screenshots/desktop.png', '/screenshots/mobile.png'].map(src => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = src;
+          }))
+        );
+
         const swRegistration = await registerServiceWorker();
         setRegistration(swRegistration);
       } catch (error) {

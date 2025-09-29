@@ -1,75 +1,72 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import Navbar from '@/app/components/features/Navbar/Navbar';
 import Footer from '@/app/components/features/Footer/Footer';
 import ProductImageGallery from './ProductImageGallery';
-import ProductOptions from './ProductOptions';
 import ProductTabs from './ProductTabs';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
-import { useProductStore } from '@/app/store';
+import { useProductStore, useCartStore, useWishlistStore } from '@/app/store';
 import { Product } from '@/app/store/types';
 import styles from './ProductDetail.module.css';
 import en from '@/locales/en/common.json';
 import fr from '@/locales/fr/common.json';
 
-// Size mapping for UK and US
-const sizeData = {
+// Constants
+const SIZE_DATA = {
   uk: [
-    { label: 'XS', value: 'XS', ukSize: '6', usSize: '2' },
-    { label: 'S', value: 'S', ukSize: '8', usSize: '4' },
-    { label: 'M', value: 'M', ukSize: '10', usSize: '6' },
-    { label: 'L', value: 'L', ukSize: '12', usSize: '8' },
-    { label: 'XL', value: 'XL', ukSize: '14', usSize: '10' },
+    { label: 'XS', value: 'XS', ukSize: '6', usSize: '2', eu: '34', chest: '81-84' },
+    { label: 'S', value: 'S', ukSize: '8', usSize: '4', eu: '36', chest: '86-89' },
+    { label: 'M', value: 'M', ukSize: '10', usSize: '6', eu: '38', chest: '91-94' },
+    { label: 'L', value: 'L', ukSize: '12', usSize: '8', eu: '40', chest: '96-99' },
+    { label: 'XL', value: 'XL', ukSize: '14', usSize: '10', eu: '42', chest: '101-104' },
   ],
   us: [
-    { label: 'XS', value: 'XS', ukSize: '6', usSize: '2' },
-    { label: 'S', value: 'S', ukSize: '8', usSize: '4' },
-    { label: 'M', value: 'M', ukSize: '10', usSize: '6' },
-    { label: 'L', value: 'L', ukSize: '12', usSize: '8' },
-    { label: 'XL', value: 'XL', ukSize: '14', usSize: '10' },
+    { label: 'XS', value: 'XS', ukSize: '6', usSize: '2', eu: '34', chest: '81-84' },
+    { label: 'S', value: 'S', ukSize: '8', usSize: '4', eu: '36', chest: '86-89' },
+    { label: 'M', value: 'M', ukSize: '10', usSize: '6', eu: '38', chest: '91-94' },
+    { label: 'L', value: 'L', ukSize: '12', usSize: '8', eu: '40', chest: '96-99' },
+    { label: 'XL', value: 'XL', ukSize: '14', usSize: '10', eu: '42', chest: '101-104' },
   ]
 };
 
-const colors = ['black', 'red', 'green', 'white', 'blue', 'purple'];
+const DEFAULT_COLORS = ['black', 'red', 'green', 'white', 'blue', 'purple'];
+
+// Types
+interface SizeGuideModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 // Size Guide Modal Component
-const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  if (!isOpen) return null;
-
-  // Handle click outside to close modal
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  // Handle escape key to close modal
+const SizeGuideModal: React.FC<SizeGuideModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleEscapeKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
-    }
+    const originalOverflow = document.body.style.overflow;
+    document.addEventListener('keydown', handleEscapeKey);
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
-      // Restore body scroll when modal is closed
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
 
+  if (!isOpen) return null;
+
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
-      style={{ zIndex: 9999 }}
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]"
       onClick={handleOverlayClick}
     >
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -114,17 +111,11 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {[
-                    { size: 'XS', uk: '6', us: '2', eu: '34', chest: '81-84' },
-                    { size: 'S', uk: '8', us: '4', eu: '36', chest: '86-89' },
-                    { size: 'M', uk: '10', us: '6', eu: '38', chest: '91-94' },
-                    { size: 'L', uk: '12', us: '8', eu: '40', chest: '96-99' },
-                    { size: 'XL', uk: '14', us: '10', eu: '42', chest: '101-104' },
-                  ].map((row, index) => (
+                  {SIZE_DATA.uk.map((row, index) => (
                     <tr key={index} className="hover:bg-blue-50 transition-colors duration-200">
-                      <td className="py-4 px-6 font-bold text-gray-900">{row.size}</td>
-                      <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.uk}</td>
-                      <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.us}</td>
+                      <td className="py-4 px-6 font-bold text-gray-900">{row.label}</td>
+                      <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.ukSize}</td>
+                      <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.usSize}</td>
                       <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.eu}</td>
                       <td className="py-4 px-6 text-center text-gray-700 font-medium">{row.chest}</td>
                     </tr>
@@ -192,19 +183,21 @@ const SizeGuideModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   );
 };
 
+// Main Component
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
-  const locale = params.locale as string || 'en';
+  const locale = (params.locale as string) || 'en';
 
+  // Local state
   const [selectedSize, setSelectedSize] = useState('M');
   const [selectedColor, setSelectedColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
   const [sizeSystem, setSizeSystem] = useState<'uk' | 'us'>('uk');
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
-  // Product store
+  // Store hooks
   const {
     currentProduct,
     loading,
@@ -214,53 +207,110 @@ export default function ProductDetailPage() {
     fetchFeaturedProducts
   } = useProductStore();
 
-  // Fetch product data
-  useEffect(() => {
-    if (productId) {
-      fetchProductById(productId);
-    }
-  }, [productId]);
-
-  // Fetch featured products for recommendations if not already loaded
-  useEffect(() => {
-    if (featuredProducts.length === 0) {
-      fetchFeaturedProducts(5);
-    }
-  }, []);
+  const { addToCart } = useCartStore();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
 
   // Translation setup
-  const currentLocale = locale;
   const translations: Record<string, Record<string, string>> = { en, fr };
-  const t = (key: string, vars?: Record<string, any>) => {
-    let str = (translations[currentLocale] || translations['en'])[key] || key;
+  const t = useCallback((key: string, vars?: Record<string, any>) => {
+    let str = (translations[locale] || translations['en'])[key] || key;
     if (vars) {
       Object.entries(vars).forEach(([k, v]) => {
         str = str.replace(`{{${k}}}`, v);
       });
     }
     return str;
-  };
+  }, [locale]);
 
-  const handleAddToCart = () => {
-    if (currentProduct) {
-      toast.success('Product added to cart!');
-      router.push(`/${locale}/cart`);
-    }
-  };
+  // Computed values
+  const productImages = useMemo(() => {
+    if (!currentProduct) return [];
+    return currentProduct.images?.length
+      ? currentProduct.images.map((img, index) => ({
+          src: img,
+          alt: `${currentProduct.name} ${index + 1}`
+        }))
+      : [{ src: currentProduct.imageUrl || '/images/babel_logo_black.jpg', alt: currentProduct.name }];
+  }, [currentProduct]);
 
-  const getCurrentSizeDisplay = (size: string) => {
-    const sizeInfo = sizeData[sizeSystem].find(s => s.value === size);
+  const availableColors = useMemo(() => {
+    return currentProduct?.colors?.length ? currentProduct.colors : DEFAULT_COLORS;
+  }, [currentProduct]);
+
+  const getCurrentSizeDisplay = useCallback((size: string) => {
+    const sizeInfo = SIZE_DATA[sizeSystem].find(s => s.value === size);
     if (!sizeInfo) return size;
-
     return sizeSystem === 'uk'
       ? `${size} (UK ${sizeInfo.ukSize})`
       : `${size} (US ${sizeInfo.usSize})`;
+  }, [sizeSystem]);
+
+  // Effects
+  useEffect(() => {
+    if (!productId) return;
+
+    const loadProduct = async () => {
+      try {
+        await fetchProductById(productId);
+      } catch (error) {
+        toast.error('Failed to load product details');
+        console.error('Error loading product:', error);
+      }
+    };
+
+    loadProduct();
+  }, [productId, fetchProductById]);
+
+  useEffect(() => {
+    if (featuredProducts.length > 0) return;
+
+    const loadFeaturedProducts = async () => {
+      try {
+        await fetchFeaturedProducts(5);
+      } catch (error) {
+        console.error('Error loading featured products:', error);
+      }
+    };
+
+    loadFeaturedProducts();
+  }, [featuredProducts.length, fetchFeaturedProducts]);
+
+  // Handlers
+  const handleAddToCart = async () => {
+    if (!currentProduct) return;
+
+    try {
+      await addToCart(currentProduct.id, quantity, {
+        size: selectedSize,
+        color: selectedColor
+      });
+      toast.success('Product added to cart!');
+    } catch (error) {
+      toast.error('Failed to add product to cart');
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  const tabs = [
-    { label: t('description'), content: <div>{t('productDescription')}</div> },
-    { label: t('shippingReturns'), content: <div>{t('shippingReturnsContent')}</div> },
-  ];
+  const handleToggleWishlist = async () => {
+    if (!currentProduct) return;
+
+    try {
+      if (isInWishlist(currentProduct.id)) {
+        await removeFromWishlist(currentProduct.id);
+        toast.success('Product removed from wishlist');
+      } else {
+        await addToWishlist(currentProduct.id);
+        toast.success('Product added to wishlist');
+      }
+    } catch (error) {
+      toast.error('Failed to update wishlist');
+      console.error('Error updating wishlist:', error);
+    }
+  };
+
+  const handleQuantityChange = (delta: number) => {
+    setQuantity(prev => Math.max(1, prev + delta));
+  };
 
   // Loading state
   if (loading) {
@@ -288,9 +338,7 @@ export default function ProductDetailPage() {
         <main className="py-8 px-4 max-w-7xl mx-auto">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
-              <p className="text-gray-600 mb-4">
-                {error || 'Product not found'}
-              </p>
+              <p className="text-gray-600 mb-4">{error || 'Product not found'}</p>
               <button
                 onClick={() => router.push(`/${locale}/dashboard`)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -305,27 +353,25 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Product images - use actual product images or fallback to defaults
-  const productImages = currentProduct.images?.length
-    ? currentProduct.images.map((img, index) => ({
-      src: img,
-      alt: `${currentProduct.name} ${index + 1}`
-    }))
-    : [{ src: currentProduct.imageUrl || '/images/babel_logo_black.jpg', alt: currentProduct.name }];
-
-  // Extract product colors if available
-  const availableColors = currentProduct.colors?.length ? currentProduct.colors : colors;
+  const tabs = [
+    { label: t('description'), content: <div>{currentProduct.description}</div> },
+    { label: t('shippingReturns'), content: <div>{t('shippingReturnsContent')}</div> },
+  ];
 
   return (
     <div className={styles.productDetailBg}>
       <Navbar />
       <main className="py-8 px-4 max-w-7xl mx-auto">
         <div className={styles.productContent}>
+          {/* Left Column - Images */}
           <div className={styles.leftCol}>
             <ProductImageGallery images={productImages} />
           </div>
+
+          {/* Right Column - Product Details */}
           <div className={styles.rightCol}>
             <h1 className={styles.productTitle}>{currentProduct.name}</h1>
+            
             <div className={styles.productPrice}>
               ${currentProduct.price?.toFixed(2)}
               {currentProduct.comparePrice && (
@@ -334,11 +380,19 @@ export default function ProductDetailPage() {
                 </span>
               )}
             </div>
+
             <div className={styles.reviewStars}>
-              <span style={{ color: '#ffb400' }}>{'★'.repeat(Math.floor(currentProduct.avgRating || 4))}</span>
-              <span style={{ color: '#d1d1d1' }}>{'★'.repeat(5 - Math.floor(currentProduct.avgRating || 4))}</span>
-              <span className={styles.reviewCount}>({currentProduct.reviewCount || 0} {t('reviews')})</span>
+              <span style={{ color: '#ffb400' }}>
+                {'★'.repeat(Math.floor(currentProduct.avgRating || 4))}
+              </span>
+              <span style={{ color: '#d1d1d1' }}>
+                {'★'.repeat(5 - Math.floor(currentProduct.avgRating || 4))}
+              </span>
+              <span className={styles.reviewCount}>
+                ({currentProduct.reviewCount || 0} {t('reviews')})
+              </span>
             </div>
+
             <div className={styles.productDesc}>
               {currentProduct.description}
             </div>
@@ -361,41 +415,37 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="bg-white border-2 border-gray-200 rounded-xl p-1 inline-flex">
-                <button
-                  onClick={() => setSizeSystem('uk')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${sizeSystem === 'uk'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                {(['uk', 'us'] as const).map((system) => (
+                  <button
+                    key={system}
+                    onClick={() => setSizeSystem(system)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                      sizeSystem === system
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }`}
-                >
-                  UK Sizes
-                </button>
-                <button
-                  onClick={() => setSizeSystem('us')}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${sizeSystem === 'us'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                >
-                  US Sizes
-                </button>
+                  >
+                    {system.toUpperCase()} Sizes
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Enhanced Size Selection */}
+            {/* Size Selection */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-900 mb-3">
                 Size: <span className="font-normal text-gray-600">{getCurrentSizeDisplay(selectedSize)}</span>
               </label>
               <div className="grid grid-cols-5 gap-2">
-                {sizeData[sizeSystem].map((sizeOption) => (
+                {SIZE_DATA[sizeSystem].map((sizeOption) => (
                   <button
                     key={sizeOption.value}
                     onClick={() => setSelectedSize(sizeOption.value)}
-                    className={`relative p-3 border-2 rounded-xl text-center transition-all duration-200 ${selectedSize === sizeOption.value
+                    className={`relative p-3 border-2 rounded-xl text-center transition-all duration-200 ${
+                      selectedSize === sizeOption.value
                         ? 'border-blue-600 bg-blue-50 text-blue-600'
                         : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                      }`}
+                    }`}
                   >
                     <div className="font-semibold">{sizeOption.label}</div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -423,10 +473,11 @@ export default function ProductDetailPage() {
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${selectedColor === color
+                    className={`w-10 h-10 rounded-full border-4 transition-all duration-200 ${
+                      selectedColor === color
                         ? 'border-blue-600 scale-110'
                         : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    }`}
                     style={{ backgroundColor: color }}
                     title={color}
                   >
@@ -447,7 +498,7 @@ export default function ProductDetailPage() {
               <label className="block text-sm font-semibold text-gray-900 mb-3">Quantity</label>
               <div className="flex items-center border-2 border-gray-200 rounded-xl w-32">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={() => handleQuantityChange(-1)}
                   className="p-3 hover:bg-gray-50 transition-colors duration-200"
                 >
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -456,7 +507,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="flex-1 text-center font-semibold text-gray-900">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => handleQuantityChange(1)}
                   className="p-3 hover:bg-gray-50 transition-colors duration-200"
                 >
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -466,6 +517,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
+            {/* Action Buttons */}
             <button
               className={`${styles.addToCartBtn} mb-4`}
               onClick={handleAddToCart}
@@ -473,34 +525,40 @@ export default function ProductDetailPage() {
             >
               {t('addToCart')}
             </button>
-            <button className={styles.wishlistBtn}>
-              <span className={styles.wishlistIcon}>♡</span> {t('addToWishlist')}
+
+            <button 
+              className={`${styles.wishlistBtn} ${isInWishlist(currentProduct.id) ? styles.inWishlist : ''}`}
+              onClick={handleToggleWishlist}
+            >
+              <span className={styles.wishlistIcon}>
+                {isInWishlist(currentProduct.id) ? '♥' : '♡'}
+              </span>
+              {isInWishlist(currentProduct.id) ? t('removeFromWishlist') : t('addToWishlist')}
             </button>
           </div>
         </div>
 
         <ProductTabs tabs={tabs} />
 
+        {/* Related Products */}
         <div className={styles.likeSection}>
           <div className={styles.likeTitle}>{t('youMayAlsoLike')}</div>
           <div className={styles.likeList}>
             {featuredProducts.slice(0, 5).map((product) => (
-              <div
+              <ProductCard
                 key={product.id}
-                onClick={() => router.push(`/${locale}/products/${product.id}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <ProductCard
-                  product={product}
-                  className={`${styles.likeCard} smallCard`}
-                  imageContainerClassName="smallImageContainer"
-                  variant="small"
-                />
-              </div>
+                product={product}
+                locale={locale}
+                className={`${styles.likeCard} smallCard`}
+                imageContainerClassName="smallImageContainer"
+                variant="small"
+                currentCategory={product.category || null}
+              />
             ))}
           </div>
         </div>
       </main>
+
       <Footer />
 
       {/* Size Guide Modal */}

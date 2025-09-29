@@ -16,10 +16,13 @@ const STATIC_ASSETS = [
   // Add your CSS and JS files here when available
 ];
 
-// API routes to cache
+// Backend API URL
+const API_BASE_URL = 'http://localhost:5000';
+
+// API routes to cache (only for offline support)
 const API_CACHE_URLS = [
-  '/api/products',
-  '/api/collections',
+  `${API_BASE_URL}/api/products`,
+  `${API_BASE_URL}/api/collections`,
 ];
 
 // Pages to cache dynamically
@@ -36,7 +39,14 @@ self.addEventListener('install', event => {
     caches.open(STATIC_CACHE_NAME)
       .then(cache => {
         console.log('Service Worker: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        // Cache each asset individually to prevent total failure if one asset fails
+        return Promise.allSettled(
+          STATIC_ASSETS.map(asset => 
+            cache.add(asset).catch(error => 
+              console.error(`Failed to cache asset: ${asset}`, error)
+            )
+          )
+        );
       })
       .then(() => {
         console.log('Service Worker: Installation complete');
@@ -44,6 +54,8 @@ self.addEventListener('install', event => {
       })
       .catch(error => {
         console.error('Service Worker: Installation failed', error);
+        // Continue even if caching fails
+        return self.skipWaiting();
       })
   );
 });
@@ -86,12 +98,15 @@ self.addEventListener('fetch', event => {
   }
 
   // Handle different types of requests
-  if (url.pathname.startsWith('/api/')) {
-    // API requests - network first, cache fallback
-    event.respondWith(networkFirstStrategy(request, DYNAMIC_CACHE_NAME));
-  } else if (STATIC_ASSETS.some(asset => url.pathname === asset) || 
-             url.pathname.includes('/icons/') ||
-             url.pathname.includes('/_next/static/')) {
+  // Skip backend API requests (let them go directly to network)
+  if (url.origin === API_BASE_URL) {
+    return;
+  }
+
+  // Handle frontend routes
+  if (STATIC_ASSETS.some(asset => url.pathname === asset) || 
+      url.pathname.includes('/icons/') ||
+      url.pathname.includes('/_next/static/')) {
     // Static assets - cache first
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE_NAME));
   } else if (url.pathname === '/' || PAGES_TO_CACHE.some(page => url.pathname.startsWith(page))) {

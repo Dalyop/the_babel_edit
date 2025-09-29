@@ -152,10 +152,8 @@ const Footer = () => {
         <h4>{t('weAccept')}</h4>
         <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto">
           {[
-            { name: "Mastercard", src: "https://cdn.worldvectorlogo.com/logos/mastercard-2.svg" },
-            { name: "Visa", src: "https://cdn.worldvectorlogo.com/logos/visa-10.svg" },
-            { name: "PayPal", src: "https://cdn.worldvectorlogo.com/logos/paypal-3.svg" },
-            { name: "Apple Pay", src: "https://cdn.worldvectorlogo.com/logos/apple-pay-payment-mark-logo.svg" }
+            { name: "Mastercard", src: "/images/payment/mastercard.svg" },
+            { name: "Apple Pay", src: "/images/payment/apple-pay.svg" }
           ].map((payment, index) => (
             <div key={index} className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-300">
               <img

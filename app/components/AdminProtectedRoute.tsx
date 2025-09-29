@@ -1,47 +1,69 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
+import Loading from '@/app/components/ui/Loading/Loading';
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
+  loadingFallback?: React.ReactNode;
 }
 
-const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) => {
+const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ 
+  children, 
+  loadingFallback 
+}) => {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const { user, loading } = useAuth();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
   const isAuthenticated = !!user;
-  const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'super_admin';
 
   useEffect(() => {
-    if (loading) return;
+    let mounted = true;
 
-    if (!isAuthenticated) {
-      router.replace(`/${locale}/auth/login`);
-      return;
-    }
+    const checkAuth = async () => {
+      if (!loading && mounted) {
+        if (!isAuthenticated) {
+          router.replace(`/${locale}/auth/login?from=${encodeURIComponent(window.location.pathname)}`);
+          return;
+        }
+        if (!isAdmin) {
+          router.replace(`/${locale}`);
+          return;
+        }
+        setIsInitialLoad(false);
+      }
+    };
 
-    if (!isAdmin) {
-      router.replace(`/${locale}`);
-    }
+    checkAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, [isAuthenticated, isAdmin, loading, router, locale]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
+  if (loading || isInitialLoad) {
+    return loadingFallback || (
+      <Loading
+        fullScreen={true}
+        text="Verifying admin access..."
+        size="large"
+      />
     );
   }
 
   if (!isAuthenticated || !isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
+    return loadingFallback || (
+      <Loading
+        fullScreen={true}
+        text="Redirecting..."
+        size="large"
+      />
     );
   }
 

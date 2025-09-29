@@ -346,3 +346,35 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 }));
+
+
+
+
+
+
+// clearCart: async () => {
+//   try {
+//     set({ loading: true, error: null });
+    
+//     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cart/clear`, {
+//       method: 'DELETE',
+//       credentials: 'include',
+//     });
+
+//     if (!response.ok) {
+//       throw new Error('Failed to clear cart');
+//     }
+
+//     set({ 
+//       items: [], 
+//       totalAmount: 0, 
+//       loading: false 
+//     });
+//   } catch (error) {
+//     console.error('Clear cart error:', error);
+//     set({ 
+//       error: error instanceof Error ? error.message : 'Failed to clear cart',
+//       loading: false 
+//     });
+//   }
+// },

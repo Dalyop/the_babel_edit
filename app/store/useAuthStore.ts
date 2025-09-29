@@ -57,12 +57,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     
     // Save user to storage
     if (user) {
-      setWithTimestamp(STORAGE_KEYS.USER, { user });
+      setWithTimestamp(STORAGE_KEYS.USER, user );
       // Set role cookie for middleware
       document.cookie = `userRole=${user.role}; path=/; max-age=86400; secure; samesite=strict`;
     } else {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEYS.USER);
+        localStorage.removeItem("accessToken"); // ✅ clear token on logout
         // Remove role cookie
         document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
@@ -83,6 +84,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     removeAuthToken();
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.USER);
+      localStorage.removeItem("accessToken"); // ✅ clear token
       // Remove role cookie
       document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
@@ -103,6 +105,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       
       // Store the access token
       setAuthToken(response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken); // ✅ save token
       
       // Set user in state
       get().setUser(response.user);
@@ -139,6 +142,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       
       // Store the access token
       setAuthToken(response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken); // ✅ save token
       
       // Set user in state
       get().setUser(response.user);
@@ -231,6 +235,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       
       setAuthToken(response.accessToken);
+      localStorage.setItem("accessToken", response.accessToken); // ✅ save refreshed token
       return true;
       
     } catch (error) {

@@ -44,15 +44,38 @@ export interface Product {
   dimensions?: string;
   isActive: boolean;
   isFeatured: boolean;
+  category?: string;
+  subcategory?: string;
+  type?: string;
+  material?: string;
+  color?: string;
   // Computed fields from backend
   avgRating: number;
   reviewCount: number;
   discountPercentage: number;
-  isInStock: boolean;
-  isOnSale: boolean;
-  relatedProducts?: Product[];
-  createdAt: string;
-  updatedAt: string;
+}
+
+export type SortByType = 'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating';
+
+export interface FilterArrayValues {
+  Type?: string[];
+  Style?: string[];
+  Brand?: string[];
+  Material?: string[];
+  Color?: string[];
+  Pattern?: string[];
+  Size?: string[];
+}
+
+export interface FilterOptions extends Partial<FilterArrayValues> {
+  [key: string]: string[] | string | number | boolean | undefined;
+  category?: string;
+  sortBy?: SortByType;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  inStock?: boolean;
+  onSale?: boolean;
 }
 
 export interface CartItem {
@@ -143,14 +166,4 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
-}
-
-export interface FilterOptions {
-  category?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  rating?: number;
-  inStock?: boolean;
-  onSale?: boolean;
-  sortBy?: 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating' | 'newest';
 }

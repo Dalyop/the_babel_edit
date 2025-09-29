@@ -78,8 +78,38 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  const checkServerHealth = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Server health check failed');
+      }
+      
+      const data = await response.json();
+      return data.status === 'OK' && data.database === 'connected';
+    } catch (error) {
+      console.error('Server health check failed:', error);
+      return false;
+    }
+  };
+
   const initializeAuth = async () => {
     try {
+      // Check server health first
+      const isServerHealthy = await checkServerHealth();
+      if (!isServerHealthy) {
+        toast.error('Unable to connect to server. Please try again later.');
+        setLoading(false);
+        return;
+      }
+
       // First, try to restore user from localStorage
       const storedUser = getUserData();
       const storedToken = getCookie('accessToken');
@@ -89,7 +119,7 @@ export const AuthProvider = ({ children }) => {
         setAccessToken(storedToken);
         
         // Set user role cookie for middleware access
-        setCookie('userRole', storedUser.role, 1);
+        setCookie('userRole', storedUser.role, 7);
         
         // Verify the stored credentials are still valid
         const isValid = await verifyStoredAuth(storedToken);
@@ -112,7 +142,8 @@ export const AuthProvider = ({ children }) => {
 
   const verifyStoredAuth = async (token) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/auth/verify`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -143,17 +174,28 @@ export const AuthProvider = ({ children }) => {
   // Enhanced API call helper with automatic token handling
   const apiCall = async (endpoint, options = {}) => {
     let token = accessToken || getCookie('accessToken');
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     
     const makeRequest = async (authToken) => {
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        ...options,
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
-          ...options.headers,
-        },
-      });
+      const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
+      try {
+        return await fetch(url, {
+          ...options,
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+            ...options.headers,
+          },
+        });
+      } catch (error) {
+        // Check server health on network errors
+        const isServerHealthy = await checkServerHealth();
+        if (!isServerHealthy) {
+          throw new Error('Server is currently unavailable. Please try again later.');
+        }
+        throw error;
+      }
     };
 
     let response = await makeRequest(token);
@@ -185,16 +227,16 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         
-        // Store new access token
+        // Store new access token with 1 week expiration
         setAccessToken(data.accessToken);
-        setCookie('accessToken', data.accessToken, 1);
+        setCookie('accessToken', data.accessToken, 7);
         
         // Update user data if provided
         if (data.user) {
           setUser(data.user);
           setUserData(data.user);
-          // Update role cookie
-          setCookie('userRole', data.user.role, 1);
+          // Update role cookie with 1 week expiration
+          setCookie('userRole', data.user.role, 7);
         }
         
         return data.accessToken;

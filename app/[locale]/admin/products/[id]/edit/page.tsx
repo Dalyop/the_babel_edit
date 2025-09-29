@@ -161,6 +161,7 @@ const EditProductPage = () => {
         images: formData.images ? formData.images.split(',').map(img => img.trim()).filter(img => img) : [formData.imageUrl],
         stock: parseInt(formData.stock) || 0,
         sku: formData.sku || undefined,
+        collectionId: formData.collectionId || undefined,
         sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(s => s) : [],
         colors: formData.colors ? formData.colors.split(',').map(c => c.trim()).filter(c => c) : [],
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [],

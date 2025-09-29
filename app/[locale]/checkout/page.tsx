@@ -1,147 +1,216 @@
-"use client";
-import React, { useState } from "react";
-import Navbar from '@/app/components/features/Navbar/Navbar';
+'use client';
+import React, { useState, useEffect, useRef } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import { useRouter, useParams } from 'next/navigation';
+import stripePromise from '../../lib/stripe';
+import CheckoutForm from '@/app/components/checkout/CheckoutForm';
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
-import styles from "./checkout.module.css";
-
-const orderItems = [
-  {
-    image: "/images/babel_logo_black.jpg",
-    name: "Vintage Denim Jacket",
-    size: "M",
-    price: 360.0,
-  },
-  {
-    image: "/images/babel_logo_white.jpg",
-    name: "Leather Ankle Boots",
-    size: "8",
-    price: 360.0,
-  },
-  {
-    image: "/images/babel_logo_black.jpg",
-    name: "Silk Scarf",
-    size: "S",
-    price: 360.0,
-  },
-];
+import { useCartStore } from '@/app/store/useCartStore';
+import styles from './checkout.module.css';
 
 export default function CheckoutPage() {
-  const [shipping, setShipping] = useState("express");
-  const [saveCard, setSaveCard] = useState(false);
+  const router = useRouter();
+  const params = useParams();
+  const { items, totalAmount } = useCartStore();
+  const [clientSecret, setClientSecret] = useState('');
+  const [orderId, setOrderId] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Prevent duplicate API calls in React Strict Mode
+  const initialized = useRef(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert("Order placement is not implemented yet.");
+  const shipping = 9.0;
+  const total = totalAmount + shipping;
+
+  const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
+
+  useEffect(() => {
+    // Prevent duplicate calls in development (React Strict Mode)
+    if (initialized.current) return;
+    initialized.current = true;
+
+    // Redirect if cart is empty
+    if (items.length === 0) {
+      router.push(`/${currentLocale}/cart`);
+      return;
+    }
+
+    // Create order and get payment intent
+    const initializeCheckout = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        console.log('Creating order with items:', items);
+
+        // Step 1: Create order
+        const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            items: items.map(item => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+              size: item.size,
+              color: item.color,
+            })),
+            shippingCost: shipping,
+            totalAmount: total,
+          }),
+        });
+
+        if (!orderResponse.ok) {
+          const errorData = await orderResponse.json().catch(() => null);
+          throw new Error(errorData?.message || `Failed to create order (${orderResponse.status})`);
+        }
+
+        const orderData = await orderResponse.json();
+        console.log("Order created:", orderData);
+        setOrderId(orderData.id);
+
+        // Step 2: Create payment intent
+        // ✅ Use /api/payments if your backend has /api prefix, otherwise use /payments
+        const paymentResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-payment-intent`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              orderId: orderData.id
+            })
+          }
+        );
+
+        if (!paymentResponse.ok) {
+          const errorData = await paymentResponse.json().catch(() => null);
+          throw new Error(errorData?.message || `Failed to create payment intent (${paymentResponse.status})`);
+        }
+
+        const { clientSecret } = await paymentResponse.json();
+        setClientSecret(clientSecret);
+        
+      } catch (err: any) {
+        console.error('Checkout initialization error:', err);
+        setError(err.message || 'Failed to initialize checkout');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeCheckout();
+  }, [items, total, shipping, router, currentLocale]);
+
+  const appearance = {
+    theme: 'stripe' as const,
+    variables: {
+      colorPrimary: '#0570de',
+      colorBackground: '#ffffff',
+      colorText: '#30313d',
+      colorDanger: '#df1b41',
+      fontFamily: 'system-ui, sans-serif',
+      spacingUnit: '4px',
+      borderRadius: '8px',
+    },
   };
+
+  const options = {
+    clientSecret,
+    appearance,
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.checkoutBg}>
+        <NavbarWithSuspense />
+        <main className={styles.checkoutContainer}>
+          <div className={styles.loadingSpinner}>
+            <div className={styles.spinner}></div>
+            <p>Initializing secure checkout...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.checkoutBg}>
+        <NavbarWithSuspense />
+        <main className={styles.checkoutContainer}>
+          <div className={styles.errorContainer}>
+            <h2>Checkout Error</h2>
+            <p>{error}</p>
+            <button
+              onClick={() => router.push(`/${currentLocale}/cart`)}
+              className={styles.backButton}
+            >
+              Return to Cart
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.checkoutBg}>
-      <Navbar />
-      <main className={styles.checkoutMain}>
-        <h1 className={styles.title}>Checkout</h1>
-        <div className={styles.checkoutContainer}>
-          <form className={styles.checkoutForm} onSubmit={handleSubmit}>
-            <div className={styles.sectionTitle}>Contact Information</div>
-            <label className={styles.inputLabel}>
-              <span className={styles.labelRow}><span className={styles.labelIcon}>🔑</span> Name</span>
-              <input className={styles.input} type="text" placeholder="Name" required />
-            </label>
-            <label className={styles.inputLabel}>
-              <span className={styles.labelRow}><span className={styles.labelIcon}>✉️</span> Email</span>
-              <input className={styles.input} type="email" placeholder="Email" required />
-            </label>
-            <div className={styles.sectionTitle}>Shipping Address</div>
-            <label className={styles.inputLabel}>
-              <span className={styles.labelRow}><span className={styles.labelIcon}>🏠</span> Address</span>
-              <input className={styles.input} type="text" placeholder="Address" required />
-            </label>
-            <label className={styles.inputLabel}>
-              <span className={styles.labelRow}><span className={styles.labelIcon}>🏢</span> City</span>
-              <input className={styles.input} type="text" placeholder="State/Province" required />
-            </label>
-            <label className={styles.inputLabel}>
-              <input className={styles.input} type="text" placeholder="Postal Code" required />
-            </label>
-            <div className={styles.sectionTitle}>Shipping Method</div>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  className={styles.radio}
-                  type="radio"
-                  name="shipping"
-                  value="standard"
-                  checked={shipping === "standard"}
-                  onChange={() => setShipping("standard")}
-                />
-                Standard Shipping (3-5 Business days) -$10.00
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  className={styles.radio}
-                  type="radio"
-                  name="shipping"
-                  value="express"
-                  checked={shipping === "express"}
-                  onChange={() => setShipping("express")}
-                />
-                Express Delivery (1-2 Business days) -$20.00
-              </label>
-            </div>
-            <div className={styles.sectionTitle}>Payment Method</div>
-            <input className={styles.input} type="text" placeholder="Card Number" required />
-            <input className={styles.input} type="text" placeholder="Expiration date" required />
-            <div className={styles.paymentRow}>
-              <input className={styles.input} type="text" placeholder="CVV" required style={{ maxWidth: 120 }} />
-              <button type="button" className={styles.payBtn}>P</button>
-              <button type="button" className={styles.payBtn}>#Pay</button>
-              <button type="button" className={styles.payBtn}>G Pay</button>
-            </div>
-            <div className={styles.checkRow}>
-              <input
-                className={styles.input}
-                type="checkbox"
-                id="saveCard"
-                checked={saveCard}
-                onChange={() => setSaveCard(!saveCard)}
-              />
-              <label htmlFor="saveCard">Save this card for future purchases</label>
-            </div>
-          </form>
-          <div className={styles.summaryCard}>
-            <div className={styles.summaryTitle}>Order Summary</div>
+      <NavbarWithSuspense />
+      <main className={styles.checkoutContainer}>
+        <h1 className={styles.heading}>Secure Checkout</h1>
+
+        <div className={styles.checkoutContent}>
+          <div className={styles.paymentSection}>
+            {clientSecret && (
+              <Elements options={options} stripe={stripePromise}>
+                <CheckoutForm orderId={orderId} total={total} />
+              </Elements>
+            )}
+          </div>
+
+          <div className={styles.orderSummary}>
+            <h2>Order Summary</h2>
+
             <div className={styles.summaryItems}>
-              {orderItems.map((item, idx) => (
-                <div className={styles.summaryItem} key={idx}>
-                  <img src={item.image} alt={item.name} className={styles.summaryImg} />
-                  <div className={styles.summaryInfo}>
-                    <div className={styles.summaryName}>{item.name}</div>
-                    <div className={styles.summarySize}>Size {item.size}</div>
+              {items.map((item) => (
+                <div key={item.id} className={styles.summaryItem}>
+                  <div className={styles.itemDetails}>
+                    <span className={styles.itemName}>{item.name}</span>
+                    <span className={styles.itemQty}>Qty: {item.quantity}</span>
                   </div>
-                  <div className={styles.summaryPrice}>${item.price.toFixed(2)}</div>
+                  <span className={styles.itemPrice}>${item.subtotal.toFixed(2)}</span>
                 </div>
               ))}
             </div>
-            <div className={styles.summaryRow}>
-              <span>Subtotal</span>
-              <span>$360.00</span>
+
+            <div className={styles.summaryTotals}>
+              <div className={styles.summaryRow}>
+                <span>Subtotal</span>
+                <span>${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Shipping</span>
+                <span>${shipping.toFixed(2)}</span>
+              </div>
+              <div className={styles.summaryTotal}>
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
             </div>
-            <div className={styles.summaryRow}>
-              <span>Shipping</span>
-              <span>6.00</span>
-            </div>
-            <div className={styles.summaryRow}>
-              <span>Tax</span>
-              <span>0.00</span>
-            </div>
-            <div className={styles.summaryTotalRow}>
-              <span>Total</span>
-              <span className={styles.summaryTotal}>$370.00</span>
-            </div>
-            <button className={styles.placeOrderBtn} type="button">Place Order</button>
           </div>
         </div>
       </main>
       <Footer />
     </div>
   );
-} 
+}

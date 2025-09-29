@@ -1,8 +1,62 @@
-// import { ApiError } from '@/app/store/types';
-
+// API base URL configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Get auth token from localStorage or cookies
+// Ensure consistent protocol usage
+const getApiUrl = (endpoint: string) => {
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  
+  // In development, always use HTTP for localhost
+  if (process.env.NODE_ENV !== 'production' && url.includes('localhost')) {
+    return url.replace('https:', 'http:');
+  }
+  
+  return url;
+};
+
+// Server availability tracking
+let isServerAvailable = true;
+let lastServerCheck = 0;
+const SERVER_CHECK_INTERVAL = 30000; // 30 seconds
+
+// Types and Interfaces
+interface ApiRequestOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  headers?: Record<string, string>;
+  body?: any;
+  requireAuth?: boolean;
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+// Server Health Check
+const checkServerAvailability = async (): Promise<boolean> => {
+  const now = Date.now();
+  if (now - lastServerCheck < SERVER_CHECK_INTERVAL) {
+    return isServerAvailable;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`);
+    isServerAvailable = response.ok;
+    lastServerCheck = now;
+    return isServerAvailable;
+  } catch (error) {
+    isServerAvailable = false;
+    lastServerCheck = now;
+    return false;
+  }
+};
+
+// Authentication Token Management
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   
@@ -19,14 +73,12 @@ const getAuthToken = (): string | null => {
   return cookieToken || null;
 };
 
-// Set auth token in localStorage
 export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('accessToken', token);
   }
 };
 
-// Remove auth token
 export const removeAuthToken = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('accessToken');
@@ -36,18 +88,46 @@ export const removeAuthToken = () => {
   }
 };
 
-// API request wrapper with authentication
-interface ApiRequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  headers?: Record<string, string>;
-  body?: any;
-  requireAuth?: boolean;
-}
+// Token Refresh Handler
+const refreshAuthToken = async (): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.accessToken) {
+        setAuthToken(data.accessToken);
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    return false;
+  }
+};
 
+// Main API Request Handler
 export const apiRequest = async <T = any>(
   endpoint: string, 
   options: ApiRequestOptions = {}
 ): Promise<T> => {
+  // Check server availability first
+  if (!await checkServerAvailability()) {
+    throw new ApiError(
+      'The server is currently unavailable. Please try again later.',
+      503,
+      'SERVER_UNAVAILABLE'
+    );
+  }
+
   const { method = 'GET', headers = {}, body, requireAuth = false } = options;
   
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
@@ -135,48 +215,9 @@ export const apiRequest = async <T = any>(
   }
 };
 
-// Refresh authentication token
-const refreshAuthToken = async (): Promise<boolean> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (data.accessToken) {
-        setAuthToken(data.accessToken);
-        return true;
-      }
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    return false;
-  }
-};
-
-// API Error class
-class ApiError extends Error {
-  public status?: number;
-  public code?: string;
-  
-  constructor(message: string, status?: number, code?: string) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.code = code;
-  }
-}
-
-// Export API endpoints
+// API Endpoints Configuration
 export const API_ENDPOINTS = {
-  // Auth
+  // Authentication
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
@@ -185,6 +226,7 @@ export const API_ENDPOINTS = {
     VERIFY: '/auth/verify',
     PROFILE: '/auth/profile',
   },
+
   // Products
   PRODUCTS: {
     LIST: '/products',
@@ -202,6 +244,7 @@ export const API_ENDPOINTS = {
       DELETE: (id: string) => `/admin/products/${id}`,
     },
   },
+
   // Collections
   COLLECTIONS: {
     LIST: '/collections',
@@ -209,7 +252,8 @@ export const API_ENDPOINTS = {
     BY_NAME: (name: string) => `/collections/${name}`,
     PRODUCTS: (name: string) => `/collections/${name}/products`,
   },
-  // Cart
+
+  // Shopping Cart
   CART: {
     GET: '/cart',
     ADD: '/cart/add',
@@ -217,6 +261,7 @@ export const API_ENDPOINTS = {
     REMOVE: (itemId: string) => `/cart/item/${itemId}`,
     CLEAR: '/cart/clear',
   },
+
   // Wishlist
   WISHLIST: {
     GET: '/wishlist',
@@ -226,13 +271,15 @@ export const API_ENDPOINTS = {
     CLEAR: '/wishlist/clear',
     MOVE_TO_CART: (productId: string) => `/wishlist/move-to-cart/${productId}`,
   },
+
   // Orders
   ORDERS: {
     LIST: '/orders',
     BY_ID: (id: string) => `/orders/${id}`,
     CREATE: '/orders',
   },
-  // Addresses
+
+  // User Addresses
   ADDRESSES: {
     LIST: '/addresses',
     BY_ID: (id: string) => `/addresses/${id}`,
@@ -240,7 +287,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/addresses/${id}`,
     DELETE: (id: string) => `/addresses/${id}`,
   },
-  // Users (Admin)
+
+  // User Management (Admin)
   USERS: {
     LIST: '/auth/admin/users',
     BY_ID: (id: string) => `/auth/admin/users/${id}`,

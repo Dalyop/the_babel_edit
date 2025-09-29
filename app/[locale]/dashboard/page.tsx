@@ -503,9 +503,9 @@ function Dashboard() {
                       error
                     }
                   </p>
-                  <div className="text-sm text-gray-500 mb-4">
+                  {/* <div className="text-sm text-gray-500 mb-4">
                     Backend URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}
-                  </div>
+                  </div> */}
                   <button 
                     onClick={() => fetchFeaturedProducts(8, true)}
                     className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
