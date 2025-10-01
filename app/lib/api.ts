@@ -37,15 +37,43 @@ export class ApiError extends Error {
   }
 }
 
+// Cookie utility functions (matching AuthContext)
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const setCookie = (name: string, value: string, days = 7) => {
+  if (typeof document === 'undefined') return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
+};
+
+const deleteCookie = (name: string) => {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
 // Server Health Check
-const checkServerAvailability = async (): Promise<boolean> => {
+export const checkServerAvailability = async (): Promise<boolean> => {
   const now = Date.now();
   if (now - lastServerCheck < SERVER_CHECK_INTERVAL) {
     return isServerAvailable;
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
     isServerAvailable = response.ok;
     lastServerCheck = now;
     return isServerAvailable;
@@ -56,40 +84,53 @@ const checkServerAvailability = async (): Promise<boolean> => {
   }
 };
 
-// Authentication Token Management
+// Authentication Token Management (using cookies like AuthContext)
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   
-  // Try localStorage first (for React state persistence)
-  const token = localStorage.getItem('accessToken');
-  if (token) return token;
-  
-  // Fallback to cookies
-  const cookieToken = document.cookie
-    .split(';')
-    .find(row => row.trim().startsWith('accessToken='))
-    ?.split('=')[1];
-    
-  return cookieToken || null;
+  // Use cookies (matching AuthContext approach)
+  return getCookie('accessToken');
 };
 
 export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('accessToken', token);
+    setCookie('accessToken', token, 7);
   }
 };
 
 export const removeAuthToken = () => {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    // Also try to clear cookie (though it should be httpOnly)
-    document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    deleteCookie('accessToken');
+    deleteCookie('refreshToken');
+    deleteCookie('userRole');
   }
 };
 
 // Token Refresh Handler
-const refreshAuthToken = async (): Promise<boolean> => {
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+const subscribeTokenRefresh = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach(callback => callback(token));
+  refreshSubscribers = [];
+};
+
+const refreshAuthToken = async (): Promise<string | null> => {
+  if (isRefreshing) {
+    // Wait for the ongoing refresh to complete
+    return new Promise((resolve) => {
+      subscribeTokenRefresh((token: string) => {
+        resolve(token);
+      });
+    });
+  }
+
+  isRefreshing = true;
+
   try {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -103,14 +144,17 @@ const refreshAuthToken = async (): Promise<boolean> => {
       const data = await response.json();
       if (data.accessToken) {
         setAuthToken(data.accessToken);
-        return true;
+        onTokenRefreshed(data.accessToken);
+        return data.accessToken;
       }
     }
     
-    return false;
+    return null;
   } catch (error) {
     console.error('Token refresh error:', error);
-    return false;
+    return null;
+  } finally {
+    isRefreshing = false;
   }
 };
 
@@ -120,9 +164,10 @@ export const apiRequest = async <T = any>(
   options: ApiRequestOptions = {}
 ): Promise<T> => {
   // Check server availability first
-  if (!await checkServerAvailability()) {
+  const serverAvailable = await checkServerAvailability();
+  if (!serverAvailable) {
     throw new ApiError(
-      'The server is currently unavailable. Please try again later.',
+      'The server is currently unavailable. Please check if the backend server is running on port 5000.',
       503,
       'SERVER_UNAVAILABLE'
     );
@@ -130,7 +175,7 @@ export const apiRequest = async <T = any>(
 
   const { method = 'GET', headers = {}, body, requireAuth = false } = options;
   
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const url = getApiUrl(endpoint);
   
   // Prepare headers
   const requestHeaders: Record<string, string> = {
@@ -139,13 +184,13 @@ export const apiRequest = async <T = any>(
   };
   
   // Add auth token if required or available
-  if (requireAuth || getAuthToken()) {
-    const token = getAuthToken();
-    if (token) {
-      requestHeaders.Authorization = `Bearer ${token}`;
-    } else if (requireAuth) {
-      throw new Error('Authentication required but no token available');
-    }
+  const token = getAuthToken();
+  if (requireAuth && !token) {
+    throw new ApiError('Authentication required but no token available', 401);
+  }
+  
+  if (token) {
+    requestHeaders.Authorization = `Bearer ${token}`;
   }
   
   // Prepare request config
@@ -161,33 +206,26 @@ export const apiRequest = async <T = any>(
   }
   
   try {
-    const response = await fetch(url, requestConfig);
+    let response = await fetch(url, requestConfig);
     
     // Handle authentication errors
-    if (response.status === 401) {
+    if (response.status === 401 && token) {
       // Try to refresh token
-      const refreshed = await refreshAuthToken();
-      if (refreshed) {
+      const newToken = await refreshAuthToken();
+      if (newToken) {
         // Retry the original request with new token
-        const newToken = getAuthToken();
-        if (newToken) {
-          requestHeaders.Authorization = `Bearer ${newToken}`;
-        }
-        const retryResponse = await fetch(url, requestConfig);
+        requestHeaders.Authorization = `Bearer ${newToken}`;
+        const retryConfig = { ...requestConfig, headers: requestHeaders };
+        response = await fetch(url, retryConfig);
         
-        if (!retryResponse.ok) {
-          throw new ApiError(
-            retryResponse.status === 401 ? 'Authentication failed' : 'Request failed',
-            retryResponse.status
-          );
+        if (!response.ok && response.status === 401) {
+          removeAuthToken();
+          throw new ApiError('Session expired. Please login again.', 401, 'SESSION_EXPIRED');
         }
-        
-        const retryResult = await retryResponse.json();
-        return retryResult;
       } else {
         // Refresh failed, user needs to login again
         removeAuthToken();
-        throw new ApiError('Authentication required', 401);
+        throw new ApiError('Session expired. Please login again.', 401, 'SESSION_EXPIRED');
       }
     }
     
@@ -195,7 +233,8 @@ export const apiRequest = async <T = any>(
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
         errorData.message || `Request failed with status ${response.status}`,
-        response.status
+        response.status,
+        errorData.code
       );
     }
     
@@ -210,7 +249,9 @@ export const apiRequest = async <T = any>(
     // Network or other errors
     console.error('API request error:', error);
     throw new ApiError(
-      error instanceof Error ? error.message : 'Network error occurred'
+      error instanceof Error ? error.message : 'Network error occurred',
+      undefined,
+      'NETWORK_ERROR'
     );
   }
 };
@@ -232,7 +273,7 @@ export const API_ENDPOINTS = {
     LIST: '/products',
     FEATURED: '/products/featured',
     BY_ID: (id: string) => `/products/${id}`,
-    SEARCH: '/products',
+    SEARCH: '/products/search',
     SUGGESTIONS: '/search/suggestions',
     FILTER_OPTIONS: '/filter-options',
     // Admin endpoints

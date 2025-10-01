@@ -78,8 +78,9 @@ const AdminPage = () => {
     setError(null);
     
     try {
+      // Use the admin products endpoint
       const response = await apiRequest<{ products: Product[] }>(
-        API_ENDPOINTS.PRODUCTS.LIST,
+        API_ENDPOINTS.PRODUCTS.ADMIN.LIST,
         { requireAuth: true }
       );
       setProducts(response.products);
@@ -98,7 +99,7 @@ const AdminPage = () => {
       
       if (retry && retryCount < MAX_RETRIES && !isServerError) {
         setRetryCount(prev => prev + 1);
-        setTimeout(() => fetchProducts(true), 1000 * Math.pow(2, retryCount)); // Exponential backoff
+        setTimeout(() => fetchProducts(true), 1000 * Math.pow(2, retryCount));
       } else {
         if (isServerError) {
           toast.error('Backend server is not responding. Please ensure it is running on port 5000.', {
@@ -137,16 +138,19 @@ const AdminPage = () => {
     setError(null);
     
     try {
-      await apiRequest(API_ENDPOINTS.PRODUCTS.ADMIN.DELETE(id), {
-        method: 'DELETE',
-        requireAuth: true
-      });
+      await apiRequest(
+        API_ENDPOINTS.PRODUCTS.ADMIN.DELETE(id), 
+        {
+          method: 'DELETE',
+          requireAuth: true
+        }
+      );
       
       toast.success(`Product "${name}" deleted successfully`);
       await fetchProducts();
       closeDeleteModal();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to delete product';
+      const errorMessage = error.message || 'Failed to delete product';
       console.error('Error deleting product:', error);
       
       setError({ 
@@ -165,10 +169,13 @@ const AdminPage = () => {
     setActionLoading(prev => ({ ...prev, [`delete-user-${id}`]: true }));
     
     try {
-      await apiRequest(API_ENDPOINTS.USERS.DELETE(id), {
-        method: 'DELETE',
-        requireAuth: true,
-      });
+      await apiRequest(
+        API_ENDPOINTS.USERS.DELETE(id), 
+        {
+          method: 'DELETE',
+          requireAuth: true,
+        }
+      );
       
       toast.success(`User "${name}" deleted successfully`);
       fetchUsers();
@@ -186,11 +193,14 @@ const AdminPage = () => {
     setActionLoading(prev => ({ ...prev, [`role-${userId}`]: true }));
     
     try {
-      await apiRequest(API_ENDPOINTS.USERS.UPDATE_ROLE(userId), {
-        method: 'PUT',
-        body: { role: newRole },
-        requireAuth: true,
-      });
+      await apiRequest(
+        API_ENDPOINTS.USERS.UPDATE_ROLE(userId), 
+        {
+          method: 'PUT',
+          body: { role: newRole },
+          requireAuth: true,
+        }
+      );
       
       toast.success('User role updated successfully');
       fetchUsers();
@@ -204,13 +214,13 @@ const AdminPage = () => {
   };
 
   const handleDeleteError = (error: any, itemName: string) => {
-    if (error.response?.status === 403) {
+    if (error.status === 403) {
       toast.error('You do not have permission to delete this product');
-    } else if (error.response?.status === 404) {
+    } else if (error.status === 404) {
       toast.error('Product not found. It may have been deleted already.');
       fetchProducts();
     } else {
-      toast.error(error.response?.data?.message || error.message || 'Delete failed');
+      toast.error(error.message || 'Delete failed');
     }
   };
 
@@ -255,7 +265,7 @@ const AdminPage = () => {
     {
       key: 'price',
       header: 'Price',
-      cell: (product) => `$${product.price.toFixed(2)}`
+      cell: (product) => `${product.price.toFixed(2)}`
     },
     {
       key: 'stock',
