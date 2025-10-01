@@ -4,15 +4,28 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiRequest, API_ENDPOINTS, setAuthToken, removeAuthToken, checkServerAvailability } from '@/app/lib/api';
 
+type Address = {
+  id?: string;
+  type: string;
+  address: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+};
+
 interface User {
   id: string;
   email: string;
   firstName?: string;
   lastName?: string;
   role: string;
+  name: string;
+  phone?: string;
+  avatar?: string;
+  addresses?: Address[];
   isVerified?: boolean;
 }
-
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;

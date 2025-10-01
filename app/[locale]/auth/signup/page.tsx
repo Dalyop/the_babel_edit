@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./signup.module.css";
 import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function SignupPage() {
   const params = useParams();
@@ -50,23 +51,6 @@ export default function SignupPage() {
     return errors;
   };
 
-  // Show toast function (you'll need to implement this based on your toast system)
-  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
-    // Replace this with your actual toast implementation
-    // Example: toast.error(message) or toast.success(message)
-    console.log(`${type.toUpperCase()}: ${message}`);
-
-    // If you're using a toast library like react-hot-toast:
-    // if (type === 'error') {
-    //   toast.error(message);
-    // } else {
-    //   toast.success(message);
-    // }
-
-    // Or if you have a custom toast context:
-    // showToast(message, type);
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -96,43 +80,43 @@ export default function SignupPage() {
   const validateForm = (): boolean => {
     // Check if all required fields are filled
     if (!formData.firstname.trim()) {
-      showToast("First name is required");
+      toast.error("First name is required");
       return false;
     }
 
     if (!formData.lastname.trim()) {
-      showToast("Last name is required");
+      toast.error("Last name is required");
       return false;
     }
 
     if (!formData.email.trim()) {
-      showToast("Email is required");
+      toast.error("Email is required");
       return false;
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      showToast("Please enter a valid email address");
+      toast.error("Please enter a valid email address");
       return false;
     }
 
     // Password validation
     const passwordValidationErrors = validatePassword(formData.password);
     if (passwordValidationErrors.length > 0) {
-      showToast(passwordValidationErrors[0]); // Show first error
+      toast.error(passwordValidationErrors[0]); // Show first error
       return false;
     }
 
     // Confirm password validation
     if (formData.password !== formData.confirmPassword) {
-      showToast("Passwords do not match");
+      toast.error("Passwords do not match");
       return false;
     }
 
     // Terms agreement validation
     if (!agree) {
-      showToast("You must agree to the Terms & Conditions");
+      toast.error("You must agree to the Terms & Conditions");
       return false;
     }
 
@@ -162,15 +146,16 @@ export default function SignupPage() {
       });
 
       if (result.success) {
-        showToast("Account created successfully!", 'success');
+        toast.success("Account created successfully!");
         router.push(`/${currentLocale}/dashboard`);
       } else {
-        showToast(result.error || "Failed to create account");
-        setError(result.error);
+        const errorMessage = result.error || "Failed to create account";
+        toast.error(errorMessage);
+        setError(errorMessage);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      showToast(errorMessage);
+      toast.error(errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);

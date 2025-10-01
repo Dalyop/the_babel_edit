@@ -46,16 +46,15 @@ export default function AccountPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [newAddress, setNewAddress] = useState({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
-  const [editingAddress, setEditingAddress] = useState<string | number | null>(null);
+  const [editingAddress, setEditingAddress] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [addressToDelete, setAddressToDelete] = useState<string | number | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
 
-  // Use ref to track if we've already fetched data
   const hasFetchedRef = useRef(false);
 
   // Redirect if not authenticated after loading completes
@@ -66,13 +65,12 @@ export default function AccountPage() {
     }
   }, [loading, user, router, currentLocale]);
 
-  // Memoize the fetchProfile function to prevent recreating it on every render
+  // Memoize the fetchProfile function
   const fetchProfile = useCallback(async () => {
-    if (!authenticatedFetch || hasFetchedRef.current) return;
+    if (!user) return;
 
     setProfileLoading(true);
     setError('');
-    hasFetchedRef.current = true;
 
     try {
       const endpoint = `/auth/profile`;
@@ -96,7 +94,7 @@ export default function AccountPage() {
         setForm({
           name: profileData.name,
           email: profileData.email,
-          phone: profileData.phone,
+          phone: profileData.phone || '',
         });
 
         // Update the user context with fresh data
@@ -108,39 +106,39 @@ export default function AccountPage() {
     } catch (err: any) {
       console.error('Profile fetch error:', err);
       setError(`Failed to load profile: ${err.message || err}`);
-      hasFetchedRef.current = false; // Reset on error so it can be retried
     } finally {
       setProfileLoading(false);
     }
-  }, [authenticatedFetch, updateUser]); // Only depend on stable functions
+  }, [authenticatedFetch, updateUser, user]);
 
-  // Initialize profile data from user context
+  // Initialize profile data from user context and fetch fresh data
   useEffect(() => {
-    if (user && (user.name || user.email) && !profile) {
+    if (!user || loading) return;
+
+    // Set initial profile from user context
+    if (!profile) {
       const userData = {
         name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         email: user.email || '',
         phone: user.phone || '',
         avatar: user.avatar || '',
-        addresses: user.addresses || [],
-        role: user.role || ''
+        addresses: user.addresses || []
       };
 
       setProfile(userData);
       setForm({
         name: userData.name,
         email: userData.email,
-        phone: userData.phone,
+        phone: userData.phone || '',
       });
     }
-  }, [user?.id, profile]); // Only run when user ID changes or profile is null
 
-  // Fetch fresh profile data (only once)
-  useEffect(() => {
-    if (user && authenticatedFetch && !hasFetchedRef.current) {
+    // Fetch fresh profile data only once
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       fetchProfile();
     }
-  }, [user?.id, fetchProfile]); // Only depend on user ID and the memoized fetch function
+  }, [user, loading, profile, authenticatedFetch, fetchProfile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -168,13 +166,10 @@ export default function AccountPage() {
           email: userData.email || '',
           phone: userData.phone || '',
           avatar: userData.avatar || '',
-          addresses: userData.addresses || [],
-          role: userData.role || ''
+          addresses: userData.addresses || []
         };
 
         setProfile(profileData);
-
-        // Update the global user context
         updateUser(userData);
       }
 
@@ -204,6 +199,12 @@ export default function AccountPage() {
       return;
     }
 
+    if (passwordForm.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
     setSaving(true);
     setError('');
 
@@ -228,7 +229,7 @@ export default function AccountPage() {
   };
 
   const handleEditAddress = (address: Address, idx: number) => {
-    setEditingAddress(address.id || idx);
+    setEditingAddress(address.id || String(idx));
     setNewAddress({
       type: address.type || 'home',
       address: address.address || '',
@@ -240,9 +241,14 @@ export default function AccountPage() {
     setShowAddressForm(true);
   };
 
-
   const handleAddressSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!newAddress.address.trim()) {
+      toast.error('Street address is required');
+      return;
+    }
+
     setSaving(true);
     setError('');
 
@@ -252,13 +258,14 @@ export default function AccountPage() {
         ? `/user/addresses/${editingAddress}`
         : '/user/addresses';
 
-      const response = await authenticatedFetch(endpoint, {
+      await authenticatedFetch(endpoint, {
         method,
         body: JSON.stringify(newAddress),
         headers: { 'Content-Type': 'application/json' }
       });
 
       // Refresh profile to get updated addresses
+      hasFetchedRef.current = false;
       await fetchProfile();
 
       setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
@@ -267,14 +274,13 @@ export default function AccountPage() {
       toast.success(`Address ${editingAddress !== null ? 'updated' : 'added'} successfully!`);
     } catch (err: any) {
       setError(`Failed to ${editingAddress !== null ? 'update' : 'add'} address: ${err.message || err}`);
-      toast.error(`Failed to ${editingAddress !== null ? 'update' : 'add'} address: ${err.message || err}`);
+      toast.error(`Failed to ${editingAddress !== null ? 'update' : 'add'} address`);
     } finally {
       setSaving(false);
     }
   };
 
-  // open dialog instead of deleting immediately
-  const handleDeleteAddress = (addressId: string | number) => {
+  const handleDeleteAddress = (addressId: string) => {
     setAddressToDelete(addressId);
     setDeleteDialogOpen(true);
   };
@@ -286,6 +292,8 @@ export default function AccountPage() {
       await authenticatedFetch(`/user/addresses/${addressToDelete}`, {
         method: "DELETE",
       });
+      
+      hasFetchedRef.current = false;
       await fetchProfile();
       toast.success("Address deleted successfully!");
     } catch (err: any) {
@@ -301,12 +309,10 @@ export default function AccountPage() {
     setLogoutDialogOpen(true);
   };
 
-
   const handleConfirm = () => {
     logout();
     setLogoutDialogOpen(false);
   };
-
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -386,37 +392,42 @@ export default function AccountPage() {
             </div>
 
             <div className={styles.addressesList}>
-              {profile?.addresses?.map((addr, idx) => (
-                <div key={idx} className={styles.addressItem}>
-                  <div className={styles.addressDetails}>
-                    <span className={styles.addressType}>{addr.type}</span>
-                    <p className={styles.addressText}>{addr.address}</p>
-                    {(addr.city || addr.state || addr.zipCode) && (
-                      <p className={styles.addressMeta}>
-                        {[addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ')}
-                      </p>
-                    )}
+              {profile?.addresses && profile.addresses.length > 0 ? (
+                profile.addresses.map((addr, idx) => (
+                  <div key={addr.id || idx} className={styles.addressItem}>
+                    <div className={styles.addressDetails}>
+                      <span className={styles.addressType}>{addr.type}</span>
+                      <p className={styles.addressText}>{addr.address}</p>
+                      {(addr.city || addr.state || addr.zipCode) && (
+                        <p className={styles.addressMeta}>
+                          {[addr.city, addr.state, addr.zipCode].filter(Boolean).join(', ')}
+                        </p>
+                      )}
+                      {addr.country && (
+                        <p className={styles.addressMeta}>{addr.country}</p>
+                      )}
+                    </div>
+                    <div className={styles.addressActions}>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => handleEditAddress(addr, idx)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={() => handleDeleteAddress(addr.id || String(idx))}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className={styles.addressActions}>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => handleEditAddress(addr, idx)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className={styles.deleteBtn}
-                      onClick={() => handleDeleteAddress(addr.id || idx)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>No addresses added yet. Click "Add New Address" to get started.</p>
                 </div>
-              )) || (
-                  <div className={styles.emptyState}>
-                    <p>No addresses added yet. Click "Add New Address" to get started.</p>
-                  </div>
-                )}
+              )}
             </div>
 
             {showAddressForm && (
@@ -439,7 +450,7 @@ export default function AccountPage() {
                   </label>
 
                   <label>
-                    <span>Street Address</span>
+                    <span>Street Address *</span>
                     <input
                       type="text"
                       name="address"
@@ -510,6 +521,7 @@ export default function AccountPage() {
                       onClick={() => {
                         setShowAddressForm(false);
                         setEditingAddress(null);
+                        setNewAddress({ type: 'home', address: '', city: '', state: '', zipCode: '', country: '' });
                       }}
                     >
                       Cancel
@@ -557,7 +569,7 @@ export default function AccountPage() {
                 name="newPassword"
                 value={passwordForm.newPassword}
                 onChange={handlePasswordChange}
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 8 characters)"
                 required
                 minLength={8}
                 className={styles.formInput}
@@ -607,31 +619,16 @@ export default function AccountPage() {
     }
   };
 
-  // Show loading while checking authentication
   if (loading) {
-    return <Loading
-      fullScreen={true}
-      text="Checking authentication..."
-      size="large"
-    />;
+    return <Loading fullScreen={true} text="Checking authentication..." size="large" />;
   }
 
-  // Redirect if no user (this will be handled by useEffect)
   if (!user) {
-    return <Loading
-      fullScreen={true}
-      text="Redirecting to login..."
-      size="large"
-    />;
+    return <Loading fullScreen={true} text="Redirecting to login..." size="large" />;
   }
 
-  // Show loading while fetching profile (only if we don't have basic user data)
   if (profileLoading && !profile) {
-    return <Loading
-      fullScreen={true}
-      text="Loading your profile..."
-      size="large"
-    />;
+    return <Loading fullScreen={true} text="Loading your profile..." size="large" />;
   }
 
   return (
@@ -655,7 +652,6 @@ export default function AccountPage() {
         </div>
 
         <div className={styles.profileContent}>
-          {/* Show error message if there's an error */}
           {error && (
             <div style={{
               padding: '1rem',
@@ -666,8 +662,6 @@ export default function AccountPage() {
               marginBottom: '1rem'
             }}>
               <strong>Error:</strong> {error}
-              <br />
-              <small>Check the browser console for more details.</small>
             </div>
           )}
 
@@ -687,10 +681,8 @@ export default function AccountPage() {
             </div>
           </div>
 
-          {/* Tab Content */}
           {renderTabContent()}
 
-          {/* Logout Confirmation Dialog */}
           <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -710,7 +702,6 @@ export default function AccountPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Delete Address Confirmation Dialog */}
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
