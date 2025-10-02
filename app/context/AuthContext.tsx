@@ -128,11 +128,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Restore user from localStorage
       const storedUser = getUserData();
       const storedToken = getCookie('accessToken');
-      
+
       if (storedUser && storedToken) {
         setUserState(storedUser);
         setCookie('userRole', storedUser.role, 7);
-        
+
         // Verify the stored credentials are still valid
         const isValid = await verifyStoredAuth();
         if (!isValid) {
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Have token but no user data, fetch user info
         await checkAuth();
       }
-      
+
     } catch (error) {
       console.error('Auth initialization failed:', error);
       clearAuthData();
@@ -164,14 +164,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setCookie('userRole', response.user.role, 7);
         return true;
       }
-      
+
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth verification failed:', error);
-      return false;
+
+      // Don't clear auth on 500 errors - only on 401
+      if (error.status === 401 || error.code === 'SESSION_EXPIRED') {
+        return false;
+      }
+
+      // For other errors (like 500), keep existing session
+      // and let the user continue
+      console.warn('Verify endpoint error - keeping existing session');
+      return true; // Assume valid if we have a token
     }
   };
-
+  
   const checkAuth = async () => {
     try {
       const token = getCookie('accessToken');
@@ -212,16 +221,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserState(response.user);
       setUserData(response.user);
       setCookie('userRole', response.user.role, 7);
-      
+
       toast.success("Login successful!");
-      
+
       return { success: true };
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Login failed');
-      return { 
-        success: false, 
-        error: error.message || 'Login failed' 
+      return {
+        success: false,
+        error: error.message || 'Login failed'
       };
     }
   };
@@ -241,16 +250,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUserState(response.user);
       setUserData(response.user);
       setCookie('userRole', response.user.role, 7);
-      
+
       toast.success("Account created successfully!");
-      
+
       return { success: true };
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(error.message || 'Signup failed');
-      return { 
-        success: false, 
-        error: error.message || 'Signup failed' 
+      return {
+        success: false,
+        error: error.message || 'Signup failed'
       };
     }
   };
@@ -285,13 +294,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
     } catch (error: any) {
       console.error('API call failed:', error);
-      
+
       // If session expired, clear auth and redirect
       if (error.code === 'SESSION_EXPIRED') {
         clearAuthData();
         router.push('/login');
       }
-      
+
       throw error;
     }
   };

@@ -37,7 +37,13 @@ export class ApiError extends Error {
   }
 }
 
-// Cookie utility functions (matching AuthContext)
+// Helper to check if running in development
+const isDevelopment = () => {
+  return process.env.NODE_ENV !== 'production' || 
+         (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+};
+
+// Cookie utility functions (matching AuthContext but with secure flag fix)
 const getCookie = (name: string): string | null => {
   if (typeof document === 'undefined') return null;
   const nameEQ = name + "=";
@@ -54,12 +60,26 @@ const setCookie = (name: string, value: string, days = 7) => {
   if (typeof document === 'undefined') return;
   const expires = new Date();
   expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;samesite=strict`;
+  
+  // Only use secure flag in production (HTTPS)
+  const secureFlag = isDevelopment() ? '' : ';secure';
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/${secureFlag};samesite=strict`;
+  
+  // Debug log in development
+  if (isDevelopment()) {
+    console.log(`Cookie set: ${name}`, { value: value.substring(0, 20) + '...', expires: expires.toUTCString() });
+  }
 };
 
 const deleteCookie = (name: string) => {
   if (typeof document === 'undefined') return;
+  // Delete with and without secure flag to ensure removal
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;secure;samesite=strict`;
+  
+  if (isDevelopment()) {
+    console.log(`Cookie deleted: ${name}`);
+  }
 };
 
 // Server Health Check
@@ -88,8 +108,13 @@ export const checkServerAvailability = async (): Promise<boolean> => {
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   
-  // Use cookies (matching AuthContext approach)
-  return getCookie('accessToken');
+  const token = getCookie('accessToken');
+  
+  if (isDevelopment() && !token) {
+    console.warn('No auth token found in cookies');
+  }
+  
+  return token;
 };
 
 export const setAuthToken = (token: string) => {
@@ -103,6 +128,10 @@ export const removeAuthToken = () => {
     deleteCookie('accessToken');
     deleteCookie('refreshToken');
     deleteCookie('userRole');
+    
+    if (isDevelopment()) {
+      console.log('All auth tokens removed');
+    }
   }
 };
 
@@ -132,6 +161,10 @@ const refreshAuthToken = async (): Promise<string | null> => {
   isRefreshing = true;
 
   try {
+    if (isDevelopment()) {
+      console.log('Attempting to refresh token...');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
@@ -145,8 +178,17 @@ const refreshAuthToken = async (): Promise<string | null> => {
       if (data.accessToken) {
         setAuthToken(data.accessToken);
         onTokenRefreshed(data.accessToken);
+        
+        if (isDevelopment()) {
+          console.log('Token refreshed successfully');
+        }
+        
         return data.accessToken;
       }
+    }
+    
+    if (isDevelopment()) {
+      console.warn('Token refresh failed:', response.status);
     }
     
     return null;
@@ -186,7 +228,10 @@ export const apiRequest = async <T = any>(
   // Add auth token if required or available
   const token = getAuthToken();
   if (requireAuth && !token) {
-    throw new ApiError('Authentication required but no token available', 401);
+    if (isDevelopment()) {
+      console.error('Auth required but no token available for:', endpoint);
+    }
+    throw new ApiError('Authentication required but no token available', 401, 'NO_TOKEN');
   }
   
   if (token) {
@@ -205,11 +250,22 @@ export const apiRequest = async <T = any>(
     requestConfig.body = JSON.stringify(body);
   }
   
+  if (isDevelopment()) {
+    console.log(`API Request: ${method} ${endpoint}`, { 
+      hasToken: !!token,
+      requireAuth 
+    });
+  }
+  
   try {
     let response = await fetch(url, requestConfig);
     
     // Handle authentication errors
     if (response.status === 401 && token) {
+      if (isDevelopment()) {
+        console.log('Received 401, attempting token refresh...');
+      }
+      
       // Try to refresh token
       const newToken = await refreshAuthToken();
       if (newToken) {
@@ -231,6 +287,11 @@ export const apiRequest = async <T = any>(
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      
+      if (isDevelopment()) {
+        console.error(`API Error: ${response.status}`, errorData);
+      }
+      
       throw new ApiError(
         errorData.message || `Request failed with status ${response.status}`,
         response.status,
@@ -239,6 +300,11 @@ export const apiRequest = async <T = any>(
     }
     
     const result = await response.json();
+    
+    if (isDevelopment()) {
+      console.log(`API Success: ${method} ${endpoint}`);
+    }
+    
     return result;
     
   } catch (error) {
@@ -332,9 +398,9 @@ export const API_ENDPOINTS = {
   // User Management (Admin)
   USERS: {
     LIST: '/auth/admin/users',
-    BY_ID: (id: string) => `/auth/admin/users/${id}`,
-    UPDATE_ROLE: (id: string) => `/auth/admin/users/${id}/role`,
-    DELETE: (id: string) => `/auth/admin/users/${id}`,
-    STATS: '/auth/admin/users/stats',
+    BY_ID: (id: string) => `/auth/users/${id}`,
+    UPDATE_ROLE: (id: string) => `/auth/users/${id}/role`,
+    DELETE: (id: string) => `/auth/users/${id}`,
+    STATS: '/auth/users/stats',
   },
 } as const;
