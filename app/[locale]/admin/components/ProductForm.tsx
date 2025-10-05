@@ -62,7 +62,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     try {
       const response = await apiRequest<{ collections: Collection[] }>(
         API_ENDPOINTS.COLLECTIONS.LIST,
-        { requireAuth: true }
+        { requireAuth: false }
       );
       // Sort collections by sortOrder, then by name
       const sortedCollections = response.collections

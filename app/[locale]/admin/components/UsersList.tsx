@@ -26,7 +26,7 @@ const UsersList: React.FC = () => {
     try {
       const response = await apiRequest<{ users: User[] }>(
         API_ENDPOINTS.USERS?.LIST || '/api/users', // Fallback if API_ENDPOINTS.USERS.LIST is undefined
-        { requireAuth: true }
+        { requireAuth: false }
       );
       setUsers(response.users);
     } catch (error) {
