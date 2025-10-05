@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { CartItem, CartResponse, Product } from './types';
 import { STORAGE_KEYS, setWithTimestamp, getWithTimestamp } from './storage';
-import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
+import { apiRequest, API_ENDPOINTS, ApiError } from '@/app/lib/api';
 
 interface CartState {
   items: CartItem[];
@@ -31,7 +31,18 @@ interface CartActions {
 
 type CartStore = CartState & CartActions;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Helper to get cookie
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
 
 const calculateTotals = (items: CartItem[]) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -291,60 +302,56 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   syncWithBackend: async () => {
-    const { items } = get();
+  const { items } = get();
+  
+  // Check for token in cookies (matching your auth system)
+  const token = getCookie('accessToken');
+  if (!token) {
+    console.log('No auth token found, skipping cart sync');
+    return;
+  }
+  
+  if (items.length === 0) {
+    console.log('No cart items to sync');
+    return;
+  }
+  
+  set({ loading: true, error: null });
+  
+  try {
+    console.log('Syncing cart with backend...', items.length, 'items');
     
-    // Only sync if user is authenticated and has items
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') || localStorage.getItem('token') : null;
-    if (!token) {
-      console.log('No auth token found, skipping cart sync');
-      return;
-    }
-    
-    if (items.length === 0) {
-      console.log('No cart items to sync');
-      return;
-    }
-    
-    set({ loading: true, error: null });
-    
-    try {
-      console.log('Syncing cart with backend...', items.length, 'items');
-      
-      // Sync local cart items with backend
-      let syncedCount = 0;
-      for (const item of items) {
-        // Only sync offline items (items created without backend)
-        if (item.id.startsWith('offline-')) {
-          try {
-            await apiRequest(API_ENDPOINTS.CART.ADD, {
-              method: 'POST',
-              requireAuth: true,
-              body: {
-                productId: item.productId,
-                quantity: item.quantity,
-                size: item.size,
-                color: item.color,
-              },
-            });
-            syncedCount++;
-          } catch (itemError) {
-            console.error('Failed to sync item:', item.id, itemError);
-          }
+    let syncedCount = 0;
+    for (const item of items) {
+      if (item.id.startsWith('offline-')) {
+        try {
+          await apiRequest(API_ENDPOINTS.CART.ADD, {
+            method: 'POST',
+            requireAuth: true,
+            body: {
+              productId: item.productId,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color,
+            },
+          });
+          syncedCount++;
+        } catch (itemError) {
+          console.error('Failed to sync item:', item.id, itemError);
         }
       }
-      
-      console.log(`Synced ${syncedCount} items with backend`);
-      
-      // After syncing, fetch the updated cart from backend
-      await get().fetchCart();
-      
-    } catch (error) {
-      console.error('Failed to sync cart with backend:', error);
-      set({ error: error instanceof Error ? error.message : 'Failed to sync cart' });
-    } finally {
-      set({ loading: false });
     }
-  },
+    
+    console.log(`Synced ${syncedCount} items with backend`);
+    await get().fetchCart();
+    
+  } catch (error) {
+    console.error('Failed to sync cart with backend:', error);
+    set({ error: error instanceof Error ? error.message : 'Failed to sync cart' });
+  } finally {
+    set({ loading: false });
+  }
+},
 }));
 
 
