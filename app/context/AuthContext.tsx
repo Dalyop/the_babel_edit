@@ -119,34 +119,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Check server health first
       const isServerHealthy = await checkServerAvailability();
-      if (!isServerHealthy) {
-        toast.error('Unable to connect to server. Please ensure the backend is running on port 5000.');
-        setLoading(false);
-        return;
-      }
 
       // Restore user from localStorage
       const storedUser = getUserData();
       const storedToken = getCookie('accessToken');
 
       if (storedUser && storedToken) {
+        // ✅ Set user immediately from storage
         setUserState(storedUser);
         setCookie('userRole', storedUser.role, 7);
+        setLoading(false); // ✅ Stop loading first
 
-        // Verify the stored credentials are still valid
-        const isValid = await verifyStoredAuth();
-        if (!isValid) {
-          clearAuthData();
+        if (!isServerHealthy) {
+          console.warn('Server unavailable - using stored credentials');
+          return;
         }
+
+        // ✅ Verify in background (but don't block the UI)
+        verifyStoredAuth().then(isValid => {
+          if (!isValid) {
+            console.warn('Token verification failed');
+            clearAuthData();
+          }
+        }).catch(error => {
+          console.error('Background verification error:', error);
+          // Don't clear auth on background errors
+        });
+
       } else if (storedToken) {
         // Have token but no user data, fetch user info
         await checkAuth();
+        setLoading(false);
+      } else {
+        // No credentials
+        setLoading(false);
       }
 
     } catch (error) {
       console.error('Auth initialization failed:', error);
-      clearAuthData();
-    } finally {
+      // ✅ Don't clear auth on initialization errors
       setLoading(false);
     }
   };
@@ -180,7 +191,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return true; // Assume valid if we have a token
     }
   };
-  
+
   const checkAuth = async () => {
     try {
       const token = getCookie('accessToken');
