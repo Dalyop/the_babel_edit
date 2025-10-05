@@ -21,8 +21,11 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   const isAuthenticated = !!user;
-  const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'super_admin';
-
+ const isAdmin = user?.role && 
+  ['admin', 'super_admin', 'super-admin', 'superadmin'].includes(
+    user.role.toLowerCase().replace(/[_-]/g, '')
+  );
+  
   useEffect(() => {
     let mounted = true;
 
