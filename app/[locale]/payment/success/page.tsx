@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import { Elements, useStripe } from '@stripe/react-stripe-js';
 import stripePromise from '../../../lib/stripe';
 import { useCartStore } from '@/app/store/useCartStore';
@@ -12,8 +12,11 @@ function PaymentSuccessContent() {
   const stripe = useStripe();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  
   const { clearCart } = useCartStore();
-
+  
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +26,7 @@ function PaymentSuccessContent() {
     }
 
     const clientSecret = searchParams.get('payment_intent_client_secret');
-
+    
     if (!clientSecret) {
       setMessage('Invalid payment session');
       setLoading(false);
@@ -69,14 +72,14 @@ function PaymentSuccessContent() {
             Thank you for your purchase. Your order has been confirmed.
           </p>
           <div className={styles.successActions}>
-            <button 
-              onClick={() => router.push('/orders')}
+            <button
+              onClick={() => router.push(`/${locale}/orders`)}
               className={styles.primaryButton}
             >
               View Orders
             </button>
-            <button 
-              onClick={() => router.push('/products')}
+            <button
+              onClick={() => router.push(`/${locale}/products`)}
               className={styles.secondaryButton}
             >
               Continue Shopping
@@ -89,14 +92,14 @@ function PaymentSuccessContent() {
           <h1 className={styles.errorTitle}>Payment Status</h1>
           <p className={styles.errorMessage}>{message}</p>
           <div className={styles.successActions}>
-            <button 
-              onClick={() => router.push('/checkout')}
+            <button
+              onClick={() => router.push(`/${locale}/checkout`)}
               className={styles.primaryButton}
             >
               Try Again
             </button>
-            <button 
-              onClick={() => router.push('/cart')}
+            <button
+              onClick={() => router.push(`/${locale}/cart`)}
               className={styles.secondaryButton}
             >
               Return to Cart

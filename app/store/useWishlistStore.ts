@@ -14,12 +14,12 @@ interface WishlistActions {
   addToWishlist: (productId: string) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
   clearWishlist: () => Promise<void>;
-  
+
   // Data management
   fetchWishlist: () => Promise<void>;
   loadFromStorage: () => void;
   syncWithBackend: () => Promise<void>;
-  
+
   // Getters
   isInWishlist: (productId: string) => boolean;
   getWishlistCount: () => number;
@@ -27,7 +27,17 @@ interface WishlistActions {
 
 type WishlistStore = WishlistState & WishlistActions;
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
 
 const saveToStorage = (items: WishlistItem[]) => {
   setWithTimestamp(STORAGE_KEYS.WISHLIST, { items });
@@ -44,7 +54,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   addToWishlist: async (productId: string) => {
     const { items } = get();
-    
+
     // Check if product is already in wishlist
     const existingItem = items.find(item => item.productId === productId);
     if (existingItem) {
@@ -52,21 +62,21 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     }
 
     set({ loading: true, error: null });
-    
+
     try {
       await apiRequest(API_ENDPOINTS.WISHLIST.ADD, {
         method: 'POST',
         requireAuth: true,
         body: { productId },
       });
-      
+
       // Refresh wishlist after adding
       await get().fetchWishlist();
-      
+
     } catch (error) {
       console.error('Failed to add to wishlist:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to add to wishlist' });
-      
+
       // Fallback to local storage for offline functionality
       const newItem: WishlistItem = {
         id: `offline-wishlist-${productId}-${Date.now()}`,
@@ -85,24 +95,24 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   removeFromWishlist: async (productId: string) => {
     set({ loading: true, error: null });
-    
+
     try {
       await apiRequest(API_ENDPOINTS.WISHLIST.REMOVE(productId), {
         method: 'DELETE',
         requireAuth: true,
       });
-      
+
       // Refresh wishlist after removing
       await get().fetchWishlist();
-      
+
     } catch (error) {
       console.error('Failed to remove from wishlist:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to remove from wishlist' });
-      
+
       // Fallback to local removal
       const { items } = get();
       const updatedItems = items.filter(item => item.productId !== productId);
-      
+
       set({ items: updatedItems });
       saveToStorage(updatedItems);
     } finally {
@@ -112,20 +122,20 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   clearWishlist: async () => {
     set({ loading: true, error: null });
-    
+
     try {
       await apiRequest(API_ENDPOINTS.WISHLIST.CLEAR, {
         method: 'DELETE',
         requireAuth: true,
       });
-      
+
       set({ items: [], error: null });
       saveToStorage([]);
-      
+
     } catch (error) {
       console.error('Failed to clear wishlist:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to clear wishlist' });
-      
+
       // Fallback to local clear
       set({ items: [] });
       saveToStorage([]);
@@ -136,7 +146,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   fetchWishlist: async () => {
     set({ loading: true, error: null });
-    
+
     try {
       const wishlistData = await apiRequest<{
         items: WishlistItem[];
@@ -145,17 +155,17 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         method: 'GET',
         requireAuth: true,
       });
-      
-      set({ 
-        items: wishlistData.items || [], 
-        error: null 
+
+      set({
+        items: wishlistData.items || [],
+        error: null
       });
-      
+
       saveToStorage(wishlistData.items || []);
-      
+
     } catch (error) {
       console.error('Failed to fetch wishlist:', error);
-      
+
       // If authenticated request fails, try loading from storage
       if (error instanceof Error && error.message.includes('Authentication')) {
         get().loadFromStorage();
@@ -170,7 +180,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   loadFromStorage: () => {
     const cachedData = getWithTimestamp<{ items: WishlistItem[] }>(STORAGE_KEYS.WISHLIST);
-    
+
     if (cachedData?.items?.length) {
       set({ items: cachedData.items, error: null });
     }
@@ -188,28 +198,26 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   syncWithBackend: async () => {
     const { items } = get();
-    
-    // Only sync if user is authenticated and has items
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') || localStorage.getItem('token') : null;
+
+    // ✅ CORRECT: Check for token in cookies
+    const token = getCookie('accessToken');
     if (!token) {
       console.log('No auth token found, skipping wishlist sync');
       return;
     }
-    
+
     if (items.length === 0) {
       console.log('No wishlist items to sync');
       return;
     }
-    
+
     set({ loading: true, error: null });
-    
+
     try {
       console.log('Syncing wishlist with backend...', items.length, 'items');
-      
-      // Sync local wishlist items with backend
+
       let syncedCount = 0;
       for (const item of items) {
-        // Only sync offline items (items created without backend)
         if (item.id.startsWith('offline-wishlist-')) {
           try {
             await apiRequest(API_ENDPOINTS.WISHLIST.ADD, {
@@ -223,12 +231,10 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
           }
         }
       }
-      
+
       console.log(`Synced ${syncedCount} wishlist items with backend`);
-      
-      // After syncing, fetch the updated wishlist from backend
       await get().fetchWishlist();
-      
+
     } catch (error) {
       console.error('Failed to sync wishlist with backend:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to sync wishlist' });

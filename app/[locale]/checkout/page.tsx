@@ -77,7 +77,7 @@ export default function CheckoutPage() {
         // Step 2: Create payment intent
         // ✅ Use /api/payments if your backend has /api prefix, otherwise use /payments
         const paymentResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-payment-intent`,
+          `${process.env.NEXT_PUBLIC_API_URL}/payments/create-payment-intent`,
           {
             method: 'POST',
             headers: {
