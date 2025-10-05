@@ -46,37 +46,37 @@ const AdminPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<ErrorState | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({ 
-    isOpen: false, 
-    type: 'product', 
-    id: '', 
-    name: '' 
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({
+    isOpen: false,
+    type: 'product',
+    id: '',
+    name: ''
   });
-  
+
   const MAX_RETRIES = 3;
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) || 'en';
-  
-  const isAdmin = user?.role?.toLowerCase() === 'admin';
+
+  const isAdmin = user?.role && ['admin', 'super_admin'].includes(user.role.toLowerCase());
 
   useEffect(() => {
-    if (!isAdmin && user) {
-      router.push(`/${locale}`);
-      return;
-    }
-    
-    if (isAdmin) {
+    // if (!isAdmin && user) {
+    //   router.push(`/${locale}`);
+    //   return;
+    // }
+
+    // if (isAdmin) {
       fetchProducts();
       fetchUsers();
-    }
-  }, [router, isAdmin, user, locale]);
+    // }
+  }, []);
 
   const fetchProducts = async (retry = false) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Use the admin products endpoint
       const response = await apiRequest<{ products: Product[] }>(
@@ -90,13 +90,13 @@ const AdminPage = () => {
       const errorMessage = isServerError
         ? 'The server is currently unavailable.'
         : error.message || 'Failed to fetch products';
-      
+
       console.error('Error fetching products:', error);
-      setError({ 
-        type: 'products', 
-        message: errorMessage 
+      setError({
+        type: 'products',
+        message: errorMessage
       });
-      
+
       if (retry && retryCount < MAX_RETRIES && !isServerError) {
         setRetryCount(prev => prev + 1);
         setTimeout(() => fetchProducts(true), 1000 * Math.pow(2, retryCount));
@@ -116,7 +116,7 @@ const AdminPage = () => {
 
   const fetchUsers = async () => {
     setUsersLoading(true);
-    
+
     try {
       const response = await apiRequest<{ users: AdminUser[] }>(
         API_ENDPOINTS.USERS.LIST,
@@ -136,28 +136,28 @@ const AdminPage = () => {
     const { id, name } = deleteConfirm;
     setActionLoading(prev => ({ ...prev, [`delete-product-${id}`]: true }));
     setError(null);
-    
+
     try {
       await apiRequest(
-        API_ENDPOINTS.PRODUCTS.ADMIN.DELETE(id), 
+        API_ENDPOINTS.PRODUCTS.ADMIN.DELETE(id),
         {
           method: 'DELETE',
           requireAuth: true
         }
       );
-      
+
       toast.success(`Product "${name}" deleted successfully`);
       await fetchProducts();
       closeDeleteModal();
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to delete product';
       console.error('Error deleting product:', error);
-      
-      setError({ 
-        type: 'action', 
+
+      setError({
+        type: 'action',
         message: `Failed to delete product "${name}": ${errorMessage}`
       });
-      
+
       handleDeleteError(error, name);
     } finally {
       setActionLoading(prev => ({ ...prev, [`delete-product-${id}`]: false }));
@@ -167,16 +167,16 @@ const AdminPage = () => {
   const handleDeleteUser = async () => {
     const { id, name } = deleteConfirm;
     setActionLoading(prev => ({ ...prev, [`delete-user-${id}`]: true }));
-    
+
     try {
       await apiRequest(
-        API_ENDPOINTS.USERS.DELETE(id), 
+        API_ENDPOINTS.USERS.DELETE(id),
         {
           method: 'DELETE',
           requireAuth: true,
         }
       );
-      
+
       toast.success(`User "${name}" deleted successfully`);
       fetchUsers();
       closeDeleteModal();
@@ -191,17 +191,17 @@ const AdminPage = () => {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setActionLoading(prev => ({ ...prev, [`role-${userId}`]: true }));
-    
+
     try {
       await apiRequest(
-        API_ENDPOINTS.USERS.UPDATE_ROLE(userId), 
+        API_ENDPOINTS.USERS.UPDATE_ROLE(userId),
         {
           method: 'PUT',
           body: { role: newRole },
           requireAuth: true,
         }
       );
-      
+
       toast.success('User role updated successfully');
       fetchUsers();
     } catch (error: any) {
@@ -239,14 +239,14 @@ const AdminPage = () => {
   };
 
   const getUserDisplayName = (user: AdminUser) => {
-    return user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}` 
+    return user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`
       : user.email;
   };
 
   const getUserInitial = (user: AdminUser) => {
-    return user.firstName 
-      ? user.firstName[0].toUpperCase() 
+    return user.firstName
+      ? user.firstName[0].toUpperCase()
       : user.email[0].toUpperCase();
   };
 
@@ -340,11 +340,10 @@ const AdminPage = () => {
       key: 'isVerified',
       header: 'Status',
       cell: (user) => (
-        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-          user.isVerified 
+        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${user.isVerified
             ? 'bg-green-100 text-green-800'
             : 'bg-yellow-100 text-yellow-800'
-        }`}>
+          }`}>
           {user.isVerified ? 'Verified' : 'Unverified'}
         </span>
       )
@@ -404,11 +403,10 @@ const AdminPage = () => {
 
   const renderTabButton = (tab: 'products' | 'users', icon: React.ReactNode, label: string) => (
     <button
-      className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium flex items-center space-x-2 ${
-        activeTab === tab
+      className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium flex items-center space-x-2 ${activeTab === tab
           ? 'border-blue-500 text-blue-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      }`}
+        }`}
       onClick={() => setActiveTab(tab)}
     >
       {icon}
@@ -420,13 +418,13 @@ const AdminPage = () => {
     <AdminProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         {renderError()}
-        
+
         {/* Header */}
         <div className="bg-white shadow">
           <div className={commonClasses.container}>
             <div className="flex h-16 justify-between items-center">
               <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
-              
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-gray-400" />
