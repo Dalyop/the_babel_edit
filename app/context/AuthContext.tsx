@@ -281,7 +281,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error('Logout error:', error);
     } finally {
       clearAuthData();
-      router.push('/login');
+      router.push('/auth/login');
     }
   };
 
@@ -298,7 +298,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // If session expired, clear auth and redirect
       if (error.code === 'SESSION_EXPIRED') {
         clearAuthData();
-        router.push('/login');
+        router.push('/auth/login');
       }
 
       throw error;
