@@ -88,7 +88,7 @@ const AdminPage = () => {
     } catch (error: any) {
       const isServerError = error.status === 503 || error.code === 'SERVER_UNAVAILABLE';
       const errorMessage = isServerError
-        ? 'The server is currently unavailable. Please check if the backend server is running.'
+        ? 'The server is currently unavailable.'
         : error.message || 'Failed to fetch products';
       
       console.error('Error fetching products:', error);
@@ -102,7 +102,7 @@ const AdminPage = () => {
         setTimeout(() => fetchProducts(true), 1000 * Math.pow(2, retryCount));
       } else {
         if (isServerError) {
-          toast.error('Backend server is not responding. Please ensure it is running on port 5000.', {
+          toast.error('Server is not responding. Please try again later.', {
             duration: 5000
           });
         } else {
