@@ -117,47 +117,43 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const initializeAuth = async () => {
     try {
-      // Check server health first
       const isServerHealthy = await checkServerAvailability();
 
-      // Restore user from localStorage
       const storedUser = getUserData();
       const storedToken = getCookie('accessToken');
 
       if (storedUser && storedToken) {
-        // ✅ Set user immediately from storage
         setUserState(storedUser);
         setCookie('userRole', storedUser.role, 7);
-        setLoading(false); // ✅ Stop loading first
+        setLoading(false);
 
         if (!isServerHealthy) {
           console.warn('Server unavailable - using stored credentials');
           return;
         }
 
-        // ✅ Verify in background (but don't block the UI)
-        verifyStoredAuth().then(isValid => {
-          if (!isValid) {
-            console.warn('Token verification failed');
-            clearAuthData();
-          }
-        }).catch(error => {
-          console.error('Background verification error:', error);
-          // Don't clear auth on background errors
-        });
+        // ✅ CRITICAL FIX: Don't clear auth on background verification failure
+        setTimeout(() => {
+          verifyStoredAuth().then(isValid => {
+            if (!isValid) {
+              console.warn('Background token verification failed');
+              // ⚠️ DON'T clear auth here - just log it
+              // Only clear if user action triggers a 401
+            }
+          }).catch(error => {
+            console.error('Background verification error:', error);
+          });
+        }, 100);
 
       } else if (storedToken) {
-        // Have token but no user data, fetch user info
         await checkAuth();
         setLoading(false);
       } else {
-        // No credentials
         setLoading(false);
       }
 
     } catch (error) {
       console.error('Auth initialization failed:', error);
-      // ✅ Don't clear auth on initialization errors
       setLoading(false);
     }
   };
