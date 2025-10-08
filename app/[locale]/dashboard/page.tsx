@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Menu, X, ShoppingBag, Search, User, Heart, Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 
 // Your original components would be imported here
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense'
@@ -29,18 +30,20 @@ const TransparentImageCard = ({ backgroundImage, title, subtitle, description, c
   className: string;
 }) => (
   <div className={`relative group overflow-hidden rounded-xl ${className}`}>
-  <img
-    src={backgroundImage}
-    alt={title}
-    className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-300"
-  />
-  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end">
-    <div className="w-full h-24 md:h-28 p-6 text-white bg-white/10 backdrop-blur-md backdrop-saturate-150 border-t border-white/20 flex flex-col justify-center">
-      <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-1">{title}</h3>
-      <p className="text-sm opacity-90 line-clamp-2">{description}</p>
+    <Image
+      src={backgroundImage}
+      alt={title}
+      layout="fill"
+      objectFit="cover"
+      className="group-hover:scale-105 transition-transform duration-300"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end">
+      <div className="w-full h-24 md:h-28 p-6 text-white bg-white/10 backdrop-blur-md backdrop-saturate-150 border-t border-white/20 flex flex-col justify-center">
+        <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-1">{title}</h3>
+        <p className="text-sm opacity-90 line-clamp-2">{description}</p>
+      </div>
     </div>
   </div>
-</div>
 );
 
 // Square Product Card specifically for "Popular This Week" section
@@ -51,18 +54,18 @@ const SquareProductCard = ({ product }: { product: Product }) => {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string || 'en';
-  
+
   const isProductInWishlist = isInWishlist(product.id);
   const isProductInCart = useCartStore(state => state.isInCart(product.id));
-  
+
   const handleProductClick = () => {
     router.push(`/${locale}/products/${product.id}`);
   };
-  
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Check if user is authenticated
     if (!user) {
       toast.error('Please sign in to add items to cart', {
@@ -72,7 +75,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       router.push(`/${locale}/auth/login`);
       return;
     }
-    
+
     try {
       await addToCart(product.id, 1);
       toast.success(`${product.name} added to cart!`, {
@@ -87,11 +90,11 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       });
     }
   };
-  
+
   const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Check if user is authenticated
     if (!user) {
       toast.error('Please sign in to add items to wishlist', {
@@ -101,7 +104,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       router.push(`/${locale}/auth/login`);
       return;
     }
-    
+
     try {
       if (isProductInWishlist) {
         await removeFromWishlist(product.id);
@@ -121,18 +124,20 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       });
     }
   };
-  
+
   return (
-    <div 
+    <div
       className="flex-shrink-0 w-72 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer"
       onClick={handleProductClick}
     >
       {/* Square Image Container */}
       <div className="relative w-full h-72 overflow-hidden">
-        <img
+        <Image
           src={product.imageUrl || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          layout="fill"
+          objectFit="cover"
         />
         {product.isActive && product.discountPercentage > 0 && (
           <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-semibold">
@@ -144,17 +149,17 @@ const SquareProductCard = ({ product }: { product: Product }) => {
             Featured
           </div>
         )}
-        
+
         {/* Wishlist Button */}
-        <button 
+        <button
           onClick={handleToggleWishlist}
           className="absolute top-3 right-3 bg-white bg-opacity-90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:shadow-lg"
         >
           <Heart className={`w-4 h-4 ${isProductInWishlist ? 'fill-pink-500 text-pink-500' : 'text-gray-700'}`} />
         </button>
-        
+
         {/* Add to Cart Button */}
-        <button 
+        <button
           onClick={handleAddToCart}
           disabled={isProductInCart}
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -162,41 +167,41 @@ const SquareProductCard = ({ product }: { product: Product }) => {
           <ShoppingBag className="w-5 h-5 text-gray-900" />
         </button>
       </div>
-    
-    {/* Product Info */}
-    <div className="p-4">
-      <div className="mb-2">
-        <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
-          {product.name}
-        </h3>
-        {product.collection && (
-          <p className="text-xs text-gray-500">{product.collection.name}</p>
-        )}
-      </div>
-      
-      {/* Rating */}
-      {product.avgRating > 0 && (
-        <div className="flex items-center gap-1 mb-2">
-          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-          <span className="text-xs text-gray-600">{product.avgRating}</span>
-          <span className="text-xs text-gray-400">({product.reviewCount})</span>
+
+      {/* Product Info */}
+      <div className="p-4">
+        <div className="mb-2">
+          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
+            {product.name}
+          </h3>
+          {product.collection && (
+            <p className="text-xs text-gray-500">{product.collection.name}</p>
+          )}
         </div>
-      )}
-      
-      {/* Price */}
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-gray-900 text-lg">
-          ${product.price}
-        </span>
-        {product.comparePrice && (
-          <span className="text-sm text-gray-400 line-through">
-            ${product.comparePrice}
-          </span>
+
+        {/* Rating */}
+        {product.avgRating > 0 && (
+          <div className="flex items-center gap-1 mb-2">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs text-gray-600">{product.avgRating}</span>
+            <span className="text-xs text-gray-400">({product.reviewCount})</span>
+          </div>
         )}
-      </div>
-      
-      {/* Stock Status */}
-      {/* <div className="mt-2">
+
+        {/* Price */}
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-gray-900 text-lg">
+            ${product.price}
+          </span>
+          {product.comparePrice && (
+            <span className="text-sm text-gray-400 line-through">
+              ${product.comparePrice}
+            </span>
+          )}
+        </div>
+
+        {/* Stock Status */}
+        {/* <div className="mt-2">
         <span className={`text-xs px-2 py-1 rounded-full ${
           product.isInStock 
             ? 'bg-green-100 text-green-800' 
@@ -205,9 +210,9 @@ const SquareProductCard = ({ product }: { product: Product }) => {
           {product.isInStock ? 'In Stock' : 'Out of Stock'}
         </span>
       </div> */}
+      </div>
     </div>
-  </div>
-);
+  );
 }
 const ArrowButton = ({ direction, onClick, className }: {
   direction: 'left' | 'right';
@@ -216,16 +221,15 @@ const ArrowButton = ({ direction, onClick, className }: {
 }) => (
   <button
     onClick={onClick}
-    className={`absolute top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow ${
-      direction === 'left' ? 'left-4' : 'right-4'
-    } ${className}`}
+    className={`absolute top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow ${direction === 'left' ? 'left-4' : 'right-4'
+      } ${className}`}
   >
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-        strokeWidth={2} 
-        d={direction === 'left' ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d={direction === 'left' ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"}
       />
     </svg>
   </button>
@@ -234,7 +238,7 @@ const ArrowButton = ({ direction, onClick, className }: {
 function Dashboard() {
   const params = useParams();
   const locale = (params.locale as string) || 'en';
-  
+
   // Store integration
   const {
     fetchFeaturedProducts,
@@ -244,22 +248,22 @@ function Dashboard() {
     loading,
     error
   } = useProductStore();
-  
+
   // Additional state for collections/categories
   const [collections, setCollections] = useState<any[]>([]);
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
-  
+
   useEffect(() => {
     // Fetch featured products from backend
     fetchFeaturedProducts(8); // Get 8 featured products
-    
+
     // Fetch collections for the highlight cards
     fetchCollections();
-    
+
     // Fetch hero carousel data
     fetchHeroData();
   }, []);
-  
+
   // Fetch collections for the highlight section
   const fetchCollections = async () => {
     try {
@@ -278,7 +282,7 @@ function Dashboard() {
       setCollections([]);
     }
   };
-  
+
   const fetchHeroData = async () => {
     // For now, using default slides, create an API endpoint for this later Isaac
     const defaultSlides = [
@@ -309,7 +313,7 @@ function Dashboard() {
     ];
     setHeroSlides(defaultSlides);
   };
-  
+
   // Your original translation function
   const t = (key: string, vars?: { [key: string]: string | number }) => {
     const translations: { [locale: string]: { [key: string]: string } } = {
@@ -397,14 +401,14 @@ function Dashboard() {
       <header>
         <NavbarWithSuspense />
       </header>
-      
+
       <section>
         <Carousel
           slides={heroSlides}
           height="500px"
         />
       </section>
-      
+
       <TextDivider text={t('thisWeeksHighlight')} />
 
       <section className="py-8 px-4 max-w-7xl mx-auto">
@@ -425,7 +429,7 @@ function Dashboard() {
             className="flex-[0_0_60%] min-w-[250px]"
           />
         </article>
-        
+
         <article className="hidden md:flex justify-center gap-4">
           <TransparentImageCard
             backgroundImage={highlightCards[2]?.image}
@@ -457,7 +461,7 @@ function Dashboard() {
           ))}
         </div>
       </section>
-      
+
       <TextDivider text={t('popularThisWeek')} />
 
       <section className="py-12 bg-gray-50 relative max-w-full">
@@ -468,16 +472,16 @@ function Dashboard() {
             onClick={() => scrollProducts('left')}
             className={`hidden md:flex ${currentPosition === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
-          
+
           {/* Products Container */}
           <div className="overflow-x-auto md:overflow-hidden px-4 md:px-16">
             <div
               ref={productsWrapperRef}
               className="flex gap-6 md:transition-transform md:duration-300 ease-in-out pb-4"
-              style={{ 
-                transform: typeof window !== 'undefined' && window.innerWidth >= 768 
-                  ? `translateX(${currentPosition}px)` 
-                  : 'none' 
+              style={{
+                transform: typeof window !== 'undefined' && window.innerWidth >= 768
+                  ? `translateX(${currentPosition}px)`
+                  : 'none'
               }}
             >
               {loading ? (
@@ -498,7 +502,7 @@ function Dashboard() {
                   <div className="text-6xl mb-4">⚠️</div>
                   <h3 className="text-xl font-semibold text-red-700 mb-2">Unable to Load Products</h3>
                   <p className="text-gray-600 text-center max-w-md mb-4">
-                    {error.includes('Failed to fetch') ? 
+                    {error.includes('Failed to fetch') ?
                       'Unable to connect to backend. Make sure your backend server is running.' :
                       error
                     }
@@ -506,7 +510,7 @@ function Dashboard() {
                   {/* <div className="text-sm text-gray-500 mb-4">
                     Backend URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}
                   </div> */}
-                  <button 
+                  <button
                     onClick={() => fetchFeaturedProducts(8, true)}
                     className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
@@ -526,7 +530,7 @@ function Dashboard() {
                   <p className="text-gray-600 text-center max-w-md">
                     No featured products available at the moment. Check back later or browse our full catalog.
                   </p>
-                  <button 
+                  <button
                     onClick={() => fetchFeaturedProducts(8, true)}
                     className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
@@ -536,21 +540,20 @@ function Dashboard() {
               )}
             </div>
           </div>
-          
+
           <ArrowButton
             direction="right"
             onClick={() => scrollProducts('right')}
-            className={`hidden md:flex ${
-              currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) + 
-              (productsWrapperRef.current?.parentElement?.clientWidth || 0) 
+            className={`hidden md:flex ${currentPosition <= -(productsWrapperRef.current?.scrollWidth || 0) +
+                (productsWrapperRef.current?.parentElement?.clientWidth || 0)
                 ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+              }`}
           />
         </div>
       </section>
 
       <TextDivider text={t('brandsForYou')} />
-      
+
       <section className="py-8 px-4 max-w-7xl mx-auto">
         <div className="grid grid-cols-4 md:grid-cols-8 gap-4 items-center">
           {[
@@ -564,7 +567,7 @@ function Dashboard() {
             { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2020/09/Uniqlo-Logo.png" }
           ].map((brand, index) => (
             <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
-              <img
+              <Image
                 src={brand.src}
                 alt={brand.name}
                 className="h-6 md:h-8 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300 filter grayscale group-hover:grayscale-0"
@@ -577,7 +580,7 @@ function Dashboard() {
           ))}
         </div>
       </section>
-      
+
       <section className="py-8 px-4 max-w-7xl mx-auto">
         <div
           className="relative min-h-[400px] md:min-h-[500px] bg-cover bg-center rounded-2xl overflow-hidden"
@@ -633,10 +636,13 @@ function Dashboard() {
             <span className="w-px h-4 bg-gray-300"></span>
             <span className="text-gray-500">POLAND</span>
           </div>
-          <img
+          <Image
             src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
             alt="Red sneakers testimonial"
             className="mx-auto w-64 md:w-80 rounded-lg"
+            layout="responsive"
+            width={600}
+            height={400}
           />
         </div>
       </section>
