@@ -62,15 +62,8 @@ const AdminPage = () => {
   const isAdmin = user?.role && ['admin', 'super_admin'].includes(user.role.toLowerCase());
 
   useEffect(() => {
-    // if (!isAdmin && user) {
-    //   router.push(`/${locale}`);
-    //   return;
-    // }
-
-    // if (isAdmin) {
       fetchProducts();
       fetchUsers();
-    // }
   }, []);
 
   const fetchProducts = async (retry = false) => {

@@ -25,7 +25,7 @@ export default function CheckoutPage() {
   const total = totalAmount + shipping;
 
   const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
-
+  
   useEffect(() => {
     // Prevent duplicate calls in development (React Strict Mode)
     if (initialized.current) return;

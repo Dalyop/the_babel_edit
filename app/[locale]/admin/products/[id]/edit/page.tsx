@@ -17,7 +17,7 @@ const EditProductPage = () => {
   const params = useParams();
   const productId = params.id as string;
   const locale = params.locale as string || 'en';
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);
@@ -29,7 +29,7 @@ const EditProductPage = () => {
     price: '',
     comparePrice: '',
     imageUrl: '',
-    images: '',
+    images: [] as string[],
     stock: '',
     sku: '',
     collectionId: '',
@@ -76,9 +76,9 @@ const EditProductPage = () => {
         API_ENDPOINTS.PRODUCTS.BY_ID(productId),
         { requireAuth: true }
       );
-      
+
       setProduct(response);
-      
+
       // Populate form with existing data
       setFormData({
         name: response.name || '',
@@ -86,7 +86,7 @@ const EditProductPage = () => {
         price: response.price?.toString() || '',
         comparePrice: response.comparePrice?.toString() || '',
         imageUrl: response.imageUrl || '',
-        images: response.images?.join(', ') || '',
+        images: response.images || [],
         stock: response.stock?.toString() || '',
         sku: response.sku || '',
         collectionId: response.collectionId || '',
@@ -107,15 +107,50 @@ const EditProductPage = () => {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // ✅ Use your centralized helper with form data support
+        const response = await apiRequest<{ url: string }>('/upload', {
+          method: 'POST',
+          body: formData,
+          isFormData: true,
+          requireAuth: true,
+        });
+
+        if (response?.url) {
+          uploadedUrls.push(response.url);
+        }
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls],
+      }));
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      toast.error('Image upload failed. Please try again.');
+    }
+  };
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -146,7 +181,7 @@ const EditProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -158,7 +193,7 @@ const EditProductPage = () => {
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         imageUrl: formData.imageUrl,
-        images: formData.images ? formData.images.split(',').map(img => img.trim()).filter(img => img) : [formData.imageUrl],
+        images: formData.images.length > 0 ? formData.images : [formData.imageUrl],
         stock: parseInt(formData.stock) || 0,
         sku: formData.sku || undefined,
         collectionId: formData.collectionId || undefined,
@@ -181,7 +216,7 @@ const EditProductPage = () => {
       router.push(`/${locale}/admin`);
     } catch (error: any) {
       console.error('Error updating product:', error);
-      
+
       // Handle specific API errors
       if (error.status === 400) {
         setApiError(error.message || 'Invalid product data. Please check your inputs.');
@@ -277,7 +312,7 @@ const EditProductPage = () => {
                 </div>
               </div>
             )}
-            
+
             <form id="edit-product-form" onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information */}
               <div className={commonClasses.card}>
@@ -414,6 +449,7 @@ const EditProductPage = () => {
               </div>
 
               {/* Images */}
+              {/* Images */}
               <div className={commonClasses.card}>
                 <h2 className="text-lg font-medium text-gray-900 mb-6">Images</h2>
                 <div className="space-y-6">
@@ -434,20 +470,43 @@ const EditProductPage = () => {
                     />
                   </FormField>
 
-                  <FormField
-                    label="Additional Images"
-                    id="images"
-                    helperText="Comma-separated image URLs"
-                  >
-                    <textarea
+                  <FormField label="Additional Images" id="images">
+                    <input
+                      type="file"
                       id="images"
                       name="images"
-                      rows={3}
-                      value={formData.images}
-                      onChange={handleChange}
-                      className={commonClasses.input}
-                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="block w-full text-sm text-gray-500 border border-gray-300 rounded-md cursor-pointer focus:outline-none"
                     />
+
+                    {/* Preview */}
+                    {formData.images.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        {formData.images.map((img, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={img}
+                              alt={`Uploaded ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  images: prev.images.filter((_, i) => i !== index),
+                                }))
+                              }
+                              className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </FormField>
                 </div>
               </div>

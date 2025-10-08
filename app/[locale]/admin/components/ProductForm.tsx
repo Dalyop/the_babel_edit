@@ -5,6 +5,7 @@ import { Product, Collection } from '@/app/store/types';
 import Button from '@/app/components/ui/Button/Button';
 import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 import { toast } from 'react-hot-toast';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 interface ProductFormProps {
   product: Partial<Product>;
@@ -33,6 +34,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   const [collections, setCollections] = useState<Collection[]>([]);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [previewImages, setPreviewImages] = useState<string[]>(product.images || []);
 
   useEffect(() => {
     fetchCollections();
@@ -55,6 +58,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       isActive: product.isActive ?? true,
       isFeatured: product.isFeatured ?? false,
     });
+    setPreviewImages(product.images || []);
   }, [product]);
 
   const fetchCollections = async () => {
@@ -64,13 +68,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         API_ENDPOINTS.COLLECTIONS.LIST,
         { requireAuth: false }
       );
-      // Sort collections by sortOrder, then by name
       const sortedCollections = response.collections
         .filter(collection => collection.isActive)
         .sort((a, b) => {
-          const orderA = a.sortOrder ?? 0; // default to 0 if undefined/null
+          const orderA = a.sortOrder ?? 0;
           const orderB = b.sortOrder ?? 0;
-
           if (orderA !== orderB) {
             return orderA - orderB;
           }
@@ -83,6 +85,84 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     } finally {
       setCollectionsLoading(false);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validate file count
+    if (files.length + previewImages.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+
+    setUploadingImages(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is too large. Maximum size is 5MB`);
+          continue;
+        }
+
+        // Validate file type
+        if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+          toast.error(`${file.name} is not a valid image format`);
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+          const response = await apiRequest<{ imageUrl: string }>(
+            '/api/admin/products/upload-image',
+            {
+              method: 'POST',
+              body: formData,
+              requireAuth: true,
+              isFormData: true
+            }
+          );
+
+          uploadedUrls.push(response.imageUrl);
+        } catch (error: any) {
+          toast.error(`Failed to upload ${file.name}`);
+          console.error('Upload error:', error);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        const newImages = [...previewImages, ...uploadedUrls];
+        setPreviewImages(newImages);
+        setFormData(prev => ({
+          ...prev,
+          images: newImages
+        }));
+        toast.success(`${uploadedUrls.length} image(s) uploaded successfully`);
+      }
+    } catch (error) {
+      toast.error('Failed to upload images');
+      console.error('Error uploading images:', error);
+    } finally {
+      setUploadingImages(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const newImages = previewImages.filter((_, i) => i !== index);
+    setPreviewImages(newImages);
+    setFormData(prev => ({
+      ...prev,
+      images: newImages
+    }));
   };
 
   const handleChange = (
@@ -108,12 +188,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     }));
   };
 
-  const handleArrayChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'images' | 'sizes' | 'colors' | 'tags') => {
+  const handleArrayChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'sizes' | 'colors' | 'tags') => {
     const value = e.target.value;
     const arrayValue = value
       .split(',')
       .map((item) => item.trim())
-      .filter((item) => item); // Remove empty strings
+      .filter((item) => item);
     setFormData((prev) => ({
       ...prev,
       [field]: arrayValue,
@@ -128,7 +208,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     if (!formData.description?.trim()) newErrors.description = 'Description is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be greater than 0';
     if (!formData.collectionId) newErrors.collectionId = 'Please select a collection';
-    if (!formData.images?.length) newErrors.images = 'At least one image URL is required';
+    if (!previewImages.length) newErrors.images = 'At least one image is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -158,6 +238,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       isActive: product.isActive ?? true,
       isFeatured: product.isFeatured ?? false,
     });
+    setPreviewImages(product.images || []);
     setErrors({});
     onCancel();
   };
@@ -238,6 +319,79 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             </div>
           </div>
 
+          {/* Image Upload Section */}
+          <div className="sm:col-span-6">
+            <label className="block text-sm font-medium leading-6 text-gray-900 mb-2">
+              Product Images
+            </label>
+            
+            {/* Image Previews */}
+            {previewImages.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+                {previewImages.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="flex items-center justify-center w-full">
+              <label
+                htmlFor="image-upload"
+                className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  uploadingImages
+                    ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {uploadingImages ? (
+                    <>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                      <p className="text-sm text-gray-500">Uploading...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG or JPEG (MAX. 5MB, up to 5 images)
+                      </p>
+                    </>
+                  )}
+                </div>
+                <input
+                  id="image-upload"
+                  type="file"
+                  className="hidden"
+                  multiple
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImages || previewImages.length >= 5}
+                />
+              </label>
+            </div>
+            {errors.images && <p className="mt-2 text-sm text-red-600">{errors.images}</p>}
+            <p className="mt-2 text-sm text-gray-500">
+              {previewImages.length}/5 images uploaded
+            </p>
+          </div>
+
           {/* Price and Compare Price */}
           <div className="sm:col-span-2">
             <label htmlFor="price" className="block text-sm font-medium leading-6 text-gray-900">
@@ -304,29 +458,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 placeholder="0"
               />
-            </div>
-          </div>
-
-          {/* Images */}
-          <div className="sm:col-span-6">
-            <label htmlFor="images" className="block text-sm font-medium leading-6 text-gray-900">
-              Images
-            </label>
-            <div className="mt-2">
-              <input
-                type="text"
-                name="images"
-                id="images"
-                value={Array.isArray(formData.images) ? formData.images.join(', ') : ''}
-                onChange={(e) => handleArrayChange(e, 'images')}
-                className="block w-full rounded-md border-0 py-1.5 pl-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Enter comma-separated image URLs"
-                required
-              />
-              {errors.images && <p className="mt-1 text-sm text-red-600">{errors.images}</p>}
-              <p className="mt-1 text-sm text-gray-500">
-                Add multiple image URLs separated by commas
-              </p>
             </div>
           </div>
 
@@ -490,6 +621,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         <Button
           type="submit"
           variant="primary"
+          disabled={uploadingImages}
         >
           {product.id ? 'Update Product' : 'Create Product'}
         </Button>

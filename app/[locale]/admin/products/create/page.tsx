@@ -11,6 +11,8 @@ import FormField from '@/app/components/ui/FormField/FormField';
 import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 import { Product, Collection } from '@/app/store/types';
 import { commonClasses } from '@/app/utils/designSystem';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
+
 
 const CreateProductPage = () => {
   const router = useRouter();
@@ -25,7 +27,7 @@ const CreateProductPage = () => {
     price: '',
     comparePrice: '',
     imageUrl: '',
-    images: '',
+    images: [] as string[],
     stock: '',
     sku: '',
     collectionId: '',
@@ -39,6 +41,54 @@ const CreateProductPage = () => {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [apiError, setApiError] = useState<string>('');
+
+  // Upload Handlers
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    try {
+      toast.loading('Uploading images...', { id: 'upload' });
+
+      const uploadedUrls: string[] = [];
+      for (const file of Array.from(files)) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('image', file);
+
+        const response = await apiRequest<{ imageUrl: string }>(
+          '/admin/products/upload-image',
+          {
+            method: 'POST',
+            body: formDataToSend,
+            requireAuth: true,
+            isFormData: true,
+          }
+        );
+
+        uploadedUrls.push(response.imageUrl);
+      }
+
+      toast.success('Images uploaded successfully!', { id: 'upload' });
+
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: prev.imageUrl || uploadedUrls[0],
+        images: [...(Array.isArray(prev.images) ? prev.images : []), ...uploadedUrls],
+      }));
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload images', { id: 'upload' });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setFormData((prev) => {
+      const newImages = Array.isArray(prev.images) ? [...prev.images] : [];
+      newImages.splice(index, 1);
+      return { ...prev, images: newImages };
+    });
+  };
+
 
   // Fetch collections on component mount
   useEffect(() => {
@@ -65,12 +115,12 @@ const CreateProductPage = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -101,7 +151,7 @@ const CreateProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -114,7 +164,7 @@ const CreateProductPage = () => {
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : undefined,
         imageUrl: formData.imageUrl,
-        images: formData.images ? formData.images.split(',').map(img => img.trim()).filter(img => img) : [formData.imageUrl],
+        images: formData.images.length > 0 ? formData.images : [formData.imageUrl],
         stock: parseInt(formData.stock) || 0,
         sku: formData.sku || undefined,
         collectionId: formData.collectionId || undefined,
@@ -137,7 +187,7 @@ const CreateProductPage = () => {
       router.push(`/${locale}/admin`);
     } catch (error: any) {
       console.error('Error creating product:', error);
-      
+
       // Handle specific API errors
       if (error.status === 400) {
         setApiError(error.message || 'Invalid product data. Please check your inputs.');
@@ -211,7 +261,7 @@ const CreateProductPage = () => {
                 </div>
               </div>
             )}
-            
+
             <form id="create-product-form" onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information */}
               <div className={commonClasses.card}>
@@ -348,41 +398,52 @@ const CreateProductPage = () => {
               </div>
 
               {/* Images */}
+              {/* Images */}
               <div className={commonClasses.card}>
                 <h2 className="text-lg font-medium text-gray-900 mb-6">Images</h2>
-                <div className="space-y-6">
-                  <FormField
-                    label="Main Image URL"
-                    id="imageUrl"
-                    required
-                    error={errors.imageUrl}
-                  >
-                    <input
-                      type="url"
-                      id="imageUrl"
-                      name="imageUrl"
-                      value={formData.imageUrl}
-                      onChange={handleChange}
-                      className={commonClasses.input}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </FormField>
 
-                  <FormField
-                    label="Additional Images"
-                    id="images"
-                    helperText="Comma-separated image URLs"
+                {/* Upload Box */}
+                <div className="space-y-4">
+                  <label
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition"
                   >
-                    <textarea
-                      id="images"
-                      name="images"
-                      rows={3}
-                      value={formData.images}
-                      onChange={handleChange}
-                      className={commonClasses.input}
-                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                    <p className="mb-1 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG or JPEG (MAX. 5MB, up to 5 images)</p>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleImageUpload}
                     />
-                  </FormField>
+                  </label>
+
+                  {/* Previews */}
+                  {formData.images && Array.isArray(formData.images) && formData.images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      {formData.images.map((img, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={img}
+                            alt={`Image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md border"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                            onClick={() => removeImage(index)}
+                          >
+                            <X className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
