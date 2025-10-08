@@ -118,8 +118,7 @@ const EditProductPage = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        // ✅ Use your centralized helper with form data support
-        const response = await apiRequest<{ url: string }>('/upload', {
+        const response = await apiRequest<{ url: string }>('/admin/products/upload-image', {
           method: 'POST',
           body: formData,
           isFormData: true,
