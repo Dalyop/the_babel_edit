@@ -7,6 +7,7 @@ import fr from '@/locales/fr/common.json';
 import { useRouter, usePathname } from 'next/navigation';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { SiTiktok, SiFacebook, SiInstagram } from '@icons-pack/react-simple-icons';
+import Image from 'next/image';
 
 const options = [
   { value: 'en', label: 'English' },
@@ -19,7 +20,6 @@ const Footer = () => {
   const currentLocale = pathname.split('/')[1] || 'en';
   const [selectOption, setSelectedOption] = useState(currentLocale);
 
-  // Mobile accordion states
   const [expandedSections, setExpandedSections] = useState({
     companyInfo: false,
     helpSupport: false,
@@ -46,17 +46,13 @@ const Footer = () => {
     }));
   };
 
-
   return (
     <footer className={styles.footer}>
       <div className={styles.footerMain}>
         <div className={styles.footerColumns}>
           {/* Company Info */}
           <div className={styles.footerCol}>
-            <div
-              className={styles.footerColHeader}
-              onClick={() => toggleSection('companyInfo')}
-            >
+            <div className={styles.footerColHeader} onClick={() => toggleSection('companyInfo')}>
               <h4 className={styles.footerColTitle}>{t('companyInfo')}</h4>
               <span className={styles.accordionIcon}>
                 {expandedSections.companyInfo ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -72,10 +68,7 @@ const Footer = () => {
 
           {/* Help & Support */}
           <div className={styles.footerCol}>
-            <div
-              className={styles.footerColHeader}
-              onClick={() => toggleSection('helpSupport')}
-            >
+            <div className={styles.footerColHeader} onClick={() => toggleSection('helpSupport')}>
               <h4 className={styles.footerColTitle}>{t('helpSupport')}</h4>
               <span className={styles.accordionIcon}>
                 {expandedSections.helpSupport ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -93,32 +86,21 @@ const Footer = () => {
 
           {/* Customer Care */}
           <div className={styles.footerCol}>
-            <div
-              className={styles.footerColHeader}
-              onClick={() => toggleSection('customerCare')}
-            >
+            <div className={styles.footerColHeader} onClick={() => toggleSection('customerCare')}>
               <h4 className={styles.footerColTitle}>{t('customerCare')}</h4>
               <span className={styles.accordionIcon}>
                 {expandedSections.customerCare ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </span>
             </div>
             <div className={`${styles.footerColContent} ${expandedSections.customerCare ? styles.expanded : ''}`}>
-              <ul>
-                {/* <li><a href={`/${currentLocale}/contact`}>{t('contactUs')}</a></li> */}
-                {/* <li><a href={`/${currentLocale}/payment`}>{t('payment')}</a></li> */}
-                {/* <li><a href={`/${currentLocale}/bonus-points`}>{t('bonusPoint')}</a></li>
-                <li><a href={`/${currentLocale}/notices`}>{t('notices')}</a></li> */}
-              </ul>
+              <ul></ul>
             </div>
           </div>
         </div>
 
-        {/* Newsletter Section */}
+        {/* Newsletter */}
         <div className={styles.footerNewsletter}>
-          <div
-            className={styles.footerColHeader}
-            onClick={() => toggleSection('newsletter')}
-          >
+          <div className={styles.footerColHeader} onClick={() => toggleSection('newsletter')}>
             <h4>{t('signUpForNews')}</h4>
             <span className={styles.accordionIcon}>
               {expandedSections.newsletter ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -133,12 +115,12 @@ const Footer = () => {
               {t('privacyText')}<a href={`/${currentLocale}/cookie-policy`}>{t('privacyCookiePolicy')}</a>
             </div>
           </div>
-          <div className="socials flex gap-4 text-gray-600">
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+          <div className="socials flex gap-4 text-gray-600 mt-3">
+            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer">
               <SiTiktok size={24} style={{ color: '#E1306C' }} />
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-              <SiFacebook size={24} style={{ color: '#E1306C' }} />
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+              <SiFacebook size={24} style={{ color: '#1877F2' }} />
             </a>
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
               <SiInstagram size={24} style={{ color: '#E1306C' }} />
@@ -150,19 +132,30 @@ const Footer = () => {
       {/* Payment Methods */}
       <div className={styles.footerPaymentsBottom}>
         <h4>{t('weAccept')}</h4>
-        <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto">
+        <div className="grid grid-cols-5 gap-3 max-w-md mx-auto">
           {[
-            { name: "Mastercard", src: "/images/payment/mastercard.svg" },
-            { name: "Apple Pay", src: "/images/payment/apple-pay.svg" }
+            { name: "Mastercard", src: "https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" },
+            { name: "Visa", src: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" },
+            { name: "PayPal", src: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" },
+            { name: "Apple Pay", src: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" },
+            { name: "Google Pay", src: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" },
           ].map((payment, index) => (
-            <div key={index} className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-300">
-              <img
+            <div
+              key={index}
+              className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-300"
+            >
+              <Image
                 src={payment.src}
                 alt={payment.name}
+                width={60}
+                height={30}
+                unoptimized
                 className="h-5 w-auto object-contain"
                 onError={(e) => {
-                  // Fallback if image fails to load
-                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"><rect width="60" height="30" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="6"/><text x="30" y="20" font-family="Arial, sans-serif" font-size="8" fill="#6b7280" text-anchor="middle">${payment.name}</text></svg>`)}`;
+                  const fallback = `data:image/svg+xml;base64,${btoa(
+                    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30'><rect width='60' height='30' fill='#f9fafb' stroke='#e5e7eb' stroke-width='1' rx='6'/><text x='30' y='20' font-family='Arial, sans-serif' font-size='8' fill='#6b7280' text-anchor='middle'>${payment.name}</text></svg>`
+                  )}`;
+                  (e.currentTarget as HTMLImageElement).src = fallback;
                 }}
               />
             </div>
@@ -180,7 +173,6 @@ const Footer = () => {
           <a href={`/${currentLocale}/cookie-policy`}>{t('privacyCookiePolicy')}</a>
           <a href={`/${currentLocale}/terms-condition`}>{t('termsConditions')}</a>
           <a href="#">{t('copyrightNotice')}</a>
-          {/* <a href="#">{t('imprint')}</a> */}
         </div>
       </div>
     </footer>

@@ -564,6 +564,7 @@ function Dashboard() {
             { name: "Zara", src: "https://logos-world.net/wp-content/uploads/2020/05/Zara-Logo-700x394.png" },
             { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/HM-Logo-700x394.png" },
             { name: "Puma", src: "https://logos-world.net/wp-content/uploads/2020/04/Puma-Logo.png" },
+            { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2023/01/Uniqlo-Logo-500x281.png" },
           ].map((brand, index) => (
             <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
               <img
@@ -639,9 +640,6 @@ function Dashboard() {
             src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
             alt="Red sneakers testimonial"
             className="mx-auto w-64 md:w-80 rounded-lg"
-            layout="responsive"
-            width={600}
-            height={400}
           />
         </div>
       </section>
