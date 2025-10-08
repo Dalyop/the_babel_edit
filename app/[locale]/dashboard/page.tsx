@@ -561,13 +561,12 @@ function Dashboard() {
             { name: "Adidas", src: "https://logos-world.net/wp-content/uploads/2020/04/Adidas-Logo.png" },
             { name: "Gucci", src: "https://logos-world.net/wp-content/uploads/2020/04/Gucci-Logo.png" },
             { name: "Louis Vuitton", src: "https://logos-world.net/wp-content/uploads/2020/04/Louis-Vuitton-Logo.png" },
-            { name: "Zara", src: "https://logos-world.net/wp-content/uploads/2020/04/Zara-Logo.png" },
-            { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/H&M-Logo.png" },
+            { name: "Zara", src: "https://logos-world.net/wp-content/uploads/2020/05/Zara-Logo-700x394.png" },
+            { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/HM-Logo-700x394.png" },
             { name: "Puma", src: "https://logos-world.net/wp-content/uploads/2020/04/Puma-Logo.png" },
-            { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2020/09/Uniqlo-Logo.png" }
           ].map((brand, index) => (
             <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
-              <Image
+              <img
                 src={brand.src}
                 alt={brand.name}
                 className="h-6 md:h-8 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300 filter grayscale group-hover:grayscale-0"
@@ -636,7 +635,7 @@ function Dashboard() {
             <span className="w-px h-4 bg-gray-300"></span>
             <span className="text-gray-500">POLAND</span>
           </div>
-          <Image
+          <img
             src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
             alt="Red sneakers testimonial"
             className="mx-auto w-64 md:w-80 rounded-lg"
