@@ -634,7 +634,7 @@ function Dashboard() {
           <div className="flex justify-center items-center space-x-4 mb-8">
             <span className="font-bold text-gray-900">Grace Tena</span>
             <span className="w-px h-4 bg-gray-300"></span>
-            <span className="text-gray-500">POLAND</span>
+            <span className="text-gray-500">UK</span>
           </div>
           <img
             src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
