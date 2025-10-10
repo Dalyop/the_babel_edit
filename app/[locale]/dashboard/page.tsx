@@ -629,10 +629,10 @@ function Dashboard() {
             <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
           </div>
           <blockquote className="text-lg md:text-xl text-gray-600 italic mb-8 max-w-2xl mx-auto">
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Scelerisque eget cras commodo amet, vel praesent cras turpis vestibulum. Sodales nisl nunc dolor sem tellus cursus consequat."
+            I absolutely love shopping here! The quality of the clothes is top-notch, and everything fits perfectly. The designs are stylish yet comfortable, and the customer service team is always so helpful and friendly. I’ve received so many compliments whenever I wear their outfits!
           </blockquote>
           <div className="flex justify-center items-center space-x-4 mb-8">
-            <span className="font-bold text-gray-900">JOHNY DEEP</span>
+            <span className="font-bold text-gray-900">Grace Tena</span>
             <span className="w-px h-4 bg-gray-300"></span>
             <span className="text-gray-500">POLAND</span>
           </div>
