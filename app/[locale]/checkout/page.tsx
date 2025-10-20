@@ -8,6 +8,7 @@ import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspe
 import Footer from '@/app/components/features/Footer/Footer';
 import { useCartStore } from '@/app/store/useCartStore';
 import styles from './checkout.module.css';
+import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -45,14 +46,11 @@ export default function CheckoutPage() {
 
         console.log('Creating order with items:', items);
 
-        // Step 1: Create order
-        const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
+        // Step 1: Create order (authenticated)
+        const orderData = await apiRequest<any>(API_ENDPOINTS.ORDERS.CREATE, {
+          method: 'POST',
+          requireAuth: true,
+          body: {
             items: items.map(item => ({
               productId: item.productId,
               quantity: item.quantity,
@@ -62,40 +60,20 @@ export default function CheckoutPage() {
             })),
             shippingCost: shipping,
             totalAmount: total,
-          }),
+          },
         });
-
-        if (!orderResponse.ok) {
-          const errorData = await orderResponse.json().catch(() => null);
-          throw new Error(errorData?.message || `Failed to create order (${orderResponse.status})`);
-        }
-
-        const orderData = await orderResponse.json();
         console.log("Order created:", orderData);
         setOrderId(orderData.id);
 
-        // Step 2: Create payment intent
-        // ✅ Use /api/payments if your backend has /api prefix, otherwise use /payments
-        const paymentResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/payments/create-payment-intent`,
+        // Step 2: Create payment intent (authenticated)
+        const { clientSecret } = await apiRequest<{ clientSecret: string }>(
+          '/payments/create-payment-intent',
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              orderId: orderData.id
-            })
+            requireAuth: true,
+            body: { orderId: orderData.id },
           }
         );
-
-        if (!paymentResponse.ok) {
-          const errorData = await paymentResponse.json().catch(() => null);
-          throw new Error(errorData?.message || `Failed to create payment intent (${paymentResponse.status})`);
-        }
-
-        const { clientSecret } = await paymentResponse.json();
         setClientSecret(clientSecret);
         
       } catch (err: any) {
