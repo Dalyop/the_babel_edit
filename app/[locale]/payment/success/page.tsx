@@ -6,7 +6,7 @@ import stripePromise from '../../../lib/stripe';
 import { useCartStore } from '@/app/store/useCartStore';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
-import styles from './success.module.css';
+import { CheckCircle2, XCircle, Package, ShoppingBag, Loader2 } from 'lucide-react';
 
 function PaymentSuccessContent() {
   const stripe = useStripe();
@@ -19,6 +19,7 @@ function PaymentSuccessContent() {
   
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState<'succeeded' | 'processing' | 'failed' | 'unknown'>('unknown');
 
   useEffect(() => {
     if (!stripe) {
@@ -29,6 +30,7 @@ function PaymentSuccessContent() {
     
     if (!clientSecret) {
       setMessage('Invalid payment session');
+      setPaymentStatus('failed');
       setLoading(false);
       return;
     }
@@ -36,91 +38,154 @@ function PaymentSuccessContent() {
     stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
       switch (paymentIntent?.status) {
         case 'succeeded':
-          setMessage('Payment succeeded!');
+          setMessage('Payment Successful');
+          setPaymentStatus('succeeded');
           clearCart();
           break;
         case 'processing':
-          setMessage('Your payment is processing.');
+          setMessage('Payment Processing');
+          setPaymentStatus('processing');
           break;
         case 'requires_payment_method':
-          setMessage('Your payment was not successful, please try again.');
+          setMessage('Payment Failed');
+          setPaymentStatus('failed');
           break;
         default:
-          setMessage('Something went wrong.');
+          setMessage('Payment Failed');
+          setPaymentStatus('failed');
           break;
       }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Error retrieving payment intent:', error);
+      setMessage('Payment Failed');
+      setPaymentStatus('failed');
       setLoading(false);
     });
   }, [stripe, searchParams, clearCart]);
 
   if (loading) {
     return (
-      <div className={styles.loadingSpinner}>
-        <div className={styles.spinner}></div>
-        <p>Verifying payment...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
       </div>
     );
   }
 
-  return (
-    <div className={styles.successCard}>
-      {message === 'Payment succeeded!' ? (
-        <>
-          <div className={styles.successIcon}>✓</div>
-          <h1 className={styles.successTitle}>Payment Successful!</h1>
-          <p className={styles.successMessage}>
-            Thank you for your purchase. Your order has been confirmed.
-          </p>
-          <div className={styles.successActions}>
+  // Success State
+  if (paymentStatus === 'succeeded') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center max-w-md">
+          {/* Large Check Animation */}
+          <div className="mb-8 relative inline-block">
+            <svg className="w-48 h-48" viewBox="0 0 200 200">
+              {/* Circle */}
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="8"
+                strokeLinecap="round"
+                className="animate-[draw-circle_0.6s_ease-out_forwards]"
+                style={{
+                  strokeDasharray: 565,
+                  strokeDashoffset: 565,
+                }}
+              />
+              {/* Checkmark */}
+              <path
+                d="M60 100 L85 125 L140 70"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="animate-[draw-check_0.4s_0.6s_ease-out_forwards]"
+                style={{
+                  strokeDasharray: 120,
+                  strokeDashoffset: 120,
+                }}
+              />
+            </svg>
+          </div>
+
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{message}</h1>
+          <p className="text-gray-600 mb-12">Order confirmation sent to your email</p>
+
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => router.push(`/${locale}/orders`)}
-              className={styles.primaryButton}
+              className="flex-1 bg-blue-600 text-white py-4 px-8 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2"
             >
+              <Package className="w-5 h-5" />
               View Orders
             </button>
             <button
               onClick={() => router.push(`/${locale}/products`)}
-              className={styles.secondaryButton}
+              className="flex-1 border-2 border-gray-300 text-gray-700 py-4 px-8 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2"
             >
+              <ShoppingBag className="w-5 h-5" />
               Continue Shopping
             </button>
           </div>
-        </>
-      ) : (
-        <>
-          <div className={styles.errorIcon}>✕</div>
-          <h1 className={styles.errorTitle}>Payment Status</h1>
-          <p className={styles.errorMessage}>{message}</p>
-          <div className={styles.successActions}>
-            <button
-              onClick={() => router.push(`/${locale}/checkout`)}
-              className={styles.primaryButton}
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => router.push(`/${locale}/cart`)}
-              className={styles.secondaryButton}
-            >
-              Return to Cart
-            </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Processing State
+  if (paymentStatus === 'processing') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center max-w-md">
+          <div className="mb-8 inline-block">
+            <div className="w-48 h-48 relative flex items-center justify-center">
+              <div className="absolute inset-0 border-8 border-yellow-200 rounded-full"></div>
+              <div className="absolute inset-0 border-8 border-yellow-500 rounded-full border-t-transparent animate-spin"></div>
+              <Loader2 className="w-20 h-20 text-yellow-500" />
+            </div>
           </div>
-        </>
-      )}
-    </div>
-  );
+
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{message}</h1>
+          <p className="text-gray-600 mb-12">Please wait while we confirm your payment</p>
+
+          <button
+            onClick={() => router.push(`/${locale}/orders`)}
+            className="bg-blue-600 text-white py-4 px-8 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200"
+          >
+            Check Order Status
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default function PaymentSuccessPage() {
   return (
     <Elements stripe={stripePromise}>
-      <div className={styles.successBg}>
+      <style jsx global>{`
+        @keyframes draw-circle {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes draw-check {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+      `}</style>
+      <div className="min-h-screen bg-white">
         <NavbarWithSuspense />
-        <main className={styles.successContainer}>
+        <main className="max-w-7xl mx-auto px-4">
           <Suspense fallback={
-            <div className={styles.loadingSpinner}>
-              <div className={styles.spinner}></div>
-              <p>Loading...</p>
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
             </div>
           }>
             <PaymentSuccessContent />
