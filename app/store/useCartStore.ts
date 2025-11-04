@@ -6,6 +6,7 @@ import { apiRequest, API_ENDPOINTS, ApiError } from '@/app/lib/api';
 interface CartState {
   items: CartItem[];
   loading: boolean;
+  loadingItems: Set<string>; // Track which products are currently being added
   error: string | null;
   totalItems: number;
   totalAmount: number;
@@ -27,6 +28,7 @@ interface CartActions {
   getCartItemCount: () => number;
   getCartTotal: () => number;
   isInCart: (productId: string) => boolean;
+  isProductLoading: (productId: string) => boolean;
 }
 
 type CartStore = CartState & CartActions;
@@ -57,6 +59,7 @@ const saveToStorage = (items: CartItem[]) => {
 const initialState: CartState = {
   items: [],
   loading: false,
+  loadingItems: new Set<string>(),
   error: null,
   totalItems: 0,
   totalAmount: 0,
@@ -66,7 +69,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
   ...initialState,
 
   addToCart: async (productId: string, quantity = 1, options = {}) => {
-    set({ loading: true, error: null });
+    // Add product to loading set
+    set(state => ({ 
+      loadingItems: new Set(state.loadingItems).add(productId),
+      error: null 
+    }));
     
     try {
       await apiRequest(API_ENDPOINTS.CART.ADD, {
@@ -127,7 +134,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
       
       saveToStorage(updatedItems);
     } finally {
-      set({ loading: false });
+      // Remove product from loading set
+      set(state => {
+        const newLoadingItems = new Set(state.loadingItems);
+        newLoadingItems.delete(productId);
+        return { loadingItems: newLoadingItems };
+      });
     }
   },
 
@@ -299,6 +311,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
   isInCart: (productId: string) => {
     const { items } = get();
     return items.some(item => item.productId === productId);
+  },
+
+  isProductLoading: (productId: string) => {
+    const { loadingItems } = get();
+    return loadingItems.has(productId);
   },
 
   syncWithBackend: async () => {

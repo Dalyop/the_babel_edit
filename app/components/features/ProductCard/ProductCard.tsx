@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCartStore, useWishlistStore, Product } from '@/app/store';
 import { toast } from 'react-hot-toast';
-import { showGlobalLoading, hideGlobalLoading, LOADING_MESSAGES } from '@/app/utils/loadingUtils';
 
 interface ProductCardProps {
     product: Product;
@@ -30,24 +29,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isInWishlist = useWishlistStore(state => state.isInWishlist(product.id));
   const isInCart = useCartStore(state => state.isInCart(product.id));
   
-  const cartLoading = useCartStore(state => state.loading);
+  // Use per-product loading state instead of global
+  const isAddingToCart = useCartStore(state => state.isProductLoading(product.id));
   const wishlistLoading = useWishlistStore(state => state.loading);
 
   const handleAddToCart = async () => {
     try {
-      showGlobalLoading(LOADING_MESSAGES.ADDING_TO_CART);
       await addToCart(product.id, 1);
       toast.success(`${product.name} added to cart!`);
     } catch (error) {
       toast.error('Failed to add to cart');
-    } finally {
-      hideGlobalLoading();
     }
   };
 
   const handleToggleWishlist = async () => {
     try {
-      showGlobalLoading(`${isInWishlist ? 'Removing from' : 'Adding to'} wishlist...`);
       if (isInWishlist) {
         await removeFromWishlist(product.id);
         toast.success(`${product.name} removed from wishlist`);
@@ -57,8 +53,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       }
     } catch (error) {
       toast.error(`Failed to ${isInWishlist ? 'remove from' : 'add to'} wishlist`);
-    } finally {
-      hideGlobalLoading();
     }
   };
 
@@ -120,10 +114,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <button 
             className={styles.addToBasketBtn}
             onClick={handleAddToCart}
-            disabled={isInCart || product.stock === 0 || cartLoading}
+            disabled={isInCart || product.stock === 0 || isAddingToCart}
           >
             <ShoppingCart className="h-4 w-4" />
-            {cartLoading ? 'Adding...' : isInCart ? 'In Cart' : product.stock === 0 ? 'Out of Stock' : 'Add'}
+            {isAddingToCart ? 'Adding...' : isInCart ? 'In Cart' : product.stock === 0 ? 'Out of Stock' : 'Add'}
           </button>
         </div>
       </div>
