@@ -76,7 +76,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }));
     
     try {
-      await apiRequest(API_ENDPOINTS.CART.ADD, {
+      // Make API call without waiting for fetchCart
+      const response = await apiRequest(API_ENDPOINTS.CART.ADD, {
         method: 'POST',
         requireAuth: true,
         body: {
@@ -87,8 +88,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
         },
       });
       
-      // Refresh cart after adding
-      await get().fetchCart();
+      // Fetch cart in background without blocking
+      get().fetchCart().catch(err => console.error('Background cart fetch failed:', err));
       
     } catch (error) {
       console.error('Failed to add to cart:', error);
