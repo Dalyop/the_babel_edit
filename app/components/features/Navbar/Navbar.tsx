@@ -28,7 +28,6 @@ function Navbar() {
   const currentLocale = pathname.split('/')[1] || 'en';
   const [selectOption, setSelectedOption] = useState(currentLocale);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // Store integration
   const cartItemCount = useCartStore(state => state.totalItems);
@@ -48,29 +47,15 @@ function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
-  };
-
   const closeMenu = () => {
     setIsMenuOpen(false);
-  };
-
-  const closeSearch = () => {
-    setIsSearchOpen(false);
   };
 
   const handleSearch = useCallback((query: string) => {
     if (query.trim()) {
       navigateWithLoading(`/${currentLocale}/products?search=${encodeURIComponent(query.trim())}`);
-      setIsSearchOpen(false);
     }
   }, [navigateWithLoading, currentLocale]);
-
-  const handleMobileSearch = useCallback((query: string) => {
-    handleSearch(query);
-    closeSearch();
-  }, [handleSearch]);
 
   // Navigation items with their icons and routes
   const navigationItems = [
@@ -265,27 +250,6 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Search Overlay */}
-      {isSearchOpen && (
-        <div className={`${styles.mobile_search} ${styles.mobile_only}`}>
-          <div className="flex items-center space-x-3">
-            <div className="flex-1">
-              <SearchInput
-                onSearch={handleMobileSearch}
-                placeholder={t('searchPlaceholder')}
-              />
-            </div>
-            <button
-              onClick={closeSearch}
-              className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-              aria-label="Close search"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <div className={`${styles.mobile_menu} ${styles.menu_open}`}>
@@ -389,13 +353,10 @@ function Navbar() {
       )}
 
       {/* Mobile Menu Overlay */}
-      {(isMenuOpen || isSearchOpen) && (
+      {isMenuOpen && (
         <div
           className={styles.menu_overlay}
-          onClick={() => {
-            closeMenu();
-            closeSearch();
-          }}
+          onClick={closeMenu}
         />
       )}
     </nav>

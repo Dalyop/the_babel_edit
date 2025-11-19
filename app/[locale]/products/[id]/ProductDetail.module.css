@@ -163,20 +163,14 @@
 
   .productTitle {
     font-size: var(--font-size-2xl);
-    text-align: center;
   }
 
   .productPrice {
     font-size: var(--font-size-xl);
-    text-align: center;
-  }
-
-  .reviewStars {
-    justify-content: center;
   }
 
   .productDesc {
-    text-align: center;
+    font-size: var(--font-size-base);
   }
 
   .likeSection {
@@ -184,8 +178,23 @@
   }
 
   .likeList {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    overflow-x: auto;
     gap: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
+  .likeCard {
+    flex: 0 0 250px;
+  }
+
+  .size-selection button {
+    padding: var(--spacing-4);
+  }
+
+  .color-selection button {
+    width: 48px;
+    height: 48px;
   }
 }
 
@@ -212,7 +221,10 @@
   }
 
   .likeList {
-    grid-template-columns: 1fr;
     gap: var(--spacing-3);
+  }
+
+  .likeCard {
+    flex: 0 0 200px;
   }
 }

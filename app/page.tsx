@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { IMAGES } from './constants/constants';
@@ -11,6 +11,12 @@ import { useParams } from 'next/navigation';
 export default function LandingPage() {
   const params = useParams();
   const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -24,7 +30,12 @@ export default function LandingPage() {
             priority
           />
         </div>
-        <nav className={styles.nav}>
+        <button className={styles.hamburger} onClick={toggleMenu}>
+          <span className={styles.hamburgerLine}></span>
+          <span className={styles.hamburgerLine}></span>
+          <span className={styles.hamburgerLine}></span>
+        </button>
+        <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`}>
           <Link href={`/${currentLocale}/dashboard`} className={styles.navLink}>Shop now</Link>
           <Link href={`/${currentLocale}/about`} className={styles.navLink}>About</Link>
           <Link href={`/${currentLocale}/contact`} className={styles.navLink}>Contact</Link>

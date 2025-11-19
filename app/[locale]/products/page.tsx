@@ -5,6 +5,7 @@ import styles from './products.module.css';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
+import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCardSkeleton';
 import { useProductStore, FilterOptions, Product } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 
@@ -389,10 +390,9 @@ const ProductsPage = () => {
 
           <div className={styles.productsGrid}>
             {isLoading ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading products...</p>
-              </div>
+              Array.from({ length: 8 }).map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))
             ) : error ? (
               <div className={styles.errorContainer}>
                 <p>{error}</p>

@@ -12,6 +12,7 @@ import AdminProtectedRoute from '@/app/components/AdminProtectedRoute';
 import Button from '@/app/components/ui/Button/Button';
 import DataTable, { Column, Action } from '@/app/components/ui/DataTable/DataTable';
 import ConfirmModal from '@/app/components/ui/ConfirmModal/ConfirmModal';
+import { useProductStore } from '@/app/store/useProductStore';
 import { commonClasses } from '@/app/utils/designSystem';
 
 interface AdminUser {
@@ -140,6 +141,7 @@ const AdminPage = () => {
       );
 
       toast.success(`Product "${name}" deleted successfully`);
+      useProductStore.getState().clearCache();
       await fetchProducts();
       closeDeleteModal();
     } catch (error: any) {

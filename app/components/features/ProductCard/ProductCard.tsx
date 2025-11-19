@@ -3,7 +3,7 @@ import styles from './ProductCard.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, ShoppingCart } from 'lucide-react';
-import { useCartStore, useWishlistStore, Product } from '@/app/store';
+import { useCartStore, useWishlistStore, useProductStore, Product } from '@/app/store';
 import { toast } from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -26,6 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const addToCart = useCartStore(state => state.addToCart);
   const addToWishlist = useWishlistStore(state => state.addToWishlist);
   const removeFromWishlist = useWishlistStore(state => state.removeFromWishlist);
+  const prefetchProductById = useProductStore(state => state.prefetchProductById);
   const isInWishlist = useWishlistStore(state => state.isInWishlist(product.id));
   const isInCart = useCartStore(state => state.isInCart(product.id));
   
@@ -56,6 +57,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const handlePrefetch = () => {
+    prefetchProductById(product.id);
+  };
+
   const cardClasses = `${styles.card} ${variant === 'small' ? styles.smallCard : ''} ${className}`;
   const imageContainerClasses = `${styles.imageContainer} ${variant === 'small' ? styles.smallImageContainer : ''} ${imageContainerClassName}`;
   return (
@@ -78,6 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <Link 
           href={`/${locale}/products/${product.id}`}
           passHref
+          onMouseEnter={handlePrefetch}
         >
           <div className="cursor-pointer relative w-full h-full">
             <Image

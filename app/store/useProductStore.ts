@@ -39,6 +39,7 @@ interface ProductActions {
   fetchProducts: (filters?: FilterOptions, force?: boolean) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
+  prefetchProductById: (id: string) => Promise<void>;
   searchProducts: (query: string, filters?: FilterOptions) => Promise<void>;
   
   // Cache management
@@ -306,6 +307,13 @@ export const useProductStore = create<ProductStore>()(
         return existingProduct;
       }
 
+      // Check for prefetched data
+      const cachedData = getCachedData<{ product: Product }>(`${CACHE_KEYS.PRODUCTS}_${id}`);
+      if (cachedData?.product && !force) {
+        setCurrentProduct(cachedData.product);
+        return cachedData.product;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -318,6 +326,7 @@ export const useProductStore = create<ProductStore>()(
         }
         
         setCurrentProduct(product);
+        setCachedData(`${CACHE_KEYS.PRODUCTS}_${id}`, { product });
         return product;
         
       } catch (error) {
@@ -330,6 +339,33 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
+    prefetchProductById: async (id: string) => {
+      const { products } = get();
+      
+      if (!id) {
+        return;
+      }
+      
+      // Check if product exists in current products first
+      const existingProduct = products.find(p => p.id === id);
+      if (existingProduct) {
+        return;
+      }
+
+      try {
+        const endpoint = API_ENDPOINTS.PRODUCTS.BY_ID(id);
+        const product = await apiRequest<Product>(endpoint);
+        
+        if (product) {
+          // Add to cache without setting as current product
+          setCachedData(`${CACHE_KEYS.PRODUCTS}_${id}`, { product });
+        }
+      } catch (error) {
+        // Don't set error state on prefetch failure
+        console.error('Error prefetching product:', error);
+      }
+    },
+ 
     searchProducts: async (query: string, filters = {}) => {
       const { setSearchResults, setSearchLoading, setError, setSearchQuery } = get();
       
@@ -383,21 +419,15 @@ export const useProductStore = create<ProductStore>()(
     },
 
     clearCache: () => {
-      const keys = Object.values(CACHE_KEYS);
-      keys.forEach(key => {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Also clear filter-specific caches
       if (typeof window !== 'undefined') {
-        const allKeys = Object.keys(localStorage);
-        allKeys.forEach(key => {
-          if (key.startsWith(CACHE_KEYS.PRODUCTS)) {
-            localStorage.removeItem(key);
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(STORAGE_KEYS.PRODUCTS)) {
+            keysToRemove.push(key);
           }
-        });
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
       }
     },
 

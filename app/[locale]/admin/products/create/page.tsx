@@ -10,6 +10,7 @@ import Button from '@/app/components/ui/Button/Button';
 import FormField from '@/app/components/ui/FormField/FormField';
 import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 import { Product, Collection } from '@/app/store/types';
+import { useProductStore } from '@/app/store/useProductStore';
 import { commonClasses } from '@/app/utils/designSystem';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
@@ -184,6 +185,7 @@ const CreateProductPage = () => {
       });
 
       toast.success('Product created successfully!');
+      useProductStore.getState().clearCache();
       router.push(`/${locale}/admin`);
     } catch (error: any) {
       console.error('Error creating product:', error);
