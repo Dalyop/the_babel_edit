@@ -13,6 +13,7 @@ import Carousel from '@/app/components/features/Carousel/Carousel';
 import Footer from '@/app/components/features/Footer/Footer';
 import { useProductStore, useCartStore, useWishlistStore, Product } from '@/app/store';
 import { useAuth } from '@/app/context/AuthContext';
+import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 
 const TextDivider = ({ text }: { text: string }) => (
   <div className="flex items-center justify-center py-8">
@@ -267,15 +268,8 @@ function Dashboard() {
   // Fetch collections for the highlight section
   const fetchCollections = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/collections`);
-      if (response.ok) {
-        const data = await response.json();
-        setCollections(data.collections || data || []);
-      } else {
-        // Backend not available, use fallback data
-        console.warn('Server unavailable, using fallback collections');
-        setCollections([]);
-      }
+      const response = await apiRequest<any>('/collections');
+      setCollections(response.collections || response || []);
     } catch (error) {
       console.warn('Backend not available, using fallback collections:');
       // Set empty collections array so the page still renders with default cards

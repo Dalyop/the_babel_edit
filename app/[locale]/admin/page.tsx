@@ -35,6 +35,7 @@ interface DeleteConfirmState {
   type: 'product' | 'user';
   id: string;
   name: string;
+  hard: boolean;
 }
 
 const AdminPage = () => {
@@ -45,13 +46,15 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<'products' | 'users'>('products');
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
   const [error, setError] = useState<ErrorState | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({
     isOpen: false,
     type: 'product',
     id: '',
-    name: ''
+    name: '',
+    hard: false
   });
 
   const MAX_RETRIES = 3;
@@ -64,7 +67,10 @@ const AdminPage = () => {
 
   useEffect(() => {
       fetchProducts();
-      fetchUsers();
+  }, [pagination.page, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   const fetchProducts = async (retry = false) => {
@@ -72,12 +78,21 @@ const AdminPage = () => {
     setError(null);
 
     try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        includeInactive: 'true',
+      });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
       // Use the admin products endpoint
-      const response = await apiRequest<{ products: Product[] }>(
-        API_ENDPOINTS.PRODUCTS.ADMIN.LIST,
+      const response = await apiRequest<{ products: Product[]; pagination: any }>(
+        `${API_ENDPOINTS.PRODUCTS.ADMIN.LIST}?${params.toString()}`,
         { requireAuth: true }
       );
       setProducts(response.products);
+      setPagination(response.pagination);
       setRetryCount(0);
     } catch (error: any) {
       const isServerError = error.status === 503 || error.code === 'SERVER_UNAVAILABLE';
@@ -127,7 +142,11 @@ const AdminPage = () => {
   };
 
   const handleDeleteProduct = async () => {
-    const { id, name } = deleteConfirm;
+    const { id, name, hard } = deleteConfirm;
+    if (hard) {
+      handleHardDeleteProduct();
+      return;
+    }
     setActionLoading(prev => ({ ...prev, [`delete-product-${id}`]: true }));
     setError(null);
 
@@ -140,7 +159,7 @@ const AdminPage = () => {
         }
       );
 
-      toast.success(`Product "${name}" deleted successfully`);
+      toast.success(`Product "${name}" soft-deleted successfully`);
       useProductStore.getState().clearCache();
       await fetchProducts();
       closeDeleteModal();
@@ -156,6 +175,39 @@ const AdminPage = () => {
       handleDeleteError(error, name);
     } finally {
       setActionLoading(prev => ({ ...prev, [`delete-product-${id}`]: false }));
+    }
+  };
+
+  const handleHardDeleteProduct = async () => {
+    const { id, name } = deleteConfirm;
+    setActionLoading(prev => ({ ...prev, [`hard-delete-product-${id}`]: true }));
+    setError(null);
+
+    try {
+      await apiRequest(
+        `/admin/products/${id}/hard`,
+        {
+          method: 'DELETE',
+          requireAuth: true
+        }
+      );
+
+      toast.success(`Product "${name}" permanently deleted successfully`);
+      useProductStore.getState().clearCache();
+      await fetchProducts();
+      closeDeleteModal();
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to permanently delete product';
+      console.error('Error permanently deleting product:', error);
+
+      setError({
+        type: 'action',
+        message: `Failed to permanently delete product "${name}": ${errorMessage}`
+      });
+
+      handleDeleteError(error, name);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`hard-delete-product-${id}`]: false }));
     }
   };
 
@@ -219,12 +271,12 @@ const AdminPage = () => {
     }
   };
 
-  const showDeleteConfirm = (type: 'product' | 'user', id: string, name: string) => {
-    setDeleteConfirm({ isOpen: true, type, id, name });
+  const showDeleteConfirm = (type: 'product' | 'user', id: string, name: string, hard = false) => {
+    setDeleteConfirm({ isOpen: true, type, id, name, hard });
   };
 
   const closeDeleteModal = () => {
-    setDeleteConfirm({ isOpen: false, type: 'product', id: '', name: '' });
+    setDeleteConfirm({ isOpen: false, type: 'product', id: '', name: '', hard: false });
   };
 
   const getStockStatus = (stock: number) => {
@@ -288,6 +340,12 @@ const AdminPage = () => {
       onClick: (product) => showDeleteConfirm('product', product.id, product.name),
       variant: 'danger',
       loading: (product) => actionLoading[`delete-product-${product.id}`]
+    },
+    {
+      label: 'Hard Delete',
+      onClick: (product) => showDeleteConfirm('product', product.id, product.name, true),
+      variant: 'danger',
+      loading: (product) => actionLoading[`hard-delete-product-${product.id}`]
     }
   ];
 
@@ -355,11 +413,6 @@ const AdminPage = () => {
   ];
 
   // Filtered data
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.collection?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -467,12 +520,33 @@ const AdminPage = () => {
                   </div>
 
                   <DataTable
-                    data={filteredProducts}
+                    data={products}
                     columns={productColumns}
                     actions={productActions}
                     loading={loading}
                     emptyMessage="No products found"
                   />
+                  <div className="flex justify-between items-center mt-4">
+                    <div>
+                      <span className="text-sm text-gray-500">
+                        Page {pagination.page} of {pagination.pages}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                        disabled={pagination.page === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                        disabled={pagination.page === pagination.pages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -505,10 +579,14 @@ const AdminPage = () => {
           onClose={closeDeleteModal}
           onConfirm={deleteConfirm.type === 'product' ? handleDeleteProduct : handleDeleteUser}
           title={`Delete ${deleteConfirm.type === 'product' ? 'Product' : 'User'}`}
-          message={`Are you sure you want to delete ${deleteConfirm.type === 'product' ? 'product' : 'user'} "${deleteConfirm.name}"? This action cannot be undone.`}
-          confirmText="Delete"
+          message={
+            deleteConfirm.hard
+              ? `Are you sure you want to permanently delete "${deleteConfirm.name}"? This action cannot be undone.`
+              : `Are you sure you want to delete ${deleteConfirm.type === 'product' ? 'product' : 'user'} "${deleteConfirm.name}"? This will only soft-delete the item.`
+          }
+          confirmText={deleteConfirm.hard ? 'Hard Delete' : 'Delete'}
           variant="danger"
-          isLoading={actionLoading[`delete-${deleteConfirm.type}-${deleteConfirm.id}`]}
+          isLoading={actionLoading[`${deleteConfirm.hard ? 'hard-' : ''}delete-${deleteConfirm.type}-${deleteConfirm.id}`]}
         />
       </div>
     </AdminProtectedRoute>
