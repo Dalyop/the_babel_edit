@@ -113,28 +113,25 @@ const EditProductPage = () => {
     if (!files) return;
 
     try {
-      const uploadedUrls: string[] = [];
-
+      const formData = new FormData();
       for (const file of Array.from(files)) {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await apiRequest<{ url: string }>('/admin/products/upload-image', {
-          method: 'POST',
-          body: formData,
-          isFormData: true,
-          requireAuth: true,
-        });
-
-        if (response?.url) {
-          uploadedUrls.push(response.url);
-        }
+        formData.append('files', file);
       }
 
-      setFormData((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls],
-      }));
+      const response = await apiRequest<{ images: { url: string }[] }>('/admin/products/upload-images', {
+        method: 'POST',
+        body: formData,
+        isFormData: true,
+        requireAuth: true,
+      });
+
+      if (response?.images) {
+        const uploadedUrls = response.images.map(image => image.url);
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, ...uploadedUrls],
+        }));
+      }
     } catch (error) {
       console.error('Image upload failed:', error);
       toast.error('Image upload failed. Please try again.');
