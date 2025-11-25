@@ -413,14 +413,14 @@ function Dashboard() {
             title={highlightCards[0]?.title}
             subtitle={highlightCards[0]?.title}
             description={highlightCards[0]?.description}
-            className="flex-[0_0_30%] min-w-[250px]"
+            className="flex-[0_0_30%] min-w-[250px] h-96"
           />
           <TransparentImageCard
             backgroundImage={highlightCards[1]?.image}
             title={highlightCards[1]?.title}
             subtitle={highlightCards[1]?.title}
             description={highlightCards[1]?.description}
-            className="flex-[0_0_60%] min-w-[250px]"
+            className="flex-[0_0_60%] min-w-[250px] h-96"
           />
         </article>
 
@@ -430,14 +430,14 @@ function Dashboard() {
             title={highlightCards[2]?.title}
             subtitle={highlightCards[2]?.title}
             description={highlightCards[2]?.description}
-            className="flex-[0_0_60%] min-w-[250px]"
+            className="flex-[0_0_60%] min-w-[250px] h-96"
           />
           <TransparentImageCard
             backgroundImage={highlightCards[3]?.image}
             title={highlightCards[3]?.title}
             subtitle={highlightCards[3]?.title}
             description={highlightCards[3]?.description}
-            className="flex-[0_0_30%] min-w-[250px]"
+            className="flex-[0_0_30%] min-w-[250px] h-96"
           />
         </article>
 
@@ -450,7 +450,7 @@ function Dashboard() {
               title={card.title}
               subtitle={card.title}
               description={card.description}
-              className=""
+              className="h-64"
             />
           ))}
         </div>

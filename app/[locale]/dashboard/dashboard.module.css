@@ -78,10 +78,6 @@
         background: #555;
     }
 
-    .hidden {
-        display: none;
-    }
-
     .productsSection :global(.arrowButton) {
         position: absolute;
         top: 50%;
