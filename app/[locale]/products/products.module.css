@@ -425,6 +425,9 @@
   border: 2px solid #fecaca;
   border-radius: 16px;
   color: #dc2626;
+  width: 100%;
+  min-height: 400px;
+  grid-column: 1 / -1;
 }
 
 .retryButton {
