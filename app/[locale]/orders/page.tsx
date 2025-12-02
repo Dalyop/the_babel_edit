@@ -1,0 +1,177 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
+import Footer from '@/app/components/features/Footer/Footer';
+import { useAuthStore } from '@/app/store/useAuthStore';
+import { Loader2, Package, AlertCircle } from 'lucide-react';
+
+// Define the structure of an order based on your backend's API response
+interface Order {
+  id: string;
+  orderNumber: string;
+  date: string;
+  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  total: number;
+  orderItems: {
+    id: string;
+    quantity: number;
+    price: number;
+    product: {
+      id: string;
+      name: string;
+      images: { url: string }[];
+    };
+  }[];
+}
+
+const OrdersPage = () => {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  const { token } = useAuthStore();
+  
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!token) {
+        setLoading(false);
+        setError('You must be logged in to view your orders.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders.');
+        }
+
+        const data = await response.json();
+        setOrders(data);
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [token]);
+
+  const getStatusChipClass = (status: Order['status']) => {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-green-100 text-green-800';
+      case 'SHIPPED':
+        return 'bg-blue-100 text-blue-800';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const OrderCard = ({ order }: { order: Order }) => (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-shadow duration-300 hover:shadow-md">
+      <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 className="font-semibold text-lg text-gray-800">Order #{order.orderNumber}</h3>
+          <p className="text-sm text-gray-500">
+            Date: {new Date(order.date).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusChipClass(order.status)}`}>
+            {order.status}
+          </span>
+          <p className="font-bold text-lg text-gray-900">${order.total.toFixed(2)}</p>
+        </div>
+      </div>
+      <div className="p-6">
+        <div className="space-y-4 mb-6">
+          {order.orderItems.slice(0, 2).map(item => (
+            <div key={item.id} className="flex items-center gap-4">
+              <img
+                src={item.product.images[0]?.url || '/placeholder-product.png'}
+                alt={item.product.name}
+                className="w-16 h-16 object-cover rounded-md border"
+              />
+              <div className='flex-grow'>
+                <p className="font-semibold text-gray-800">{item.product.name}</p>
+                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
+            </div>
+          ))}
+          {order.orderItems.length > 2 && (
+             <p className="text-sm text-gray-500 pt-2 text-center">
+               + {order.orderItems.length - 2} more item(s)
+             </p>
+          )}
+        </div>
+        <Link href={`/${locale}/orders/${order.id}`} className="inline-block w-full text-center bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+            View Order Details
+        </Link>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <NavbarWithSuspense />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">My Orders</h1>
+        </div>
+
+        {loading && (
+          <div className="text-center py-20">
+            <Loader2 className="mx-auto w-12 h-12 text-blue-600 animate-spin" />
+            <p className="mt-4 text-lg text-gray-600">Loading your orders...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center py-20 bg-red-50 border border-red-200 rounded-lg">
+            <AlertCircle className="mx-auto w-12 h-12 text-red-500" />
+            <p className="mt-4 text-lg text-red-700 font-semibold">{error}</p>
+            <p className='mt-2 text-gray-600'>There was a problem fetching your order history.</p>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
+            {orders.length > 0 ? (
+              <div className="space-y-8">
+                {orders.map(order => <OrderCard key={order.id} order={order} />)}
+              </div>
+            ) : (
+              <div className="text-center py-20 border-2 border-dashed border-gray-300 rounded-lg">
+                <Package className="mx-auto w-12 h-12 text-gray-400" />
+                <h2 className="mt-4 text-xl font-semibold text-gray-800">No Orders Yet</h2>
+                <p className="mt-2 text-gray-500">You haven't placed any orders with us. When you do, they will appear here.</p>
+                <Link href={`/${locale}/products`} className="mt-6 inline-block bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                  Start Shopping
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default OrdersPage;

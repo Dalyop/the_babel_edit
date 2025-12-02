@@ -1,0 +1,201 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
+import Footer from '@/app/components/features/Footer/Footer';
+import { useAuthStore } from '@/app/store/useAuthStore';
+import { Loader2, AlertCircle, Package, ArrowLeft } from 'lucide-react';
+
+// Assuming the same Order interface as the orders list page
+interface Order {
+  id: string;
+  orderNumber: string;
+  date: string;
+  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  total: number;
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  orderItems: {
+    id: string;
+    quantity: number;
+    price: number;
+    product: {
+      id: string;
+      name: string;
+      images: { url: string }[];
+    };
+  }[];
+}
+
+const OrderDetailPage = () => {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  const orderId = params?.orderId as string;
+  const { token } = useAuthStore();
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!token || !orderId) {
+        setLoading(false);
+        setError('Invalid request.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Order not found.');
+          }
+          throw new Error('Failed to fetch order details.');
+        }
+
+        const data = await response.json();
+        setOrder(data);
+      } catch (err: any) {
+        setError(err.message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [token, orderId]);
+  
+  const getStatusChipClass = (status: Order['status']) => {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-green-100 text-green-800';
+      case 'SHIPPED':
+        return 'bg-blue-100 text-blue-800';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+                <Loader2 className="mx-auto w-12 h-12 text-blue-600 animate-spin" />
+                <p className="mt-4 text-lg text-gray-600">Loading Order Details...</p>
+            </div>
+        </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center p-8 bg-white shadow-md rounded-lg">
+                <AlertCircle className="mx-auto w-12 h-12 text-red-500" />
+                <p className="mt-4 text-xl text-red-700 font-semibold">{error}</p>
+                <p className='mt-2 text-gray-600'>We couldn't retrieve the details for this order.</p>
+                <Link href={`/${locale}/orders`} className="mt-6 inline-flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
+                    Back to My Orders
+                </Link>
+            </div>
+        </div>
+    );
+  }
+
+  if (!order) {
+    return null; // Should be handled by error state
+  }
+  
+  const { shippingAddress } = order;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <NavbarWithSuspense />
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Link href={`/${locale}/orders`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 font-semibold">
+          <ArrowLeft className="w-5 h-5" />
+          Back to My Orders
+        </Link>
+        
+        <div className="bg-white rounded-xl shadow-lg">
+            <div className="p-6 border-b border-gray-200">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Placed on {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
+                    <span className={`px-4 py-2 text-base font-medium rounded-full ${getStatusChipClass(order.status)}`}>
+                        {order.status}
+                    </span>
+                </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Shipping Address</h2>
+                    <address className="not-italic text-gray-600 space-y-1">
+                        <p>{shippingAddress.street}</p>
+                        <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}</p>
+                        <p>{shippingAddress.country}</p>
+                    </address>
+                </div>
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Payment Summary</h2>
+                    <div className="space-y-2 text-gray-600">
+                        <div className="flex justify-between"><span>Subtotal</span> <span>${order.total.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>Shipping</span> <span className='text-green-600'>FREE</span></div>
+                        <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2 mt-2"><span>Total</span> <span>${order.total.toFixed(2)}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Items in this Order</h2>
+                <div className="space-y-4">
+                    {order.orderItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
+                            <img
+                                src={item.product.images[0]?.url || '/placeholder-product.png'}
+                                alt={item.product.name}
+                                className="w-20 h-20 object-cover rounded-lg border"
+                            />
+                            <div className='flex-grow'>
+                                <p className="font-semibold text-gray-900">{item.product.name}</p>
+                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            </div>
+                            <div className='text-right'>
+                                <p className="font-semibold text-gray-800">${(item.price * item.quantity).toFixed(2)}</p>
+                                <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default OrderDetailPage;

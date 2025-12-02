@@ -384,18 +384,6 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <div className={styles.reviewStars}>
-              <span style={{ color: '#ffb400' }}>
-                {'★'.repeat(Math.floor(currentProduct.avgRating || 4))}
-              </span>
-              <span style={{ color: '#d1d1d1' }}>
-                {'★'.repeat(5 - Math.floor(currentProduct.avgRating || 4))}
-              </span>
-              <span className={styles.reviewCount}>
-                ({currentProduct.reviewCount || 0} {t('reviews')})
-              </span>
-            </div>
-
             <div className={styles.productDesc}>
               {currentProduct.description}
             </div>
