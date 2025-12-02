@@ -7,6 +7,7 @@ import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspe
 import Footer from '@/app/components/features/Footer/Footer';
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { Loader2, AlertCircle, Package, ArrowLeft } from 'lucide-react';
+import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 
 // Assuming the same Order interface as the orders list page
 interface Order {
@@ -38,7 +39,7 @@ const OrderDetailPage = () => {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const orderId = params?.orderId as string;
-  const { token } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,37 +47,30 @@ const OrderDetailPage = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!token || !orderId) {
+      if (!isAuthenticated || !orderId) {
         setLoading(false);
-        setError('Invalid request.');
+        setError('Invalid request. You must be logged in to view an order.');
         return;
       }
 
       try {
-        const response = await fetch(`/api/orders/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const data = await apiRequest<Order>(API_ENDPOINTS.ORDERS.BY_ID(orderId), {
+          requireAuth: true,
         });
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Order not found.');
-          }
-          throw new Error('Failed to fetch order details.');
-        }
-
-        const data = await response.json();
         setOrder(data);
       } catch (err: any) {
-        setError(err.message || 'An unexpected error occurred.');
+        if (err.status === 404) {
+            setError('Order not found.');
+        } else {
+            setError(err.message || 'An unexpected error occurred.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [token, orderId]);
+  }, [isAuthenticated, orderId]);
   
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {

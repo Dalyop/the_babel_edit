@@ -7,6 +7,7 @@ import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspe
 import Footer from '@/app/components/features/Footer/Footer';
 import { useAuthStore } from '@/app/store/useAuthStore';
 import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 
 // Define the structure of an order based on your backend's API response
 interface Order {
@@ -30,7 +31,7 @@ interface Order {
 const OrdersPage = () => {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const { token } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,24 +39,16 @@ const OrdersPage = () => {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!token) {
+      if (!isAuthenticated) {
         setLoading(false);
         setError('You must be logged in to view your orders.');
         return;
       }
 
       try {
-        const response = await fetch('/api/orders', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const data = await apiRequest<Order[]>(API_ENDPOINTS.ORDERS.LIST, {
+          requireAuth: true,
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch orders.');
-        }
-
-        const data = await response.json();
         setOrders(data);
       } catch (err: any) {
         setError(err.message || 'An unexpected error occurred.');
@@ -65,7 +58,7 @@ const OrdersPage = () => {
     };
 
     fetchOrders();
-  }, [token]);
+  }, [isAuthenticated]);
 
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
