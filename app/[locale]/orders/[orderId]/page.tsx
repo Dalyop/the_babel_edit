@@ -5,9 +5,9 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
-import { useAuthStore } from '@/app/store/useAuthStore';
+import { useAuth } from '@/app/context/AuthContext';
 import { Loader2, AlertCircle, Package, ArrowLeft } from 'lucide-react';
-import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
+import { API_ENDPOINTS } from '@/app/lib/api';
 
 // Assuming the same Order interface as the orders list page
 interface Order {
@@ -39,24 +39,26 @@ const OrderDetailPage = () => {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const orderId = params?.orderId as string;
-  const { isAuthenticated } = useAuthStore();
+  const { user, loading: authLoading, authenticatedFetch } = useAuth();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) {
+      return; // Wait for authentication to resolve
+    }
+
     const fetchOrder = async () => {
-      if (!isAuthenticated || !orderId) {
+      if (!user || !orderId) {
         setLoading(false);
         setError('Invalid request. You must be logged in to view an order.');
         return;
       }
 
       try {
-        const data = await apiRequest<Order>(API_ENDPOINTS.ORDERS.BY_ID(orderId), {
-          requireAuth: true,
-        });
+        const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.BY_ID(orderId));
         setOrder(data);
       } catch (err: any) {
         if (err.status === 404) {
@@ -70,7 +72,9 @@ const OrderDetailPage = () => {
     };
 
     fetchOrder();
-  }, [isAuthenticated, orderId]);
+  }, [user, authLoading, authenticatedFetch, orderId]);
+  
+  const totalLoading = loading || authLoading;
   
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
