@@ -122,7 +122,7 @@ const Footer = () => {
             <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
               <SiFacebook size={24} style={{ color: '#1877F2' }} />
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://instagram.com/thebabeledit" target="_blank" rel="noopener noreferrer">
               <SiInstagram size={24} style={{ color: '#E1306C' }} />
             </a>
           </div>
