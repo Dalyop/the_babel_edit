@@ -332,4 +332,17 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/auth/users/${id}`,
     STATS: '/auth/users/stats',
   },
+  REVIEWS: {
+    CREATE: '/reviews',
+    LIST: '/reviews',
+    DELETE: (reviewId: string) => `/reviews/${reviewId}`,
+  },
+  ADMIN: { // New top-level ADMIN key
+    TESTIMONIALS: {
+      LIST: '/admin/testimonials', // GET all featured testimonial IDs
+      ADD: '/admin/testimonials',   // POST to add a reviewId as testimonial
+      REMOVE: (reviewId: string) => `/admin/testimonials/${reviewId}`, // DELETE to remove
+      PUBLIC_LIST: '/testimonials/public', // GET public testimonials (non-admin)
+    }
+  }
 } as const;

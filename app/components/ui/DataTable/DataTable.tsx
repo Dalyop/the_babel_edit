@@ -12,9 +12,9 @@ export interface Column<T> {
 }
 
 export interface Action<T> {
-  label: string;
+  label: string | ((item: T) => string);
   onClick: (item: T) => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | ((item: T) => 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger');
   size?: 'sm' | 'md' | 'lg';
   disabled?: (item: T) => boolean;
   loading?: (item: T) => boolean;
@@ -104,18 +104,22 @@ function DataTable<T extends Record<string, any>>({
                 {actions.length > 0 && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center space-x-2">
-                      {actions.map((action, actionIndex) => (
-                        <Button
-                          key={actionIndex}
-                          variant={action.variant || 'secondary'}
-                          size={action.size || 'sm'}
-                          onClick={() => action.onClick(item)}
-                          disabled={action.disabled?.(item)}
-                          isLoading={action.loading?.(item)}
-                        >
-                          {action.label}
-                        </Button>
-                      ))}
+                      {actions.map((action, actionIndex) => {
+                        const label = typeof action.label === 'function' ? action.label(item) : action.label;
+                        const variant = typeof action.variant === 'function' ? action.variant(item) : action.variant;
+                        return (
+                          <Button
+                            key={actionIndex}
+                            variant={variant || 'secondary'}
+                            size={action.size || 'sm'}
+                            onClick={() => action.onClick(item)}
+                            disabled={action.disabled?.(item)}
+                            isLoading={action.loading?.(item)}
+                          >
+                            {label}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </td>
                 )}

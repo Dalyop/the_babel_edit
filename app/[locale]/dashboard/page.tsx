@@ -6,6 +6,21 @@ import { toast } from 'react-hot-toast';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 
+interface Testimonial {
+    id: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    user: {
+        firstName: string;
+        lastName: string;
+        avatar?: string;
+    };
+    product: {
+        name: string;
+    };
+}
+
 // Your original components would be imported here
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense'
 import Carousel from '@/app/components/features/Carousel/Carousel';
@@ -253,6 +268,8 @@ function Dashboard() {
   // Additional state for collections/categories
   const [collections, setCollections] = useState<any[]>([]);
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
 
   useEffect(() => {
     // Fetch featured products from backend
@@ -263,6 +280,21 @@ function Dashboard() {
 
     // Fetch hero carousel data
     fetchHeroData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+        try {
+            const data = await apiRequest<Testimonial[]>(API_ENDPOINTS.ADMIN.TESTIMONIALS.PUBLIC_LIST);
+            setTestimonials(data);
+        } catch (error) {
+            console.error('Failed to fetch testimonials:', error);
+            toast.error('Failed to load testimonials.');
+        } finally {
+            setTestimonialsLoading(false);
+        }
+    };
+    fetchTestimonials();
   }, []);
 
   // Fetch collections for the highlight section
@@ -630,19 +662,30 @@ function Dashboard() {
             <h2 className="text-3xl md:text-4xl font-bold mb-2">THEY SAYS</h2>
             <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
           </div>
-          <blockquote className="text-lg md:text-xl text-gray-600 italic mb-8 max-w-2xl mx-auto">
-            I absolutely love shopping here! The quality of the clothes is top-notch, and everything fits perfectly. The designs are stylish yet comfortable, and the customer service team is always so helpful and friendly. I’ve received so many compliments whenever I wear their outfits!
-          </blockquote>
-          <div className="flex justify-center items-center space-x-4 mb-8">
-            <span className="font-bold text-gray-900">Grace Tena</span>
-            <span className="w-px h-4 bg-gray-300"></span>
-            <span className="text-gray-500">UK</span>
-          </div>
-          <img
-            src="https://images.pexels.com/photos/1598508/pexels-photo-1598508.jpeg?auto=compress&cs=tinysrgb&w=600"
-            alt="Red sneakers testimonial"
-            className="mx-auto w-64 md:w-80 rounded-lg"
-          />
+          {testimonialsLoading ? (
+            <div>Loading testimonials...</div>
+          ) : testimonials.length > 0 ? (
+            <div> {/* Add this wrapper div */}
+              <blockquote className="text-lg md:text-xl text-gray-600 italic mb-8 max-w-2xl mx-auto">
+                {testimonials[0].comment}
+              </blockquote>
+              <div className="flex justify-center items-center space-x-4 mb-8">
+                  <img
+                      src={testimonials[0].user.avatar || "/images/babel_logo_black.jpg"}
+                      alt="avatar"
+                      className="w-12 h-12 rounded-full"
+                  />
+                  <span className="font-bold text-gray-900">{testimonials[0].user.firstName} {testimonials[0].user.lastName}</span>
+              </div>
+              <div className="flex justify-center">
+                  {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-6 h-6 ${i < testimonials[0].rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                  ))}
+              </div>
+            </div> /* Close the wrapper div */
+          ) : (
+            <p>No testimonials yet.</p>
+          )}
         </div>
       </section>
 
