@@ -559,6 +559,14 @@ function Dashboard() {
             { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/HM-Logo-700x394.png" },
             { name: "Puma", src: "https://logos-world.net/wp-content/uploads/2020/04/Puma-Logo.png" },
             { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2023/01/Uniqlo-Logo-500x281.png" },
+            { name: "Chanel", src: "https://www.stickpng.com/img/icons-logos-emojis/iconic-brands/chanel-logo-transparent-png" },
+            { name: "Prada", src: "https://upload.wikimedia.org/wikipedia/commons/4/44/Prada.png" },
+            { name: "Dior", src: "https://www.stickpng.com/assets/images/icons/iconic-brands/dior-logo.png" },
+            { name: "Versace", src: "https://upload.wikimedia.org/wikipedia/commons/a/ad/Versace_logo.svg" },
+            { name: "Balenciaga", src: "https://logowik.com/content/uploads/images/balenciaga5106.jpg" },
+            { name: "Fendi", src: "https://www.citypng.com/public/uploads/preview/-11594957117gcn10p5y5q.png" },
+            { name: "Burberry", src: "https://static.cdnlogo.com/logos/b/6/burberry.svg" },
+            { name: "Hermes", src: "https://logo-teka.com/wp-content/uploads/2025/07/hermes-logo.png" },
           ].map((brand, index) => (
             <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
               <img

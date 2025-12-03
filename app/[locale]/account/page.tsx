@@ -17,6 +17,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { API_ENDPOINTS } from "@/app/lib/api";
+import { Loader2, Package, AlertCircle } from 'lucide-react';
 
 type Address = {
   id?: string;
@@ -36,6 +38,25 @@ type Profile = {
   addresses?: Address[];
 };
 
+// Define the structure of an order based on your backend's API response
+interface Order {
+  id: string;
+  orderNumber: string;
+  date: string;
+  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  total: number;
+  orderItems: {
+    id: string;
+    quantity: number;
+    price: number;
+    product: {
+      id: string;
+      name: string;
+      images: { url: string }[];
+    };
+  }[];
+}
+
 export default function AccountPage() {
   const params = useParams();
   const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
@@ -54,6 +75,10 @@ export default function AccountPage() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+  
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
 
   const hasFetchedRef = useRef(false);
 
@@ -139,6 +164,25 @@ export default function AccountPage() {
       fetchProfile();
     }
   }, [user, loading, profile, authenticatedFetch, fetchProfile]);
+
+  // Fetch orders when orders tab is active
+  useEffect(() => {
+    if (activeTab === 'orders' && user) {
+      const fetchOrders = async () => {
+        setOrdersLoading(true);
+        setOrdersError(null);
+        try {
+          const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.LIST);
+          setOrders(data);
+        } catch (err: any) {
+          setOrdersError(err.message || 'An unexpected error occurred.');
+        } finally {
+          setOrdersLoading(false);
+        }
+      };
+      fetchOrders();
+    }
+  }, [activeTab, user, authenticatedFetch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -313,6 +357,66 @@ export default function AccountPage() {
     logout();
     setLogoutDialogOpen(false);
   };
+
+  const getStatusChipClass = (status: Order['status']) => {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-green-100 text-green-800';
+      case 'SHIPPED':
+        return 'bg-blue-100 text-blue-800';
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const OrderCard = ({ order }: { order: Order }) => (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-shadow duration-300 hover:shadow-md">
+      <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 className="font-semibold text-lg text-gray-800">Order #{order.orderNumber}</h3>
+          <p className="text-sm text-gray-500">
+            Date: {new Date(order.date).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusChipClass(order.status)}`}>
+            {order.status}
+          </span>
+          <p className="font-bold text-lg text-gray-900">${order.total.toFixed(2)}</p>
+        </div>
+      </div>
+      <div className="p-6">
+        <div className="space-y-4 mb-6">
+          {order.orderItems.slice(0, 2).map(item => (
+            <div key={item.id} className="flex items-center gap-4">
+              <img
+                src={item.product.images[0]?.url || '/placeholder-product.png'}
+                alt={item.product.name}
+                className="w-16 h-16 object-cover rounded-md border"
+              />
+              <div className='flex-grow'>
+                <p className="font-semibold text-gray-800">{item.product.name}</p>
+                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
+            </div>
+          ))}
+          {order.orderItems.length > 2 && (
+             <p className="text-sm text-gray-500 pt-2 text-center">
+               + {order.orderItems.length - 2} more item(s)
+             </p>
+          )}
+        </div>
+        <Link href={`/${currentLocale}/orders/${order.id}`} className="inline-block w-full text-center bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+            View Order Details
+        </Link>
+      </div>
+    </div>
+  );
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -605,12 +709,31 @@ export default function AccountPage() {
         return (
           <div className={styles.ordersTab}>
             <h2 className={styles.tabTitle}>Order History</h2>
-            <div className={styles.emptyState}>
-              <p>No orders found. Start shopping to see your orders here!</p>
-              <Link href={`/${currentLocale}/products`} className={styles.primaryBtn}>
-                Browse Products
-              </Link>
-            </div>
+            {ordersLoading ? (
+                <div className="text-center py-20">
+                    <Loader2 className="mx-auto w-12 h-12 text-blue-600 animate-spin" />
+                    <p className="mt-4 text-lg text-gray-600">Loading your orders...</p>
+                </div>
+            ) : ordersError ? (
+                <div className="text-center py-20 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertCircle className="mx-auto w-12 h-12 text-red-500" />
+                    <p className="mt-4 text-lg text-red-700 font-semibold">{ordersError}</p>
+                    <p className='mt-2 text-gray-600'>There was a problem fetching your order history.</p>
+                </div>
+            ) : orders.length > 0 ? (
+                <div className="space-y-8">
+                    {orders.map(order => <OrderCard key={order.id} order={order} />)}
+                </div>
+            ) : (
+                <div className={styles.emptyState}>
+                    <Package className="mx-auto w-12 h-12 text-gray-400" />
+                    <h2 className="mt-4 text-xl font-semibold text-gray-800">No Orders Yet</h2>
+                    <p className="mt-2 text-gray-500">You haven't placed any orders with us. When you do, they will appear here.</p>
+                    <Link href={`/${currentLocale}/products`} className={styles.primaryBtn}>
+                        Browse Products
+                    </Link>
+                </div>
+            )}
           </div>
         );
 

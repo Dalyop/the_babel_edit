@@ -6,7 +6,7 @@ import { IMAGES } from '@/app/constants/constants';
 import SearchInput from '@/app/components/ui/SearchInput/SearchInput';
 import styles from './Navbar.module.css';
 // icon imports
-import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X, Search, Heart } from 'lucide-react';
+import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X, Search, Heart, Package } from 'lucide-react';
 import Select from '../../ui/Select/Select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import en from '@/locales/en/common.json';
@@ -113,6 +113,12 @@ function Navbar() {
           className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
         >
           {t('account')}
+        </button>
+        <button
+          onClick={() => navigateWithLoading(`/${currentLocale}/orders`)}
+          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+        >
+          {t('orders')}
         </button>
         <button
           onClick={() => navigateWithLoading(`/${currentLocale}/wishlist`)}
@@ -296,6 +302,18 @@ function Navbar() {
                   </svg>
                 </div>
                 <span className="text-xs text-gray-600">{t('account')}</span>
+              </button>
+              <button
+                onClick={() => {
+                  navigateWithLoading(`/${currentLocale}/orders`);
+                  closeMenu();
+                }}
+                className="flex flex-col items-center space-y-1"
+              >
+                <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                  <Package className="h-4 w-4 text-gray-600" />
+                </div>
+                <span className="text-xs text-gray-600">{t('orders')}</span>
               </button>
             </div>
 

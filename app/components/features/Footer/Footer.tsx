@@ -136,7 +136,6 @@ const Footer = () => {
           {[
             { name: "Mastercard", src: "https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" },
             { name: "Visa", src: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" },
-            { name: "PayPal", src: "https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" },
             { name: "Apple Pay", src: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" },
             { name: "Google Pay", src: "https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" },
           ].map((payment, index) => (
