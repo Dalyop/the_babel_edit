@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast';
 interface Order {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   total: number;
   shippingAddress: {
@@ -23,15 +23,15 @@ interface Order {
     state: string;
     zipCode: string;
     country: string;
-  };
-  orderItems: {
+  } | null;
+  items: {
     id: string;
     quantity: number;
     price: number;
     product: {
       id: string;
       name: string;
-      images: { url: string }[];
+      imageUrl: string;
     };
   }[];
 }
@@ -39,7 +39,7 @@ interface Order {
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: { id: string; name: string; images: { url: string }[] }; // Assuming product has at least id and name
+  product: { id: string; name: string; imageUrl: string };
   onSubmit: (reviewData: { rating: number; comment: string }) => Promise<void>;
 }
 
@@ -103,7 +103,7 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; images: { url: string }[] } | null>(null);
+  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; imageUrl: string } | null>(null);
 
   useEffect(() => {
     if (authLoading) {
@@ -218,7 +218,7 @@ const OrderDetailPage = () => {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
                         <p className="text-sm text-gray-500 mt-1">
-                            Placed on {new Date(order.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
                     <span className={`px-4 py-2 text-base font-medium rounded-full ${getStatusChipClass(order.status)}`}>
@@ -231,9 +231,15 @@ const OrderDetailPage = () => {
                 <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Shipping Address</h2>
                     <address className="not-italic text-gray-600 space-y-1">
-                        <p>{shippingAddress.street}</p>
-                        <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}</p>
-                        <p>{shippingAddress.country}</p>
+                        {shippingAddress ? (
+                            <>
+                                <p>{shippingAddress.street}</p>
+                                <p>{shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}</p>
+                                <p>{shippingAddress.country}</p>
+                            </>
+                        ) : (
+                            <p>No shipping address provided.</p>
+                        )}
                     </address>
                 </div>
                 <div>
@@ -249,25 +255,27 @@ const OrderDetailPage = () => {
             <div className="p-6 border-t border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Items in this Order</h2>
                 <div className="space-y-4">
-                    {order.orderItems.map(item => (
+                    {order.items.map(item => (
                         <div key={item.id} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50">
                             <img
-                                src={item.product.images[0]?.url || '/placeholder-product.png'}
-                                alt={item.product.name}
+                                src={item.product?.imageUrl || '/placeholder-product.png'}
+                                alt={item.product?.name || 'Product image'}
                                 className="w-20 h-20 object-cover rounded-lg border"
                             />
                             <div className='flex-grow'>
-                                <p className="font-semibold text-gray-900">{item.product.name}</p>
+                                <p className="font-semibold text-gray-900">{item.product?.name || 'Product no longer available'}</p>
                                 <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                                <button 
-                                    onClick={() => {
-                                        setSelectedProductForReview(item.product);
-                                        setReviewModalOpen(true);
-                                    }}
-                                    className="text-sm text-blue-600 hover:underline"
-                                >
-                                    Leave a Review
-                                </button>
+                                {item.product && (
+                                    <button 
+                                        onClick={() => {
+                                            setSelectedProductForReview(item.product);
+                                            setReviewModalOpen(true);
+                                        }}
+                                        className="text-sm text-blue-600 hover:underline"
+                                    >
+                                        Leave a Review
+                                    </button>
+                                )}
                             </div>
                             <div className='text-right'>
                                 <p className="font-semibold text-gray-800">${(item.price * item.quantity).toFixed(2)}</p>
