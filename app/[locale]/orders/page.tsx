@@ -23,7 +23,7 @@ interface Order {
     product: {
       id: string;
       name: string;
-      images: { url: string }[];
+      imageUrl: string;
     };
   }[];
 }
@@ -101,7 +101,7 @@ const OrdersPage = () => {
           {order.items.slice(0, 2).map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <img
-                src={item.product.images[0]?.url || '/placeholder-product.png'}
+                src={item.product.imageUrl || '/placeholder-product.png'}
                 alt={item.product.name}
                 className="w-16 h-16 object-cover rounded-md border"
               />
