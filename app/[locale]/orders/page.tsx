@@ -13,10 +13,10 @@ import { API_ENDPOINTS } from '@/app/lib/api';
 interface Order {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   total: number;
-  orderItems: {
+  items: {
     id: string;
     quantity: number;
     price: number;
@@ -52,7 +52,7 @@ const OrdersPage = () => {
 
       try {
         const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.LIST);
-        setOrders(data);
+        setOrders(data.orders);
       } catch (err: any) {
         setError(err.message || 'An unexpected error occurred.');
       } finally {
@@ -86,7 +86,7 @@ const OrdersPage = () => {
         <div>
           <h3 className="font-semibold text-lg text-gray-800">Order #{order.orderNumber}</h3>
           <p className="text-sm text-gray-500">
-            Date: {new Date(order.date).toLocaleDateString()}
+            Date: {new Date(order.createdAt).toLocaleDateString()}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -98,7 +98,7 @@ const OrdersPage = () => {
       </div>
       <div className="p-6">
         <div className="space-y-4 mb-6">
-          {order.orderItems.slice(0, 2).map(item => (
+          {order.items.slice(0, 2).map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <img
                 src={item.product.images[0]?.url || '/placeholder-product.png'}
@@ -112,9 +112,9 @@ const OrdersPage = () => {
               <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
             </div>
           ))}
-          {order.orderItems.length > 2 && (
+          {order.items.length > 2 && (
              <p className="text-sm text-gray-500 pt-2 text-center">
-               + {order.orderItems.length - 2} more item(s)
+               + {order.items.length - 2} more item(s)
              </p>
           )}
         </div>
