@@ -85,7 +85,7 @@ const ReviewModal = ({ isOpen, onClose, product, onSubmit }: ReviewModalProps) =
                     </div>
                     <div className="flex justify-end gap-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">Submit Review</button>
+                        <button type="submit" className="px-4 py-2 bg-[var(--color-primary-light)] text-white rounded">Submit Review</button>
                     </div>
                 </form>
             </div>
@@ -139,13 +139,13 @@ const OrderDetailPage = () => {
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
       case 'DELIVERED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-[var(--color-success)] bg-opacity-10 text-[var(--color-success)]';
       case 'SHIPPED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[var(--color-primary-light)] bg-opacity-10 text-[var(--color-primary-light)]';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[var(--color-warning)] bg-opacity-10 text-[var(--color-warning)]';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-[var(--color-accent)] bg-opacity-10 text-[var(--color-accent)]';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -174,7 +174,7 @@ const OrderDetailPage = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
-                <Loader2 className="mx-auto w-12 h-12 text-blue-600 animate-spin" />
+                <Loader2 className="mx-auto w-12 h-12 text-[var(--color-primary-light)] animate-spin" />
                 <p className="mt-4 text-lg text-gray-600">Loading Order Details...</p>
             </div>
         </div>
@@ -185,10 +185,10 @@ const OrderDetailPage = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center p-8 bg-white shadow-md rounded-lg">
-                <AlertCircle className="mx-auto w-12 h-12 text-red-500" />
-                <p className="mt-4 text-xl text-red-700 font-semibold">{error}</p>
+                <AlertCircle className="mx-auto w-12 h-12 text-[var(--color-accent)]" />
+                <p className="mt-4 text-xl text-[var(--color-accent)] font-semibold">{error}</p>
                 <p className='mt-2 text-gray-600'>We couldn't retrieve the details for this order.</p>
-                <Link href={`/${locale}/orders`} className="mt-6 inline-flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <Link href={`/${locale}/orders`} className="mt-6 inline-flex items-center gap-2 bg-[var(--color-primary-light)] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[var(--color-primary)] transition-colors">
                     <ArrowLeft className="w-5 h-5" />
                     Back to My Orders
                 </Link>
@@ -207,7 +207,7 @@ const OrderDetailPage = () => {
     <div className="min-h-screen bg-gray-50">
       <NavbarWithSuspense />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Link href={`/${locale}/orders`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 font-semibold">
+        <Link href={`/${locale}/orders`} className="inline-flex items-center gap-2 text-[var(--color-primary-light)] hover:text-[var(--color-primary)] mb-6 font-semibold">
           <ArrowLeft className="w-5 h-5" />
           Back to My Orders
         </Link>
@@ -246,7 +246,7 @@ const OrderDetailPage = () => {
                     <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Payment Summary</h2>
                     <div className="space-y-2 text-gray-600">
                         <div className="flex justify-between"><span>Subtotal</span> <span>${order.total.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span>Shipping</span> <span className='text-green-600'>FREE</span></div>
+                        <div className="flex justify-between"><span>Shipping</span> <span className='text-[var(--color-success)]'>FREE</span></div>
                         <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2 mt-2"><span>Total</span> <span>${order.total.toFixed(2)}</span></div>
                     </div>
                 </div>
@@ -271,7 +271,7 @@ const OrderDetailPage = () => {
                                             setSelectedProductForReview(item.product);
                                             setReviewModalOpen(true);
                                         }}
-                                        className="text-sm text-blue-600 hover:underline"
+                                        className="text-sm text-[var(--color-primary-light)] hover:underline"
                                     >
                                         Leave a Review
                                     </button>

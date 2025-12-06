@@ -107,7 +107,7 @@ function PaymentSuccessContent() {
                 cy="100"
                 r="90"
                 fill="none"
-                stroke="#10b981"
+                stroke="var(--color-success)"
                 strokeWidth="8"
                 strokeLinecap="round"
                 className="animate-[draw-circle_0.6s_ease-out_forwards]"
@@ -120,7 +120,7 @@ function PaymentSuccessContent() {
               <path
                 d="M60 100 L85 125 L140 70"
                 fill="none"
-                stroke="#10b981"
+                stroke="var(--color-success)"
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -139,7 +139,7 @@ function PaymentSuccessContent() {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => router.push(`/${locale}/orders`)}
-              className="flex-1 bg-blue-600 text-white py-4 px-8 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2"
+              className="flex-1 bg-[var(--color-primary-light)] text-white py-4 px-8 rounded-xl font-semibold hover:bg-[var(--color-primary)] transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Package className="w-5 h-5" />
               View Orders
@@ -164,9 +164,9 @@ function PaymentSuccessContent() {
         <div className="text-center max-w-md">
           <div className="mb-8 inline-block">
             <div className="w-48 h-48 relative flex items-center justify-center">
-              <div className="absolute inset-0 border-8 border-yellow-200 rounded-full"></div>
-              <div className="absolute inset-0 border-8 border-yellow-500 rounded-full border-t-transparent animate-spin"></div>
-              <Loader2 className="w-20 h-20 text-yellow-500" />
+              <div className="absolute inset-0 border-8 border-[var(--color-warning)] opacity-20 rounded-full"></div>
+              <div className="absolute inset-0 border-8 border-[var(--color-warning)] rounded-full border-t-transparent animate-spin"></div>
+              <Loader2 className="w-20 h-20 text-[var(--color-warning)]" />
             </div>
           </div>
 
@@ -179,6 +179,35 @@ function PaymentSuccessContent() {
           >
             Check Order Status
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Failed State
+  if (paymentStatus === 'failed') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center max-w-md">
+          <div className="mb-8 inline-block">
+            <XCircle className="w-48 h-48 text-[var(--color-accent)]" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Payment Failed</h1>
+          <p className="text-gray-600 mb-12">{message}</p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => router.back()}
+              className="flex-1 bg-[var(--color-accent)] text-white py-4 px-8 rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] transition-all duration-200"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push(`/${locale}/cart`)}
+              className="flex-1 border-2 border-gray-300 text-gray-700 py-4 px-8 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+            >
+              Return to Cart
+            </button>
+          </div>
         </div>
       </div>
     );
