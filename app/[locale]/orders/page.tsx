@@ -101,12 +101,12 @@ const OrdersPage = () => {
           {order.items.slice(0, 2).map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <img
-                src={item.product.imageUrl || '/placeholder-product.png'}
-                alt={item.product.name}
+                src={item.product?.imageUrl || '/placeholder-product.png'}
+                alt={item.product?.name || 'Product image'}
                 className="w-16 h-16 object-cover rounded-md border"
               />
               <div className='flex-grow'>
-                <p className="font-semibold text-gray-800">{item.product.name}</p>
+                <p className="font-semibold text-gray-800">{item.product?.name || 'Product no longer available'}</p>
                 <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
               </div>
               <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
