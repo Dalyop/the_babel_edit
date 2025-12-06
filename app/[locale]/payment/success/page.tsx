@@ -4,6 +4,8 @@ import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import { Elements, useStripe } from '@stripe/react-stripe-js';
 import stripePromise from '../../../lib/stripe';
 import { useCartStore } from '@/app/store/useCartStore';
+import { useAuth } from '@/app/context/AuthContext';
+import { API_ENDPOINTS } from '@/app/lib/api';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
 import { CheckCircle2, XCircle, Package, ShoppingBag, Loader2 } from 'lucide-react';
@@ -16,6 +18,7 @@ function PaymentSuccessContent() {
   const locale = (params?.locale as string) || 'en';
   
   const { clearCart } = useCartStore();
+  const { authenticatedFetch } = useAuth();
   
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,12 +38,30 @@ function PaymentSuccessContent() {
       return;
     }
 
-    stripe.retrievePaymentIntent(clientSecret).then(({ paymentIntent }) => {
+    stripe.retrievePaymentIntent(clientSecret).then(async ({ paymentIntent }) => {
       switch (paymentIntent?.status) {
         case 'succeeded':
-          setMessage('Payment Successful');
+          setMessage('Payment Successful. Finalizing order...');
           setPaymentStatus('succeeded');
-          clearCart();
+          
+          // New logic to confirm order on our backend
+          const orderId = searchParams.get('orderId');
+          if (orderId) {
+            try {
+              await authenticatedFetch(API_ENDPOINTS.ORDERS.CONFIRM_PAYMENT(orderId), {
+                method: 'PATCH',
+              });
+              setMessage('Payment Successful!');
+              clearCart();
+            } catch (apiError) {
+              console.error("Error confirming order:", apiError);
+              setMessage('Payment succeeded but failed to update order. Please contact support.');
+              // Still clear cart as payment was taken
+              clearCart();
+            }
+          } else {
+            setMessage('Payment succeeded but order ID was missing. Please contact support.');
+          }
           break;
         case 'processing':
           setMessage('Payment Processing');

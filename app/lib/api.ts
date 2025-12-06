@@ -317,6 +317,7 @@ export const API_ENDPOINTS = {
     LIST: '/orders',
     BY_ID: (id: string) => `/orders/${id}`,
     CREATE: '/orders',
+    CONFIRM_PAYMENT: (id: string) => `/orders/${id}/confirm-payment`,
   },
   ADDRESSES: {
     LIST: '/addresses',
