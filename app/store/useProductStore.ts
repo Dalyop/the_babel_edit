@@ -22,6 +22,8 @@ interface ProductState {
     total: number;
     pages: number;
   } | null;
+  page: number;
+  hasMore: boolean;
 }
 
 interface ProductActions {
@@ -36,7 +38,7 @@ interface ProductActions {
   setSearchQuery: (query: string) => void;
   
   // API Actions
-  fetchProducts: (filters?: FilterOptions, force?: boolean) => Promise<void>;
+  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean }) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
   prefetchProductById: (id: string) => Promise<void>;
@@ -66,6 +68,8 @@ const initialState: ProductState = {
   searchQuery: '',
   lastFetchTime: null,
   pagination: null,
+  page: 1,
+  hasMore: true,
 };
 
 // Debounce helper
@@ -152,7 +156,6 @@ export const useProductStore = create<ProductStore>()(
 
     setProducts: (products) => {
       set({ products });
-      setCachedData(CACHE_KEYS.PRODUCTS, { products });
     },
 
     setFeaturedProducts: (featuredProducts) => {
@@ -170,39 +173,47 @@ export const useProductStore = create<ProductStore>()(
     
     setError: (error) => set({ error }),
     
-    setFilters: (filters) => {
-      set({ filters });
-      setCachedData(CACHE_KEYS.FILTERS, { filters });
+    setFilters: (newFilters) => {
+      const currentFilters = get().filters;
+      if (JSON.stringify(newFilters) !== JSON.stringify(currentFilters)) {
+        set({ filters: newFilters, page: 1, products: [], hasMore: true });
+        get().fetchProducts({ filters: newFilters, force: true });
+      }
     },
     
     setSearchQuery: (searchQuery) => set({ searchQuery }),
 
-    fetchProducts: async (filters = {}, force = false) => {
-      const { setProducts, setLoading, setError, setFilters } = get();
-      
-      // Generate cache key based on filters
-      const filtersKey = `${CACHE_KEYS.PRODUCTS}_${JSON.stringify(filters)}`;
-      
-      // Check cache first unless force fetch is requested
-      if (!force) {
-        const cachedData = getCachedData<{ products: Product[] }>(filtersKey);
-        if (cachedData?.products?.length) {
-          setProducts(cachedData.products);
-          setFilters(filters);
-          return;
-        }
+    fetchProducts: async (options = {}) => {
+      const { force = false } = options;
+      let { filters } = options;
+      const {
+        page,
+        hasMore,
+        loading,
+        filters: currentFilters,
+        products: currentProducts
+      } = get();
+
+      if (loading || (!force && !hasMore)) {
+        return;
       }
 
-      setLoading(true);
-      setError(null);
+      const isNewFilter = filters && JSON.stringify(filters) !== JSON.stringify(currentFilters);
+      if (isNewFilter) {
+          // If filters changed, reset state for new data
+          set({ page: 1, products: [], hasMore: true });
+          filters = filters || {};
+      } else {
+          filters = currentFilters;
+      }
+      
+      const pageToFetch = isNewFilter ? 1 : page;
 
-      // Add retry logic for connection issues
-      const maxRetries = 3;
-      let retryCount = 0;
+      set({ loading: true, error: null });
 
       try {
-        const queryParams = buildQueryParams(filters);
-        const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const queryParams = buildQueryParams({ ...filters, page: pageToFetch });
+        const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
         
         const data = await apiRequest<{
           products: Product[];
@@ -218,28 +229,21 @@ export const useProductStore = create<ProductStore>()(
           throw new Error('Invalid response format');
         }
         
-        setProducts(data.products);
-        setFilters(filters);
-        set({ 
+        set((state) => ({
+          products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
+          pagination: data.pagination,
+          page: state.page + 1,
+          hasMore: data.pagination.page < data.pagination.pages,
+          filters: filters,
           lastFetchTime: Date.now(),
-          pagination: data.pagination
-        });
-        
-        // Cache with filter-specific key
-        setCachedData(filtersKey, { products: data.products });
+        }));
         
       } catch (error) {
         console.error('Error fetching products:', error);
         const errorMessage = handleError(error, 'Failed to fetch products');
-        setError(errorMessage);
-        
-        // Try to load from cache as fallback
-        const cachedData = getCachedData<{ products: Product[] }>(filtersKey);
-        if (cachedData?.products?.length) {
-          setProducts(cachedData.products);
-        }
+        set({ error: errorMessage, hasMore: false });
       } finally {
-        setLoading(false);
+        set({ loading: false });
       }
     },
 

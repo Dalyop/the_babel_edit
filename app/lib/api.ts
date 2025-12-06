@@ -327,9 +327,9 @@ export const API_ENDPOINTS = {
   },
   USERS: {
     LIST: '/auth/admin/users',
-    BY_ID: (id: string) => `/auth/users/${id}`,
-    UPDATE_ROLE: (id: string) => `/auth/users/${id}/role`,
-    DELETE: (id: string) => `/auth/users/${id}`,
+    BY_ID: (id: string) => `/auth/admin/users/${id}`,
+    UPDATE_ROLE: (id: string) => `/auth/admin/users/${id}/role`,
+    DELETE: (id: string) => `/auth/admin/users/${id}`,
     STATS: '/auth/users/stats',
   },
   REVIEWS: {

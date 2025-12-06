@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './products.module.css';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
@@ -9,13 +9,41 @@ import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCa
 import { useProductStore, FilterOptions, Product } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 
+// A simple Intersection Observer hook
+const useIntersectionObserver = (callback: () => void, options?: IntersectionObserverInit) => {
+  const observer = useRef<IntersectionObserver | null>(null);
+  const target = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        callback();
+      }
+    }, options);
+
+    if (target.current) {
+      observer.current.observe(target.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [callback, options]);
+
+  return target;
+};
+
+
 const ProductsPage = () => {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
   const search = searchParams.get('search');
 
   // Store selectors
-  const store = useProductStore();
   const {
     fetchProducts,
     searchProducts,
@@ -23,15 +51,17 @@ const ProductsPage = () => {
     searchResults,
     loading,
     searchLoading,
-    error
-  } = store;
+    error,
+    hasMore,
+    page,
+    setFilters: setStoreFilters,
+  } = useProductStore();
 
   // Local state
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating'>('newest');
   const [activeFilters, setActiveFilters] = useState<FilterOptions>({});
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
 
-  // Handle filter changes
   const handleFilterChange = useCallback((filterType: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
@@ -40,7 +70,6 @@ const ProductsPage = () => {
         : [];
       
       if (currentValues.includes(value)) {
-        // Remove the value if it exists
         const updatedValues = currentValues.filter(v => v !== value);
         if (updatedValues.length === 0) {
           delete newFilters[filterType];
@@ -48,19 +77,16 @@ const ProductsPage = () => {
           newFilters[filterType] = updatedValues;
         }
       } else {
-        // Add the new value
         newFilters[filterType] = [...currentValues, value];
       }
       return newFilters;
     });
   }, []);
 
-  // Clear all filters
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
   }, []);
 
-  // Toggle filter section expansion
   const toggleFilterSection = useCallback((sectionTitle: string) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -68,7 +94,6 @@ const ProductsPage = () => {
     }));
   }, []);
 
-  // Remove specific filter
   const removeFilter = useCallback((filterType: string, value?: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
@@ -89,152 +114,57 @@ const ProductsPage = () => {
     });
   }, []);
 
-  // Initialize expanded sections when category changes
   useEffect(() => {
     if (category) {
       const normalizedCategory = category.toLowerCase() === 'clothes' ? 'clothing' : category.toLowerCase();
       if (CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS]) {
         const initialExpanded: {[key: string]: boolean} = {};
         CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS].forEach(filterGroup => {
-          initialExpanded[filterGroup.title] = true; // All sections expanded by default
+          initialExpanded[filterGroup.title] = true;
         });
         setExpandedSections(initialExpanded);
       }
     }
   }, [category]);
 
-  // Memoized filters object
   const currentFilters = useMemo(() => ({
     ...activeFilters,
     sortBy,
     ...(category && { category }),
   }), [activeFilters, sortBy, category]);
 
-  // Determine which products to show and loading state
   const displayProducts = useMemo(() => search ? searchResults : products, [search, searchResults, products]);
   const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
 
-  // Client-side filtering and sorting
-  const filteredAndSortedProducts = useMemo(() => {
-    if (!displayProducts?.length) return [];
-
-    // Apply filters
-    let filtered = displayProducts.filter((product: Product) => {
-      // Check each active filter
-      return Object.entries(activeFilters).every(([filterType, filterValues]) => {
-        if (!Array.isArray(filterValues) || filterValues.length === 0) return true;
-        
-        const type = filterType.toLowerCase();
-        
-        // Map filter types to product properties based on your actual data
-        switch (type) {
-          case 'type':
-            return filterValues.some(value => {
-              const searchValue = value.toLowerCase();
-              // Check tags, name, description, and category for the filter value
-              return product.tags?.some(tag => 
-                  tag.toLowerCase().includes(searchValue) || 
-                  searchValue.includes(tag.toLowerCase())
-                ) ||
-                product.name?.toLowerCase().includes(searchValue) ||
-                searchValue.includes(product.name?.toLowerCase() || '') ||
-                product.description?.toLowerCase().includes(searchValue) ||
-                product.category?.toLowerCase().includes(searchValue);
-            });
-            
-          case 'size':
-            // Check if product has the exact size
-            return filterValues.some(value => 
-              product.sizes?.some(size => size === value)
-            );
-            
-          case 'color':
-            // Check if product has the exact color
-            return filterValues.some(value => 
-              product.colors?.some(color => color === value)
-            );
-            
-          case 'material':
-            // Check tags for material-related keywords
-            return filterValues.some(value => 
-              product.tags?.some(tag => tag.toLowerCase().includes(value.toLowerCase())) ||
-              product.name?.toLowerCase().includes(value.toLowerCase()) ||
-              product.description?.toLowerCase().includes(value.toLowerCase())
-            );
-            
-          default:
-            return true;
-        }
-      });
-    });
-
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'price_asc':
-          return (a.price || 0) - (b.price || 0);
-        case 'price_desc':
-          return (b.price || 0) - (a.price || 0);
-        case 'name_asc':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'name_desc':
-          return (b.name || '').localeCompare(a.name || '');
-        case 'rating':
-          return (b.avgRating || 0) - (a.avgRating || 0);
-        case 'newest':
-        default:
-          return (parseInt(b.id) || 0) - (parseInt(a.id) || 0);
-      }
-    });
-  }, [displayProducts, activeFilters, sortBy]);
-
-  // Fetch data effect
   useEffect(() => {
-    const controller = new AbortController();
-    
-    const loadProducts = async () => {
-      try {
-        const filters = {
-          ...(category ? { category } : {}),
-          sortBy
-        };
+    if (search) {
+      searchProducts(search, currentFilters);
+    } else {
+      setStoreFilters(currentFilters);
+    }
+  }, [search, currentFilters, searchProducts, setStoreFilters]);
 
-        if (search) {
-          await searchProducts(search, filters);
-        } else {
-          await fetchProducts(filters);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to load products:', error);
-        }
-      }
-    };
+  const loadMoreProducts = useCallback(() => {
+    if (!loading && hasMore && !search) {
+      fetchProducts();
+    }
+  }, [loading, hasMore, fetchProducts, search]);
 
-    loadProducts();
+  const observerRef = useIntersectionObserver(loadMoreProducts, {
+    rootMargin: '200px',
+  });
 
-    return () => {
-      controller.abort();
-    };
-  }, [search, category, sortBy, searchProducts, fetchProducts]);
-
-  // Handlers
   const handleSortChange = useCallback((newSortBy: typeof sortBy) => {
     setSortBy(newSortBy);
   }, []);
-
+  
   const handleRetry = useCallback(() => {
-    const filters = {
-      ...(category ? { category } : {}),
-      sortBy
-    };
-    
     if (search) {
-      searchProducts(search, filters);
+      searchProducts(search, currentFilters);
     } else {
-      fetchProducts(filters);
+      fetchProducts({ filters: currentFilters, force: true });
     }
-  }, [search, category, sortBy, searchProducts, fetchProducts]);
+  }, [search, currentFilters, searchProducts, fetchProducts]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -242,7 +172,6 @@ const ProductsPage = () => {
     return 'All Products';
   }, [search, category]);
 
-  // Count active filters
   const activeFilterCount = useMemo(() => {
     return Object.values(activeFilters).reduce((count: number, values) => {
       return count + (Array.isArray(values) ? values.length : 0);
@@ -270,7 +199,7 @@ const ProductsPage = () => {
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value as typeof sortBy)}
               className={styles.sortSelect}
-              disabled={isLoading}
+              disabled={isLoading && page === 1}
             >
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low to High</option>
@@ -282,7 +211,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                {filteredAndSortedProducts.length} products found
+                {displayProducts.length} products found
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -296,7 +225,6 @@ const ProductsPage = () => {
           </div>
         </div>
 
-        {/* Active Filters Tags */}
         {activeFilterCount > 0 && (
           <div className={styles.activeFiltersContainer}>
             <div className={styles.activeFiltersTitle}>Active Filters:</div>
@@ -333,7 +261,6 @@ const ProductsPage = () => {
             )}
             
             {category && (() => {
-              // Map category URL params to filter keys
               const categoryMap: { [key: string]: string } = {
                 'new-arrivals': 'new arrivals',
                 'newarrivals': 'new arrivals', 
@@ -349,7 +276,7 @@ const ProductsPage = () => {
               return CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS];
             })()?.map((filterGroup, groupIndex) => {
               const currentValues = (activeFilters[filterGroup.title] as string[]) || [];
-              const isExpanded = expandedSections[filterGroup.title] ?? true; // Default to true if not set
+              const isExpanded = expandedSections[filterGroup.title] ?? true;
               
               return (
                 <div key={groupIndex} className={styles.filterSection}>
@@ -389,7 +316,7 @@ const ProductsPage = () => {
           </div>
 
           <div className={styles.productsGrid}>
-            {isLoading ? (
+            {(isLoading && page === 1) ? (
               Array.from({ length: 8 }).map((_, index) => (
                 <ProductCardSkeleton key={index} />
               ))
@@ -400,7 +327,7 @@ const ProductsPage = () => {
                   Retry
                 </button>
               </div>
-            ) : filteredAndSortedProducts.length === 0 ? (
+            ) : displayProducts.length === 0 ? (
               <div className={styles.noResultsContainer}>
                 <h3>No products found</h3>
                 <p>Try adjusting your filters or search terms</p>
@@ -411,10 +338,22 @@ const ProductsPage = () => {
                 )}
               </div>
             ) : (
-              filteredAndSortedProducts.map((product: Product) => (
-                <ProductCard key={product.id} product={product} />
+              displayProducts.map((product: Product) => (
+                <ProductCard key={`${product.id}-${product.name}`} product={product} />
               ))
             )}
+            
+            {/* Infinite scroll loader */}
+            <div ref={observerRef} className={styles.loaderContainer}>
+              {loading && hasMore && (
+                 Array.from({ length: 4 }).map((_, index) => (
+                  <ProductCardSkeleton key={`loading-${index}`} />
+                ))
+              )}
+              {!loading && !hasMore && displayProducts.length > 0 && (
+                <p className={styles.endOfResults}>You've reached the end of the results.</p>
+              )}
+            </div>
           </div>
         </div>
       </main>
