@@ -316,18 +316,27 @@ const ProductsPage = () => {
           </div>
 
           <div className={styles.productsGrid}>
-            {(isLoading && page === 1) ? (
-              Array.from({ length: 8 }).map((_, index) => (
-                <ProductCardSkeleton key={index} />
-              ))
-            ) : error ? (
+            {error ? (
               <div className={styles.errorContainer}>
                 <p>{error}</p>
                 <button className={styles.retryButton} onClick={handleRetry}>
                   Retry
                 </button>
               </div>
-            ) : displayProducts.length === 0 ? (
+            ) : (
+              <>
+                {displayProducts.map((product: Product) => (
+                  <ProductCard key={`${product.id}-${product.name}`} product={product} />
+                ))}
+                {/* Skeletons for initial load AND infinite scroll appear here */}
+                {isLoading && hasMore &&
+                  Array.from({ length: page === 1 ? 8 : 4 }).map((_, index) => (
+                    <ProductCardSkeleton key={`skeleton-${index}`} />
+                  ))
+                }
+              </>
+            )}
+            {!isLoading && displayProducts.length === 0 && (
               <div className={styles.noResultsContainer}>
                 <h3>No products found</h3>
                 <p>Try adjusting your filters or search terms</p>
@@ -337,24 +346,15 @@ const ProductsPage = () => {
                   </button>
                 )}
               </div>
-            ) : (
-              displayProducts.map((product: Product) => (
-                <ProductCard key={`${product.id}-${product.name}`} product={product} />
-              ))
             )}
-            
-            {/* Infinite scroll loader */}
-            <div ref={observerRef} className={styles.loaderContainer}>
-              {loading && hasMore && (
-                 Array.from({ length: 4 }).map((_, index) => (
-                  <ProductCardSkeleton key={`loading-${index}`} />
-                ))
-              )}
-              {!loading && !hasMore && displayProducts.length > 0 && (
-                <p className={styles.endOfResults}>You've reached the end of the results.</p>
-              )}
-            </div>
           </div>
+        </div>
+        
+        {/* Observer target for infinite scroll */}
+        <div ref={observerRef} className={styles.loaderContainer}>
+            {!isLoading && !hasMore && displayProducts.length > 0 && (
+              <p className={styles.endOfResults}>You've reached the end of the results.</p>
+            )}
         </div>
       </main>
       <Footer />

@@ -208,12 +208,15 @@
   width: 250px;
   flex-shrink: 0;
   position: sticky;
-  top: 64px;
-  height: fit-content;
+  top: 80px; /* Adjust if navbar height changes */
+  align-self: start;
+  max-height: calc(100vh - 100px); /* Viewport height minus top offset and padding */
+  overflow-y: auto;
   background: white;
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 16px; /* Add padding for scroll spacing */
 }
 
 .filtersContainer::-webkit-scrollbar {
