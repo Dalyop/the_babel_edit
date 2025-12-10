@@ -42,17 +42,17 @@ type Profile = {
 interface Order {
   id: string;
   orderNumber: string;
-  date: string;
+  createdAt: string;
   status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   total: number;
-  orderItems: {
+  items: {
     id: string;
     quantity: number;
     price: number;
     product: {
       id: string;
       name: string;
-      images: { url: string }[];
+      imageUrl: string;
     };
   }[];
 }
@@ -173,7 +173,7 @@ export default function AccountPage() {
         setOrdersError(null);
         try {
           const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.LIST);
-          setOrders(data);
+          setOrders(data.orders);
         } catch (err: any) {
           setOrdersError(err.message || 'An unexpected error occurred.');
         } finally {
@@ -361,15 +361,15 @@ export default function AccountPage() {
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
       case 'DELIVERED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-[var(--color-success)] text-white';
       case 'SHIPPED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[var(--color-primary-light)] text-white';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-[var(--color-warning)] text-amber-800';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-[var(--color-accent)] text-white';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white';
     }
   };
 
@@ -379,7 +379,7 @@ export default function AccountPage() {
         <div>
           <h3 className="font-semibold text-lg text-gray-800">Order #{order.orderNumber}</h3>
           <p className="text-sm text-gray-500">
-            Date: {new Date(order.date).toLocaleDateString()}
+            Date: {new Date(order.createdAt).toLocaleDateString()}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -391,27 +391,27 @@ export default function AccountPage() {
       </div>
       <div className="p-6">
         <div className="space-y-4 mb-6">
-          {order.orderItems.slice(0, 2).map(item => (
+          {order.items.slice(0, 2).map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <img
-                src={item.product.images[0]?.url || '/placeholder-product.png'}
-                alt={item.product.name}
+                src={item.product?.imageUrl || '/placeholder-product.png'}
+                alt={item.product?.name || 'Product image'}
                 className="w-16 h-16 object-cover rounded-md border"
               />
               <div className='flex-grow'>
-                <p className="font-semibold text-gray-800">{item.product.name}</p>
+                <p className="font-semibold text-gray-800">{item.product?.name || 'Product no longer available'}</p>
                 <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
               </div>
               <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
             </div>
           ))}
-          {order.orderItems.length > 2 && (
+          {order.items.length > 2 && (
              <p className="text-sm text-gray-500 pt-2 text-center">
-               + {order.orderItems.length - 2} more item(s)
+               + {order.items.length - 2} more item(s)
              </p>
           )}
         </div>
-        <Link href={`/${currentLocale}/orders/${order.id}`} className="inline-block w-full text-center bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300">
+        <Link href={`/${currentLocale}/orders/${order.id}`} className="inline-block w-full text-center bg-[var(--color-primary-light)] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[var(--color-primary)] transition-colors duration-300">
             View Order Details
         </Link>
       </div>

@@ -304,25 +304,19 @@ textarea {
 
 /* Remove conflicting button styles - handled by Button component */
 
-/* Link Styles */
-a {
-  color: var(--color-accent);
-  text-decoration: none;
-  transition: var(--transition-colors);
-  font-weight: 500;
-}
-
-a:hover {
-  color: var(--color-accent-hover);
-  text-decoration: underline;
-}
-
-.link-muted {
-  color: var(--color-text-light);
-}
-
-.link-muted:hover {
-  color: var(--color-text);
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  a {
+    @apply text-accent no-underline transition-colors font-medium;
+  }
+  a:hover {
+    @apply text-red-600 underline;
+  }
 }
 
 /* Layout Components */

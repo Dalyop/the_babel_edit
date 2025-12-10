@@ -2,17 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import AdminProtectedRoute from '@/app/components/AdminProtectedRoute';
-import Button from '@/app/components/ui/Button/Button';
+import { Button } from '@/components/ui/button';
 import FormField from '@/app/components/ui/FormField/FormField';
 import { apiRequest, API_ENDPOINTS } from '@/app/lib/api';
 import { Product, Collection } from '@/app/store/types';
 import { useProductStore } from '@/app/store/useProductStore';
 import { commonClasses } from '@/app/utils/designSystem';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, PlusCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 
 const CreateProductPage = () => {
@@ -22,6 +31,9 @@ const CreateProductPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(true);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [isSavingCollection, setIsSavingCollection] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -209,6 +221,38 @@ const CreateProductPage = () => {
     }
   };
 
+  const handleSaveCollection = async () => {
+    if (!newCollectionName.trim()) {
+      toast.error('Collection name cannot be empty.');
+      return;
+    }
+    setIsSavingCollection(true);
+    try {
+      const response = await apiRequest<{ collection: Collection }>(
+        '/admin/collections',
+        {
+          method: 'POST',
+          body: { name: newCollectionName },
+          requireAuth: true,
+        }
+      );
+      const newCollection = response.collection;
+
+      // Update state
+      setCollections(prev => [...prev, newCollection]);
+      setFormData(prev => ({ ...prev, collectionId: newCollection.id }));
+      
+      toast.success(`Collection "${newCollection.name}" created and selected.`);
+      setIsCollectionModalOpen(false);
+      setNewCollectionName('');
+    } catch (error: any) {
+      console.error('Failed to create collection:', error);
+      toast.error(error.message || 'Failed to create collection.');
+    } finally {
+      setIsSavingCollection(false);
+    }
+  };
+
   return (
     <AdminProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -221,8 +265,8 @@ const CreateProductPage = () => {
                   <Button
                     onClick={() => router.back()}
                     variant="ghost"
-                    leftIcon={<ArrowLeft className="h-4 w-4" />}
                   >
+                    <ArrowLeft className="h-4 w-4" />
                     Back
                   </Button>
                   <div>
@@ -239,9 +283,9 @@ const CreateProductPage = () => {
                       form.requestSubmit();
                     }
                   }}
-                  isLoading={isLoading}
-                  leftIcon={<Save className="h-4 w-4" />}
+                  disabled={isLoading}
                 >
+                  {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
                   Save Product
                 </Button>
               </div>
@@ -324,24 +368,36 @@ const CreateProductPage = () => {
                   <FormField
                     label="Collection"
                     id="collectionId"
-                    helperText="Select a collection for this product (optional)"
+                    helperText="Select a collection for this product"
                     error={errors.collectionId}
                   >
-                    <select
-                      id="collectionId"
-                      name="collectionId"
-                      value={formData.collectionId}
-                      onChange={handleChange}
-                      className={commonClasses.input}
-                      disabled={loadingCollections}
-                    >
-                      <option value="">No collection</option>
-                      {collections.map((collection) => (
-                        <option key={collection.id} value={collection.id}>
-                          {collection.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <select
+                        id="collectionId"
+                        name="collectionId"
+                        value={formData.collectionId}
+                        onChange={handleChange}
+                        className={`${commonClasses.input} flex-grow`}
+                        disabled={loadingCollections}
+                      >
+                        <option value="">No collection</option>
+                        {collections.map((collection) => (
+                          <option key={collection.id} value={collection.id}>
+                            {collection.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setIsCollectionModalOpen(true)}
+                        disabled={loadingCollections}
+                        aria-label="Create new collection"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                     {loadingCollections && (
                       <p className="mt-1 text-xs text-gray-500">Loading collections...</p>
                     )}
@@ -605,15 +661,52 @@ const CreateProductPage = () => {
                 </Button>
                 <Button
                   type="submit"
-                  isLoading={isLoading}
-                  leftIcon={<Save className="h-4 w-4" />}
+                  disabled={isLoading}
                 >
+                  {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
                   Save Product
                 </Button>
               </div>
             </form>
           </div>
         </div>
+        <Dialog open={isCollectionModalOpen} onOpenChange={setIsCollectionModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Collection</DialogTitle>
+              <DialogDescription>
+                Add a new collection to categorize your products.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <FormField label="Collection Name" id="newCollectionName">
+                <input
+                  type="text"
+                  id="newCollectionName"
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  className={commonClasses.input}
+                  placeholder="e.g., Summer 2024"
+                />
+              </FormField>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="ghost">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                type="button"
+                onClick={handleSaveCollection}
+                disabled={isSavingCollection}
+              >
+                {isSavingCollection && <Loader2 className="animate-spin h-4 w-4" />}
+                Save Collection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminProtectedRoute>
   );

@@ -289,7 +289,7 @@ function Dashboard() {
             setTestimonials(data);
         } catch (error) {
             console.error('Failed to fetch testimonials:', error);
-            toast.error('Failed to load testimonials.');
+
         } finally {
             setTestimonialsLoading(false);
         }

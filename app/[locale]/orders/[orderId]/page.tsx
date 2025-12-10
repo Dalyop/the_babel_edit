@@ -139,15 +139,15 @@ const OrderDetailPage = () => {
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
       case 'DELIVERED':
-        return 'bg-[var(--color-success)] bg-opacity-10 text-[var(--color-success)]';
+        return 'bg-[var(--color-success)] text-white';
       case 'SHIPPED':
-        return 'bg-[var(--color-primary-light)] bg-opacity-10 text-[var(--color-primary-light)]';
+        return 'bg-[var(--color-primary-light)] text-white';
       case 'PENDING':
-        return 'bg-[var(--color-warning)] bg-opacity-10 text-[var(--color-warning)]';
+        return 'bg-[var(--color-warning)] text-amber-800';
       case 'CANCELLED':
-        return 'bg-[var(--color-accent)] bg-opacity-10 text-[var(--color-accent)]';
+        return 'bg-[var(--color-accent)] text-white';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white';
     }
   };
 
