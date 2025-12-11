@@ -126,7 +126,13 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number): URLSearchP
             queryParams.append('sortBy', 'createdAt');
             queryParams.append('sortOrder', 'desc');
         }
+      } else if (Array.isArray(value)) {
+        // If the value is an array, append each item separately
+        value.forEach(item => {
+          queryParams.append(key, item);
+        });
       } else {
+        // Otherwise, append as a string
         queryParams.append(key, String(value));
       }
     }
