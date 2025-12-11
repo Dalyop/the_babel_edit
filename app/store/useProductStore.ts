@@ -164,12 +164,10 @@ export const useProductStore = create<ProductStore>()(
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     
     setFilters: (newFilters) => {
-      const currentFilters = get().filters;
-      if (JSON.stringify(newFilters) !== JSON.stringify(currentFilters)) {
-        // Reset state for the new filter and trigger a fetch for the first page.
-        set({ filters: newFilters, page: 1, products: [], hasMore: true });
-        get().fetchProducts({ force: true });
-      }
+      // The component's useEffect is already responsible for checking if filters have changed.
+      // This action will now unconditionally reset and fetch.
+      set({ filters: newFilters, page: 1, products: [], hasMore: true });
+      get().fetchProducts({ force: true });
     },
     
     fetchProducts: async (options = {}) => {
