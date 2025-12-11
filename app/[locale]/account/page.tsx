@@ -80,6 +80,9 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
 
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
+
   const hasFetchedRef = useRef(false);
 
   // Redirect if not authenticated after loading completes
@@ -165,7 +168,26 @@ export default function AccountPage() {
     }
   }, [user, loading, profile, authenticatedFetch, fetchProfile]);
 
-  // Fetch orders when orders tab is active
+  // Fetch recent orders on initial load
+  useEffect(() => {
+    const fetchRecentOrders = async () => {
+      if (!user) return;
+      setRecentOrdersLoading(true);
+      try {
+        const data = await authenticatedFetch(`${API_ENDPOINTS.ORDERS.LIST}?limit=3`);
+        setRecentOrders(data.orders || []);
+      } catch (err: any) {
+        // Don't show an error for this, as it's just a preview
+        console.error("Failed to fetch recent orders:", err);
+      } finally {
+        setRecentOrdersLoading(false);
+      }
+    };
+    fetchRecentOrders();
+  }, [user, authenticatedFetch]);
+
+
+  // Fetch all orders when orders tab is active
   useEffect(() => {
     if (activeTab === 'orders' && user) {
       const fetchOrders = async () => {
@@ -361,58 +383,59 @@ export default function AccountPage() {
   const getStatusChipClass = (status: Order['status']) => {
     switch (status) {
       case 'DELIVERED':
-        return 'bg-[var(--color-success)] text-white';
+        return 'bg-green-100 text-green-800';
       case 'SHIPPED':
-        return 'bg-[var(--color-primary-light)] text-white';
+        return 'bg-blue-100 text-blue-800';
       case 'PENDING':
-        return 'bg-[var(--color-warning)] text-amber-800';
+        return 'bg-yellow-100 text-yellow-800';
       case 'CANCELLED':
-        return 'bg-[var(--color-accent)] text-white';
+        return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const OrderCard = ({ order }: { order: Order }) => (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-shadow duration-300 hover:shadow-md">
-      <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-semibold text-lg text-gray-800">Order #{order.orderNumber}</h3>
+          <h3 className="font-semibold text-gray-800">Order #{order.orderNumber}</h3>
           <p className="text-sm text-gray-500">
-            Date: {new Date(order.createdAt).toLocaleDateString()}
+            {new Date(order.createdAt).toLocaleDateString()}
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusChipClass(order.status)}`}>
+        <div className="flex items-center gap-3">
+          <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${getStatusChipClass(order.status)}`}>
             {order.status}
           </span>
-          <p className="font-bold text-lg text-gray-900">${order.total.toFixed(2)}</p>
+          <p className="font-bold text-gray-900">${order.total.toFixed(2)}</p>
         </div>
       </div>
-      <div className="p-6">
-        <div className="space-y-4 mb-6">
+      <div className="p-4">
+        <div className="space-y-3 mb-4">
           {order.items.slice(0, 2).map(item => (
-            <div key={item.id} className="flex items-center gap-4">
+            <div key={item.id} className="flex items-center gap-3">
               <img
                 src={item.product?.imageUrl || '/placeholder-product.png'}
                 alt={item.product?.name || 'Product image'}
-                className="w-16 h-16 object-cover rounded-md border"
+                className="w-12 h-12 object-cover rounded-md border"
               />
               <div className='flex-grow'>
-                <p className="font-semibold text-gray-800">{item.product?.name || 'Product no longer available'}</p>
-                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                <p className="font-medium text-sm text-gray-800 line-clamp-1">{item.product?.name || 'Product not available'}</p>
+                <p className="text-xs text-gray-500">Qty: {item.quantity} · Price: ${item.price.toFixed(2)}</p>
               </div>
-              <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
             </div>
           ))}
           {order.items.length > 2 && (
-             <p className="text-sm text-gray-500 pt-2 text-center">
+             <p className="text-xs text-gray-500 pt-1 text-center">
                + {order.items.length - 2} more item(s)
              </p>
           )}
         </div>
-        <Link href={`/${currentLocale}/orders/${order.id}`} className="inline-block w-full text-center bg-[var(--color-primary-light)] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[var(--color-primary)] transition-colors duration-300">
+        <Link href={`/${currentLocale}/orders/${order.id}`} className="inline-block w-full">
+          <Button variant="outline" className="w-full">
             View Order Details
+          </Button>
         </Link>
       </div>
     </div>
@@ -422,60 +445,87 @@ export default function AccountPage() {
     switch (activeTab) {
       case 'profile':
         return (
-          <form className={styles.profileForm} onSubmit={handleSubmit}>
-            <h2 className={styles.tabTitle}>Profile Settings</h2>
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>👤</span> Full Name
-              </span>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Your full name"
-                required
-                className={styles.formInput}
-              />
-            </label>
+          <>
+            <form className={styles.profileForm} onSubmit={handleSubmit}>
+              <h2 className={styles.tabTitle}>Profile Settings</h2>
+              <label>
+                <span className={styles.labelRow}>
+                  <span className={styles.labelIcon}>👤</span> Full Name
+                </span>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Your full name"
+                  required
+                  className={styles.formInput}
+                />
+              </label>
 
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>✉️</span> Email Address
-              </span>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="your.email@example.com"
-                required
-                className={styles.formInput}
-              />
-            </label>
+              <label>
+                <span className={styles.labelRow}>
+                  <span className={styles.labelIcon}>✉️</span> Email Address
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="your.email@example.com"
+                  required
+                  className={styles.formInput}
+                />
+              </label>
 
-            <label>
-              <span className={styles.labelRow}>
-                <span className={styles.labelIcon}>📞</span> Phone Number
-              </span>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="+1 (555) 123-4567"
-                className={styles.formInput}
-              />
-            </label>
+              <label>
+                <span className={styles.labelRow}>
+                  <span className={styles.labelIcon}>📞</span> Phone Number
+                </span>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="+1 (555) 123-4567"
+                  className={styles.formInput}
+                />
+              </label>
 
-            <button
-              type="submit"
-              className={styles.primaryBtn}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Update Profile'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Update Profile'}
+              </button>
+            </form>
+
+            {/* Recent Orders Section */}
+            <div className="mt-12">
+              <h2 className={styles.tabTitle}>Recent Order History</h2>
+              {recentOrdersLoading ? (
+                <div className="text-center py-10">
+                  <Loader2 className="mx-auto w-8 h-8 text-blue-600 animate-spin" />
+                  <p className="mt-2 text-gray-500">Loading recent orders...</p>
+                </div>
+              ) : recentOrders.length > 0 ? (
+                <div className="space-y-6">
+                  {recentOrders.map(order => <OrderCard key={order.id} order={order} />)}
+                  <div className="text-center pt-2">
+                    <Button variant="outline" onClick={() => setActiveTab('orders')}>
+                      View All Orders
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className={`${styles.emptyState} py-10`}>
+                  <Package className="mx-auto w-10 h-10 text-gray-400" />
+                  <p className="mt-2 text-gray-500">You have no recent orders.</p>
+                </div>
+              )}
+            </div>
+          </>
         );
 
       case 'addresses':
