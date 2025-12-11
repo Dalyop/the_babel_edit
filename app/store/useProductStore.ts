@@ -38,7 +38,7 @@ interface ProductActions {
   setSearchQuery: (query: string) => void;
   
   // API Actions
-  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean }) => Promise<void>;
+  fetchProducts: (options?: { force?: boolean }) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
   prefetchProductById: (id: string) => Promise<void>;
@@ -85,11 +85,9 @@ const CACHE_KEYS = {
 // Error handling utility
 const handleError = (error: unknown, defaultMessage: string): string => {
   if (error instanceof Error) {
-    // Network errors
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
       return 'Unable to connect to server. Please check your internet connection.';
     }
-    // Timeout errors
     if (error.message.includes('timeout')) {
       return 'Request timed out. Please try again.';
     }
@@ -99,14 +97,13 @@ const handleError = (error: unknown, defaultMessage: string): string => {
 };
 
 // Query parameter builder
-const buildQueryParams = (filters: FilterOptions = {}): URLSearchParams => {
+const buildQueryParams = (filters: FilterOptions = {}, page: number): URLSearchParams => {
   const queryParams = new URLSearchParams();
   
   // Add filters
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
       if (key === 'sortBy') {
-        // Handle sortBy mapping
         switch (value) {
           case 'price_asc':
             queryParams.append('sortBy', 'price');
@@ -125,9 +122,6 @@ const buildQueryParams = (filters: FilterOptions = {}): URLSearchParams => {
             queryParams.append('sortOrder', 'desc');
             break;
           case 'newest':
-            queryParams.append('sortBy', 'createdAt');
-            queryParams.append('sortOrder', 'desc');
-            break;
           default:
             queryParams.append('sortBy', 'createdAt');
             queryParams.append('sortOrder', 'desc');
@@ -137,6 +131,9 @@ const buildQueryParams = (filters: FilterOptions = {}): URLSearchParams => {
       }
     }
   });
+
+  // Add pagination
+  queryParams.append('page', String(page));
   
   return queryParams;
 };
@@ -154,65 +151,39 @@ export const useProductStore = create<ProductStore>()(
   subscribeWithSelector((set, get) => ({
     ...initialState,
 
-    setProducts: (products) => {
-      set({ products });
-    },
-
+    setProducts: (products) => set({ products }),
     setFeaturedProducts: (featuredProducts) => {
       set({ featuredProducts });
       setCachedData(CACHE_KEYS.FEATURED, { featuredProducts });
     },
-
     setSearchResults: (searchResults) => set({ searchResults }),
-    
     setCurrentProduct: (currentProduct) => set({ currentProduct }),
-    
     setLoading: (loading) => set({ loading }),
-    
     setSearchLoading: (searchLoading) => set({ searchLoading }),
-    
     setError: (error) => set({ error }),
+    setSearchQuery: (searchQuery) => set({ searchQuery }),
     
     setFilters: (newFilters) => {
       const currentFilters = get().filters;
       if (JSON.stringify(newFilters) !== JSON.stringify(currentFilters)) {
+        // Reset state for the new filter and trigger a fetch for the first page.
         set({ filters: newFilters, page: 1, products: [], hasMore: true });
-        get().fetchProducts({ filters: newFilters, force: true });
+        get().fetchProducts({ force: true });
       }
     },
     
-    setSearchQuery: (searchQuery) => set({ searchQuery }),
-
     fetchProducts: async (options = {}) => {
       const { force = false } = options;
-      let { filters } = options;
-      const {
-        page,
-        hasMore,
-        loading,
-        filters: currentFilters,
-        products: currentProducts
-      } = get();
+      const { page: pageToFetch, hasMore, loading, filters } = get();
 
       if (loading || (!force && !hasMore)) {
         return;
       }
 
-      const isNewFilter = filters && JSON.stringify(filters) !== JSON.stringify(currentFilters);
-      if (isNewFilter) {
-          // If filters changed, reset state for new data
-          set({ page: 1, products: [], hasMore: true });
-          filters = filters || {};
-      } else {
-          filters = currentFilters;
-      }
-      
-      const pageToFetch = isNewFilter ? 1 : page;
-
       set({ loading: true, error: null });
 
       try {
-        const queryParams = buildQueryParams({ ...filters, page: pageToFetch });
+        const queryParams = buildQueryParams(filters, pageToFetch);
         const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
         
         const data = await apiRequest<{
@@ -225,16 +196,13 @@ export const useProductStore = create<ProductStore>()(
           };
         }>(endpoint);
         
-        if (!data.products) {
-          throw new Error('Invalid response format');
-        }
+        if (!data.products) throw new Error('Invalid response format');
         
         set((state) => ({
           products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
           pagination: data.pagination,
           page: state.page + 1,
           hasMore: data.pagination.page < data.pagination.pages,
-          filters: filters,
           lastFetchTime: Date.now(),
         }));
         
@@ -250,7 +218,6 @@ export const useProductStore = create<ProductStore>()(
     fetchFeaturedProducts: async (limit = 10, force = false) => {
       const { setFeaturedProducts, setLoading, setError } = get();
       
-      // Check cache first
       if (!force) {
         const cachedData = getCachedData<{ featuredProducts: Product[] }>(CACHE_KEYS.FEATURED);
         if (cachedData?.featuredProducts?.length) {
@@ -263,30 +230,18 @@ export const useProductStore = create<ProductStore>()(
       setError(null);
 
       try {
-        const queryParams = new URLSearchParams({
-          limit: limit.toString(),
-          sortOrder: 'desc'
-        });
-
+        const queryParams = new URLSearchParams({ limit: limit.toString(), sortOrder: 'desc' });
         const endpoint = `${API_ENDPOINTS.PRODUCTS.FEATURED}?${queryParams.toString()}`;
-        const responseData = await apiRequest<{
-          products: Product[];
-          meta?: any;
-        }>(endpoint);
+        const responseData = await apiRequest<{ products: Product[] }>(endpoint);
         
-        if (!responseData.products) {
-          throw new Error('Invalid response format');
-        }
+        if (!responseData.products) throw new Error('Invalid response format');
         
-        const featuredProducts = responseData.products;
-        setFeaturedProducts(featuredProducts);
+        setFeaturedProducts(responseData.products);
         
       } catch (error) {
         console.error('Error fetching featured products:', error);
         const errorMessage = handleError(error, 'Failed to fetch featured products');
         setError(errorMessage);
-        
-        // Try to load from cache as fallback
         const cachedData = getCachedData<{ featuredProducts: Product[] }>(CACHE_KEYS.FEATURED);
         if (cachedData?.featuredProducts?.length) {
           setFeaturedProducts(cachedData.featuredProducts);
@@ -304,14 +259,12 @@ export const useProductStore = create<ProductStore>()(
         return null;
       }
       
-      // Check if product exists in current products first
       const existingProduct = products.find(p => p.id === id);
       if (existingProduct && !force) {
         setCurrentProduct(existingProduct);
         return existingProduct;
       }
 
-      // Check for prefetched data
       const cachedData = getCachedData<{ product: Product }>(`${CACHE_KEYS.PRODUCTS}_${id}`);
       if (cachedData?.product && !force) {
         setCurrentProduct(cachedData.product);
@@ -325,9 +278,7 @@ export const useProductStore = create<ProductStore>()(
         const endpoint = API_ENDPOINTS.PRODUCTS.BY_ID(id);
         const product = await apiRequest<Product>(endpoint);
         
-        if (!product) {
-          throw new Error('Product not found');
-        }
+        if (!product) throw new Error('Product not found');
         
         setCurrentProduct(product);
         setCachedData(`${CACHE_KEYS.PRODUCTS}_${id}`, { product });
@@ -346,26 +297,19 @@ export const useProductStore = create<ProductStore>()(
     prefetchProductById: async (id: string) => {
       const { products } = get();
       
-      if (!id) {
-        return;
-      }
+      if (!id) return;
       
-      // Check if product exists in current products first
       const existingProduct = products.find(p => p.id === id);
-      if (existingProduct) {
-        return;
-      }
+      if (existingProduct) return;
 
       try {
         const endpoint = API_ENDPOINTS.PRODUCTS.BY_ID(id);
         const product = await apiRequest<Product>(endpoint);
         
         if (product) {
-          // Add to cache without setting as current product
           setCachedData(`${CACHE_KEYS.PRODUCTS}_${id}`, { product });
         }
       } catch (error) {
-        // Don't set error state on prefetch failure
         console.error('Error prefetching product:', error);
       }
     },
@@ -383,31 +327,16 @@ export const useProductStore = create<ProductStore>()(
 
       setSearchQuery(trimmedQuery);
       
-      // Clear existing timeout
-      if (searchTimeoutId) {
-        clearTimeout(searchTimeoutId);
-      }
+      if (searchTimeoutId) clearTimeout(searchTimeoutId);
 
-      // Debounce search
       searchTimeoutId = setTimeout(async () => {
         setSearchLoading(true);
         setError(null);
 
         try {
-          const queryParams = new URLSearchParams({
-            search: trimmedQuery,
-            ...Object.fromEntries(
-              Object.entries(filters)
-                .filter(([_, value]) => value !== undefined && value !== null && value !== '')
-                .map(([key, value]) => [key, String(value)])
-            ),
-          });
-
+          const queryParams = buildQueryParams({ ...filters, search: trimmedQuery }, 1);
           const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
-          const data = await apiRequest<{
-            products: Product[];
-            pagination?: any;
-          }>(endpoint);
+          const data = await apiRequest<{ products: Product[] }>(endpoint);
           
           setSearchResults(data.products || []);
           
@@ -424,13 +353,7 @@ export const useProductStore = create<ProductStore>()(
 
     clearCache: () => {
       if (typeof window !== 'undefined') {
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith(STORAGE_KEYS.PRODUCTS)) {
-            keysToRemove.push(key);
-          }
-        }
+        const keysToRemove = Object.values(CACHE_KEYS);
         keysToRemove.forEach(key => localStorage.removeItem(key));
       }
     },
@@ -438,23 +361,14 @@ export const useProductStore = create<ProductStore>()(
     loadFromCache: () => {
       const { setProducts, setFeaturedProducts, setFilters } = get();
       
-      // Load products from cache
       const cachedProducts = getCachedData<{ products: Product[] }>(CACHE_KEYS.PRODUCTS);
-      if (cachedProducts?.products?.length) {
-        setProducts(cachedProducts.products);
-      }
+      if (cachedProducts?.products?.length) setProducts(cachedProducts.products);
       
-      // Load featured products from cache
       const cachedFeatured = getCachedData<{ featuredProducts: Product[] }>(CACHE_KEYS.FEATURED);
-      if (cachedFeatured?.featuredProducts?.length) {
-        setFeaturedProducts(cachedFeatured.featuredProducts);
-      }
+      if (cachedFeatured?.featuredProducts?.length) setFeaturedProducts(cachedFeatured.featuredProducts);
       
-      // Load filters from cache
       const cachedFilters = getCachedData<{ filters: FilterOptions }>(CACHE_KEYS.FILTERS);
-      if (cachedFilters?.filters) {
-        setFilters(cachedFilters.filters);
-      }
+      if (cachedFilters?.filters) setFilters(cachedFilters.filters);
     },
 
     reset: () => {

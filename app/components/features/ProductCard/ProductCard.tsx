@@ -30,7 +30,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isInWishlist = useWishlistStore(state => state.isInWishlist(product.id));
   const isInCart = useCartStore(state => state.isInCart(product.id));
   
-  // Use per-product loading state instead of global
   const isAddingToCart = useCartStore(state => state.isProductLoading(product.id));
   const wishlistLoading = useWishlistStore(state => state.loading);
 
@@ -61,11 +60,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
     prefetchProductById(product.id);
   };
 
-  const cardClasses = `${styles.card} ${variant === 'small' ? styles.smallCard : ''} ${className}`;
+  const isOutOfStock = product.stock === 0;
+
+  const cardClasses = `
+    ${styles.card} 
+    ${variant === 'small' ? styles.smallCard : ''} 
+    ${isOutOfStock ? 'grayscale opacity-60 pointer-events-none' : ''} 
+    ${className}
+  `;
   const imageContainerClasses = `${styles.imageContainer} ${variant === 'small' ? styles.smallImageContainer : ''} ${imageContainerClassName}`;
+
   return (
     <div className={cardClasses}>
       <div className={imageContainerClasses}>
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+            <span className="bg-black text-white font-bold py-2 px-4 rounded-lg">
+              Out of Stock
+            </span>
+          </div>
+        )}
         {/* Wishlist Button */}
         <button
           onClick={handleToggleWishlist}
@@ -120,10 +134,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <button 
             className={styles.addToBasketBtn}
             onClick={handleAddToCart}
-            disabled={isInCart || product.stock === 0 || isAddingToCart}
+            disabled={isInCart || isOutOfStock || isAddingToCart}
           >
             <ShoppingCart className="h-4 w-4" />
-            {isAddingToCart ? 'Adding...' : isInCart ? 'In Cart' : product.stock === 0 ? 'Out of Stock' : 'Add'}
+            {isAddingToCart ? 'Adding...' : isInCart ? 'In Cart' : isOutOfStock ? 'Out of Stock' : 'Add'}
           </button>
         </div>
       </div>

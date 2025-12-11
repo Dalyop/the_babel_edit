@@ -119,7 +119,7 @@ const OrderDetailPage = () => {
 
       try {
         const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.BY_ID(orderId));
-        setOrder(data);
+        setOrder(data.order);
       } catch (err: any) {
         if (err.status === 404) {
             setError('Order not found.');

@@ -20,7 +20,8 @@ export default function CheckoutPage() {
   
   const [clientSecret, setClientSecret] = useState('');
   const [orderId, setOrderId] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // For initial page load checks
+  const [isInitializingPayment, setIsInitializingPayment] = useState(false); // For payment initialization step
   const [error, setError] = useState('');
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
   const [activeStep, setActiveStep] = useState(1);
@@ -39,9 +40,6 @@ export default function CheckoutPage() {
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
-  // Prevent duplicate API calls
-  const initializationAttempted = useRef(false);
-
   const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
   
   const shippingCosts = {
@@ -53,12 +51,18 @@ export default function CheckoutPage() {
   const tax = totalAmount * 0.08; // 8% tax
   const total = totalAmount + shipping + tax;
 
-  // Check authentication - redirect if not authenticated
+  // Check authentication and cart status
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace(`/${currentLocale}/auth/login?from=${encodeURIComponent(window.location.pathname)}`);
+    if (!authLoading) {
+      if (!user) {
+        router.replace(`/${currentLocale}/auth/login?from=${encodeURIComponent(window.location.pathname)}`);
+      } else if (items.length === 0) {
+        router.push(`/${currentLocale}/cart`);
+      } else {
+        setLoading(false);
+      }
     }
-  }, [user, authLoading, router, currentLocale]);
+  }, [user, authLoading, items, router, currentLocale]);
 
   // Pre-fill user email if available
   useEffect(() => {
@@ -66,86 +70,7 @@ export default function CheckoutPage() {
       setShippingInfo(prev => ({ ...prev, email: user.email }));
     }
   }, [user]);
-
-  // Initialize checkout
-  useEffect(() => {
-    // Wait for auth check to complete
-    if (authLoading) return;
-    
-    // Don't proceed if user is not authenticated
-    if (!user) return;
-    
-    // Prevent duplicate calls
-    if (initializationAttempted.current) return;
-    
-    // Redirect if cart is empty
-    if (items.length === 0) {
-      router.push(`/${currentLocale}/cart`);
-      return;
-    }
-
-    const initializeCheckout = async () => {
-      initializationAttempted.current = true;
-      
-      try {
-        setLoading(true);
-        setError('');
-
-        console.log('Creating order with items:', items);
-
-        // Create order
-        const orderData = await apiRequest<any>(API_ENDPOINTS.ORDERS.CREATE, {
-          method: 'POST',
-          requireAuth: true,
-          body: {
-            items: items.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-              size: item.size,
-              color: item.color,
-            })),
-            shippingCost: shipping,
-            totalAmount: total,
-            shippingMethod: shippingMethod,
-          },
-        });
-        
-        console.log("✅ Order created:", orderData);
-        setOrderId(orderData.id);
-
-        // Create payment intent
-        const { clientSecret: secret } = await apiRequest<{ clientSecret: string }>(
-          '/payments/create-payment-intent',
-          {
-            method: 'POST',
-            requireAuth: true,
-            body: { orderId: orderData.id },
-          }
-        );
-        
-        console.log("✅ Payment intent created");
-        setClientSecret(secret);
-        
-      } catch (err: any) {
-        console.error('❌ Checkout initialization error:', err);
-        
-        // Handle authentication errors
-        if (err.message?.includes('not authenticated') || err.message?.includes('401')) {
-          router.replace(`/${currentLocale}/auth/login?from=${encodeURIComponent(window.location.pathname)}`);
-          return;
-        }
-        
-        setError(err.message || 'Failed to initialize checkout. Please try again.');
-        initializationAttempted.current = false; // Allow retry
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeCheckout();
-  }, [authLoading, user, items, total, shipping, shippingMethod, router, currentLocale]);
-
+  
   // Validate shipping form
   const validateShippingForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -175,10 +100,60 @@ export default function CheckoutPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleProceedToPayment = () => {
-    if (validateShippingForm()) {
+  const handleProceedToPayment = async () => {
+    if (!validateShippingForm()) {
+      return;
+    }
+    
+    setIsInitializingPayment(true);
+    setError('');
+
+    try {
+      // Step 1: Create the pending order
+      const orderData = await apiRequest<any>(API_ENDPOINTS.ORDERS.CREATE, {
+        method: 'POST',
+        requireAuth: true,
+        body: {
+          items: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            size: item.size,
+            color: item.color,
+          })),
+          shippingCost: shipping,
+          totalAmount: total,
+          shippingMethod: shippingMethod,
+          // Include shipping info in the order creation
+          shippingDetails: shippingInfo,
+        },
+      });
+      
+      console.log("✅ Order created:", orderData);
+      setOrderId(orderData.order.id);
+
+      // Step 2: Create the payment intent for that order
+      const { clientSecret: secret } = await apiRequest<{ clientSecret: string }>(
+        '/payments/create-payment-intent',
+        {
+          method: 'POST',
+          requireAuth: true,
+          body: { orderId: orderData.order.id },
+        }
+      );
+      
+      console.log("✅ Payment intent created");
+      setClientSecret(secret);
+
+      // Step 3: Move to payment step
       setActiveStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err: any) {
+      console.error('❌ Failed to initialize payment:', err);
+      setError(err.message || 'Failed to initialize checkout. Please try again.');
+    } finally {
+      setIsInitializingPayment(false);
     }
   };
 
@@ -212,15 +187,15 @@ export default function CheckoutPage() {
     appearance,
   };
 
-  // Show loading while checking authentication
-  if (authLoading) {
+  // Show loading while checking auth or cart
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
         <NavbarWithSuspense />
         <main className="max-w-7xl mx-auto px-4 py-16">
           <div className="flex flex-col items-center justify-center">
             <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 font-medium">Verifying authentication...</p>
+            <p className="text-gray-600 font-medium">Verifying your cart...</p>
           </div>
         </main>
         <Footer />
@@ -231,21 +206,6 @@ export default function CheckoutPage() {
   // Don't render if not authenticated (will redirect)
   if (!user) {
     return null;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-        <NavbarWithSuspense />
-        <main className="max-w-7xl mx-auto px-4 py-16">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 font-medium">Initializing secure checkout...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
   }
 
   if (error) {
@@ -261,11 +221,7 @@ export default function CheckoutPage() {
             <p className="text-gray-600 mb-6">{error}</p>
             <div className="flex gap-3 justify-center">
               <button
-                onClick={() => {
-                  setError('');
-                  initializationAttempted.current = false;
-                  window.location.reload();
-                }}
+                onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
                 Try Again
@@ -357,128 +313,46 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
+                  {/* Form inputs are the same as before */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.firstName ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="John"
-                    />
-                    {formErrors.firstName && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.firstName}</p>
-                    )}
+                    <input type="text" value={shippingInfo.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.firstName ? 'border-red-500' : 'border-gray-300'}`} placeholder="John" />
+                    {formErrors.firstName && <p className="text-red-500 text-xs mt-1">{formErrors.firstName}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.lastName ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="Doe"
-                    />
-                    {formErrors.lastName && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>
-                    )}
+                    <input type="text" value={shippingInfo.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.lastName ? 'border-red-500' : 'border-gray-300'}`} placeholder="Doe" />
+                    {formErrors.lastName && <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                    <input
-                      disabled
-                      type="email"
-                      value={shippingInfo.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="john@example.com"
-                    />
-                    {formErrors.email && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
-                    )}
+                    <input disabled type="email" value={shippingInfo.email} onChange={(e) => handleInputChange('email', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.email ? 'border-red-500' : 'border-gray-300'}`} placeholder="john@example.com" />
+                    {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
-                    <input
-                      type="tel"
-                      value={shippingInfo.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.phone ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                    {formErrors.phone && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>
-                    )}
+                    <input type="tel" value={shippingInfo.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.phone ? 'border-red-500' : 'border-gray-300'}`} placeholder="+1 (555) 123-4567" />
+                    {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.address ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="123 Main Street"
-                    />
-                    {formErrors.address && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>
-                    )}
+                    <input type="text" value={shippingInfo.address} onChange={(e) => handleInputChange('address', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.address ? 'border-red-500' : 'border-gray-300'}`} placeholder="123 Main Street" />
+                    {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.city ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="New York"
-                    />
-                    {formErrors.city && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.city}</p>
-                    )}
+                    <input type="text" value={shippingInfo.city} onChange={(e) => handleInputChange('city', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.city ? 'border-red-500' : 'border-gray-300'}`} placeholder="New York" />
+                    {formErrors.city && <p className="text-red-500 text-xs mt-1">{formErrors.city}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.state}
-                      onChange={(e) => handleInputChange('state', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.state ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="NY"
-                      maxLength={2}
-                    />
-                    {formErrors.state && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.state}</p>
-                    )}
+                    <input type="text" value={shippingInfo.state} onChange={(e) => handleInputChange('state', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.state ? 'border-red-500' : 'border-gray-300'}`} placeholder="NY" maxLength={2} />
+                    {formErrors.state && <p className="text-red-500 text-xs mt-1">{formErrors.state}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
-                    <input
-                      type="text"
-                      value={shippingInfo.zipCode}
-                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formErrors.zipCode ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="10001"
-                      maxLength={10}
-                    />
-                    {formErrors.zipCode && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.zipCode}</p>
-                    )}
+                    <input type="text" value={shippingInfo.zipCode} onChange={(e) => handleInputChange('zipCode', e.target.value)} className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${ formErrors.zipCode ? 'border-red-500' : 'border-gray-300'}`} placeholder="10001" maxLength={10} />
+                    {formErrors.zipCode && <p className="text-red-500 text-xs mt-1">{formErrors.zipCode}</p>}
                   </div>
                 </div>
 
@@ -490,23 +364,9 @@ export default function CheckoutPage() {
                       { id: 'standard', label: 'Standard Shipping', time: '3-5 business days', price: shippingCosts.standard },
                       { id: 'express', label: 'Express Shipping', time: '1-2 business days', price: shippingCosts.express }
                     ].map((method) => (
-                      <label
-                        key={method.id}
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          shippingMethod === method.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
+                      <label key={method.id} className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${ shippingMethod === method.id ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
                         <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="shipping"
-                            value={method.id}
-                            checked={shippingMethod === method.id}
-                            onChange={(e) => setShippingMethod(e.target.value as 'standard' | 'express')}
-                            className="w-4 h-4 text-blue-600"
-                          />
+                          <input type="radio" name="shipping" value={method.id} checked={shippingMethod === method.id} onChange={(e) => setShippingMethod(e.target.value as 'standard' | 'express')} className="w-4 h-4 text-blue-600"/>
                           <div>
                             <div className="font-semibold text-gray-900">{method.label}</div>
                             <div className="text-sm text-gray-600">{method.time}</div>
@@ -520,9 +380,17 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={handleProceedToPayment}
-                  className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-500/30"
+                  disabled={isInitializingPayment}
+                  className="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-500/30 flex items-center justify-center"
                 >
-                  Continue to Payment
+                  {isInitializingPayment ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span>Initializing Payment...</span>
+                    </>
+                  ) : (
+                    'Continue to Payment'
+                  )}
                 </button>
               </div>
             )}
@@ -550,7 +418,10 @@ export default function CheckoutPage() {
                 </Elements>
 
                 <button
-                  onClick={() => setActiveStep(1)}
+                  onClick={() => {
+                    setActiveStep(1);
+                    setClientSecret(''); // Clear secret to allow re-initialization if needed
+                  }}
                   className="w-full mt-4 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   Back to Shipping

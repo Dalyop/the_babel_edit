@@ -162,7 +162,7 @@ const ProductsPage = () => {
     if (search) {
       searchProducts(search, currentFilters);
     } else {
-      fetchProducts({ filters: currentFilters, force: true });
+      fetchProducts({ force: true });
     }
   }, [search, currentFilters, searchProducts, fetchProducts]);
 
