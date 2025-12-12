@@ -143,7 +143,8 @@ const ProductsPage = () => {
       // When filters change, fetch the first page of results
       fetchProducts({ filters: currentFilters, force: true });
     }
-  }, [search, currentFilters, searchProducts, fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, currentFilters]);
 
   const loadMoreProducts = useCallback(() => {
     if (!loading && hasMore && !search) {
