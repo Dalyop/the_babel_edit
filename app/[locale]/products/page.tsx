@@ -6,7 +6,7 @@ import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspe
 import Footer from '@/app/components/features/Footer/Footer';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCardSkeleton';
-import { useProductStore, FilterOptions, Product } from '@/app/store';
+import { useProductStore, Product } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 
 // A simple Intersection Observer hook
@@ -43,6 +43,7 @@ const ProductsPage = () => {
   const category = searchParams.get('category');
   const search = searchParams.get('search');
 
+  // Store selectors
   const {
     fetchProducts,
     searchProducts,
@@ -51,20 +52,29 @@ const ProductsPage = () => {
     loading,
     searchLoading,
     error,
-    hasMore,
-    page,
   } = useProductStore();
 
+  // Local state for filter UI
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating'>('newest');
-  const [activeFilters, setActiveFilters] = useState<FilterOptions>({});
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  // Initial data fetch
+  useEffect(() => {
+    const filtersToFetch = category ? { category } : {};
+    if (search) {
+      searchProducts(search, filtersToFetch);
+    } else {
+      fetchProducts({ filters: filtersToFetch, force: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category]);
+
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      const currentValues = Array.isArray(newFilters[filterKey]) 
-        ? newFilters[filterKey] as string[]
-        : [];
+      const currentValues = newFilters[filterKey] || [];
       
       if (currentValues.includes(value)) {
         const updatedValues = currentValues.filter(v => v !== value);
@@ -80,6 +90,57 @@ const ProductsPage = () => {
     });
   }, []);
 
+  // Memoized, client-side filtered and sorted products
+  const displayProducts = useMemo(() => {
+    let filtered = search ? searchResults : products;
+
+    // Apply active filters
+    if (Object.keys(activeFilters).length > 0) {
+      filtered = filtered.filter(product => {
+        return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
+          if (!filterValues || filterValues.length === 0) {
+            return true;
+          }
+          // Assuming product properties are lowercase (e.g., product.type, product.material)
+          const productValue = product[filterKey as keyof Product];
+
+          if (Array.isArray(productValue)) {
+            // e.g., for 'sizes' or 'colors' array on the product
+            return productValue.some(val => filterValues.includes(val));
+          } else if (typeof productValue === 'string') {
+            // e.g., for 'type' or 'material' string on the product
+            return filterValues.includes(productValue);
+          }
+          
+          return false;
+        });
+      });
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'rating':
+          return b.avgRating - a.avgRating;
+        case 'newest':
+        default:
+          // Assuming products are fetched newest first, so we don't need to re-sort
+          return 0; 
+      }
+    });
+
+    return sorted;
+  }, [search, searchResults, products, activeFilters, sortBy]);
+
+
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
   }, []);
@@ -94,10 +155,9 @@ const ProductsPage = () => {
   const removeFilter = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      const currentValues = Array.isArray(newFilters[filterKey]) 
-        ? newFilters[filterKey] as string[]
-        : [];
+      const currentValues = newFilters[filterKey] || [];
       const updatedValues = currentValues.filter(v => v !== value);
+      
       if (updatedValues.length === 0) {
         delete newFilters[filterKey];
       } else {
@@ -120,45 +180,21 @@ const ProductsPage = () => {
     }
   }, [category]);
 
-  const currentFilters = useMemo(() => ({
-    ...activeFilters,
-    sortBy,
-    ...(category && { category }),
-  }), [activeFilters, sortBy, category]);
-
-  const displayProducts = useMemo(() => search ? searchResults : products, [search, searchResults, products]);
   const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
 
-  useEffect(() => {
-    if (search) {
-      searchProducts(search, currentFilters);
-    } else {
-      fetchProducts({ filters: currentFilters, force: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, currentFilters]);
-
-  const loadMoreProducts = useCallback(() => {
-    if (!loading && hasMore && !search) {
-      fetchProducts();
-    }
-  }, [loading, hasMore, fetchProducts, search]);
-
-  const observerRef = useIntersectionObserver(loadMoreProducts, {
-    rootMargin: '200px',
-  });
-
-  const handleSortChange = useCallback((newSortBy: typeof sortBy) => {
+  const handleSortChange = useCallback((newSortBy: any) => {
     setSortBy(newSortBy);
   }, []);
   
   const handleRetry = useCallback(() => {
+    const filtersToFetch = category ? { category } : {};
     if (search) {
-      searchProducts(search, currentFilters);
+      searchProducts(search, filtersToFetch);
     } else {
-      fetchProducts({ filters: currentFilters, force: true });
+      fetchProducts({ filters: filtersToFetch, force: true });
     }
-  }, [search, currentFilters, searchProducts, fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -167,9 +203,7 @@ const ProductsPage = () => {
   }, [search, category]);
 
   const activeFilterCount = useMemo(() => {
-    return Object.values(activeFilters).reduce((count: number, values) => {
-      return count + (Array.isArray(values) ? values.length : 0);
-    }, 0);
+    return Object.values(activeFilters).reduce((count, values) => count + values.length, 0);
   }, [activeFilters]);
   
   const currentCategoryFilters = useMemo(() => {
@@ -207,9 +241,9 @@ const ProductsPage = () => {
           <div className={styles.sortAndFilter}>
             <select
               value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value as typeof sortBy)}
+              onChange={(e) => handleSortChange(e.target.value)}
               className={styles.sortSelect}
-              disabled={isLoading && page === 1}
+              disabled={loading}
             >
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low to High</option>
@@ -221,7 +255,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                
+                {displayProducts.length} product(s) found
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -243,7 +277,7 @@ const ProductsPage = () => {
                   const filterGroup = currentCategoryFilters.find(g => g.key === filterKey);
                   const filterTitle = filterGroup ? filterGroup.title : filterKey;
 
-                  return Array.isArray(values) ? values.map((value, index) => {
+                  return values.map((value, index) => {
                     const option = filterGroup?.options.find(o => o.value === value);
                     const optionLabel = option ? option.label : value;
 
@@ -259,7 +293,7 @@ const ProductsPage = () => {
                         </button>
                       </div>
                     )
-                  }) : null
+                  });
               })}
             </div>
           </div>
@@ -279,7 +313,7 @@ const ProductsPage = () => {
             )}
             
             {currentCategoryFilters.map((filterGroup, groupIndex) => {
-              const currentValues = (activeFilters[filterGroup.key] as string[]) || [];
+              const currentValues = activeFilters[filterGroup.key] || [];
               const isExpanded = expandedSections[filterGroup.title] ?? true;
               
               return (
@@ -320,26 +354,23 @@ const ProductsPage = () => {
           </div>
 
           <div className={styles.productsGrid}>
-            {error ? (
+            {loading ? (
+              // Skeletons for initial load
+              Array.from({ length: 8 }).map((_, index) => (
+                <ProductCardSkeleton key={`skeleton-${index}`} />
+              ))
+            ) : error ? (
               <div className={styles.errorContainer}>
                 <p>{error}</p>
                 <button className={styles.retryButton} onClick={handleRetry}>
                   Retry
                 </button>
               </div>
+            ) : displayProducts.length > 0 ? (
+              displayProducts.map((product: Product) => (
+                <ProductCard key={`${product.id}-${product.name}`} product={product} />
+              ))
             ) : (
-              <>
-                {displayProducts.map((product: Product) => (
-                  <ProductCard key={`${product.id}-${product.name}`} product={product} />
-                ))}
-                {isLoading && hasMore &&
-                  Array.from({ length: page === 1 ? 8 : 4 }).map((_, index) => (
-                    <ProductCardSkeleton key={`skeleton-${index}`} />
-                  ))
-                }
-              </>
-            )}
-            {!isLoading && displayProducts.length === 0 && (
               <div className={styles.noResultsContainer}>
                 <h3>No products found</h3>
                 <p>Try adjusting your filters or search terms</p>
@@ -353,9 +384,10 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        <div ref={observerRef} className={styles.loaderContainer}>
-            {!isLoading && !hasMore && displayProducts.length > 0 && (
-              <p className={styles.endOfResults}>You've reached the end of the results.</p>
+        {/* Infinite scroll is no longer needed with client-side filtering */}
+        <div className={styles.loaderContainer}>
+            {!loading && displayProducts.length > 0 && (
+              <p className={styles.endOfResults}>You've seen all {displayProducts.length} results.</p>
             )}
         </div>
       </main>
