@@ -43,7 +43,6 @@ const ProductsPage = () => {
   const category = searchParams.get('category');
   const search = searchParams.get('search');
 
-  // Store selectors
   const {
     fetchProducts,
     searchProducts,
@@ -56,27 +55,26 @@ const ProductsPage = () => {
     page,
   } = useProductStore();
 
-  // Local state
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating'>('newest');
   const [activeFilters, setActiveFilters] = useState<FilterOptions>({});
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
 
-  const handleFilterChange = useCallback((filterType: string, value: string) => {
+  const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      const currentValues = Array.isArray(newFilters[filterType]) 
-        ? newFilters[filterType] as string[]
+      const currentValues = Array.isArray(newFilters[filterKey]) 
+        ? newFilters[filterKey] as string[]
         : [];
       
       if (currentValues.includes(value)) {
         const updatedValues = currentValues.filter(v => v !== value);
         if (updatedValues.length === 0) {
-          delete newFilters[filterType];
+          delete newFilters[filterKey];
         } else {
-          newFilters[filterType] = updatedValues;
+          newFilters[filterKey] = updatedValues;
         }
       } else {
-        newFilters[filterType] = [...currentValues, value];
+        newFilters[filterKey] = [...currentValues, value];
       }
       return newFilters;
     });
@@ -93,21 +91,17 @@ const ProductsPage = () => {
     }));
   }, []);
 
-  const removeFilter = useCallback((filterType: string, value?: string) => {
+  const removeFilter = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      if (value) {
-        const currentValues = Array.isArray(newFilters[filterType]) 
-          ? newFilters[filterType] as string[]
-          : [];
-        const updatedValues = currentValues.filter(v => v !== value);
-        if (updatedValues.length === 0) {
-          delete newFilters[filterType];
-        } else {
-          newFilters[filterType] = updatedValues;
-        }
+      const currentValues = Array.isArray(newFilters[filterKey]) 
+        ? newFilters[filterKey] as string[]
+        : [];
+      const updatedValues = currentValues.filter(v => v !== value);
+      if (updatedValues.length === 0) {
+        delete newFilters[filterKey];
       } else {
-        delete newFilters[filterType];
+        newFilters[filterKey] = updatedValues;
       }
       return newFilters;
     });
@@ -135,12 +129,10 @@ const ProductsPage = () => {
   const displayProducts = useMemo(() => search ? searchResults : products, [search, searchResults, products]);
   const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
 
-  // This one useEffect now handles all data fetching logic for the page
   useEffect(() => {
     if (search) {
       searchProducts(search, currentFilters);
     } else {
-      // When filters change, fetch the first page of results
       fetchProducts({ filters: currentFilters, force: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,8 +140,6 @@ const ProductsPage = () => {
 
   const loadMoreProducts = useCallback(() => {
     if (!loading && hasMore && !search) {
-      // subsequent fetches for infinite scroll don't pass filters,
-      // as the store already holds the correct filters
       fetchProducts();
     }
   }, [loading, hasMore, fetchProducts, search]);
@@ -181,6 +171,22 @@ const ProductsPage = () => {
       return count + (Array.isArray(values) ? values.length : 0);
     }, 0);
   }, [activeFilters]);
+  
+  const currentCategoryFilters = useMemo(() => {
+    if (!category) return [];
+    const categoryMap: { [key: string]: string } = {
+      'new-arrivals': 'new arrivals',
+      'newarrivals': 'new arrivals', 
+      'clothes': 'clothing',
+      'clothing': 'clothing',
+      'accessories': 'accessories',
+      'bags': 'bags',
+      'shoes': 'shoes'
+    };
+    const categoryKey = categoryMap[category.toLowerCase()] || category.toLowerCase();
+    return CATEGORY_FILTERS[categoryKey as keyof typeof CATEGORY_FILTERS] || [];
+  }, [category]);
+
 
   return (
     <div className={styles.pageBg}>
@@ -233,20 +239,28 @@ const ProductsPage = () => {
           <div className={styles.activeFiltersContainer}>
             <div className={styles.activeFiltersTitle}>Active Filters:</div>
             <div className={styles.activeFiltersTags}>
-              {Object.entries(activeFilters).map(([filterType, values]) => 
-                Array.isArray(values) ? values.map((value, index) => (
-                  <div key={`${filterType}-${value}-${index}`} className={styles.filterTag}>
-                    <span>{filterType}: {value}</span>
-                    <button 
-                      className={styles.removeFilterButton}
-                      onClick={() => removeFilter(filterType, value)}
-                      aria-label={`Remove ${filterType}: ${value} filter`}
-                    >
-                      ×
-                    </button>
-                  </div>
-                )) : null
-              )}
+              {Object.entries(activeFilters).map(([filterKey, values]) => {
+                  const filterGroup = currentCategoryFilters.find(g => g.key === filterKey);
+                  const filterTitle = filterGroup ? filterGroup.title : filterKey;
+
+                  return Array.isArray(values) ? values.map((value, index) => {
+                    const option = filterGroup?.options.find(o => o.value === value);
+                    const optionLabel = option ? option.label : value;
+
+                    return (
+                      <div key={`${filterKey}-${value}-${index}`} className={styles.filterTag}>
+                        <span>{filterTitle}: {optionLabel}</span>
+                        <button 
+                          className={styles.removeFilterButton}
+                          onClick={() => removeFilter(filterKey, value)}
+                          aria-label={`Remove ${filterTitle}: ${optionLabel} filter`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  }) : null
+              })}
             </div>
           </div>
         )}
@@ -264,22 +278,8 @@ const ProductsPage = () => {
               </div>
             )}
             
-            {category && (() => {
-              const categoryMap: { [key: string]: string } = {
-                'new-arrivals': 'new arrivals',
-                'newarrivals': 'new arrivals', 
-                'clothes': 'clothing',
-                'clothing': 'clothing',
-                'accessories': 'accessories',
-                'bags': 'bags',
-                'shoes': 'shoes'
-              };
-              
-              const categoryKey = categoryMap[category.toLowerCase()] || category.toLowerCase();
-              const normalizedCategory = categoryKey === 'clothes' ? 'clothing' : categoryKey;
-              return CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS];
-            })()?.map((filterGroup, groupIndex) => {
-              const currentValues = (activeFilters[filterGroup.title] as string[]) || [];
+            {currentCategoryFilters.map((filterGroup, groupIndex) => {
+              const currentValues = (activeFilters[filterGroup.key] as string[]) || [];
               const isExpanded = expandedSections[filterGroup.title] ?? true;
               
               return (
@@ -300,12 +300,12 @@ const ProductsPage = () => {
                         <div key={optionIndex} className={styles.filterOption}>
                           <input
                             type="checkbox"
-                            id={`${filterGroup.title}-${option.value}`}
+                            id={`${filterGroup.key}-${option.value}`}
                             checked={isChecked}
-                            onChange={() => handleFilterChange(filterGroup.title, option.value)}
+                            onChange={() => handleFilterChange(filterGroup.key, option.value)}
                           />
                           <label 
-                            htmlFor={`${filterGroup.title}-${option.value}`}
+                            htmlFor={`${filterGroup.key}-${option.value}`}
                             className={isChecked ? styles.checkedLabel : ''}
                           >
                             {option.label}
@@ -332,7 +332,6 @@ const ProductsPage = () => {
                 {displayProducts.map((product: Product) => (
                   <ProductCard key={`${product.id}-${product.name}`} product={product} />
                 ))}
-                {/* Skeletons for initial load AND infinite scroll appear here */}
                 {isLoading && hasMore &&
                   Array.from({ length: page === 1 ? 8 : 4 }).map((_, index) => (
                     <ProductCardSkeleton key={`skeleton-${index}`} />
@@ -354,7 +353,6 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        {/* Observer target for infinite scroll */}
         <div ref={observerRef} className={styles.loaderContainer}>
             {!isLoading && !hasMore && displayProducts.length > 0 && (
               <p className={styles.endOfResults}>You've reached the end of the results.</p>

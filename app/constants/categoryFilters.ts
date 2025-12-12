@@ -5,6 +5,7 @@ export interface FilterOption {
 
 export interface FilterGroup {
   title: string;
+  key: string; // The key to be used in API query parameters
   options: FilterOption[];
 }
 
@@ -16,6 +17,7 @@ export const CATEGORY_FILTERS: CategoryFilters = {
   clothing: [
     {
       title: 'Type',
+      key: 'type',
       options: [
         { label: 'T-Shirts', value: 't-shirts' },
         { label: 'Blouses & Shirts', value: 'blouses-shirts' },
@@ -33,6 +35,7 @@ export const CATEGORY_FILTERS: CategoryFilters = {
   bags: [
     {
       title: 'Type',
+      key: 'type',
       options: [
         { label: 'Backpacks', value: 'backpacks' },
         { label: 'Handbags', value: 'handbags' },
@@ -45,6 +48,7 @@ export const CATEGORY_FILTERS: CategoryFilters = {
     },
     {
       title: 'Material',
+      key: 'material',
       options: [
         { label: 'Leather', value: 'leather' },
         { label: 'Canvas', value: 'canvas' },
@@ -58,6 +62,7 @@ export const CATEGORY_FILTERS: CategoryFilters = {
   accessories: [
     {
       title: 'Type',
+      key: 'type',
       options: [
         { label: 'Bags', value: 'bags' },
         { label: 'Hats', value: 'hats' },
@@ -73,6 +78,7 @@ export const CATEGORY_FILTERS: CategoryFilters = {
   shoes: [
     {
       title: 'Type',
+      key: 'type',
       options: [
         { label: 'Sneakers', value: 'sneakers' },
         { label: 'Boots', value: 'boots' },
