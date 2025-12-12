@@ -16,7 +16,7 @@ export interface User {
 
 export interface Collection {
   id: string;
-  name: string;
+  name:string;
   description?: string;
   imageUrl?: string;
   isActive: boolean;
@@ -57,14 +57,15 @@ export interface Product {
 
 export type SortByType = 'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating';
 
+// This is the root cause of the bug. The keys should be lowercase to match the API.
 export interface FilterArrayValues {
-  Type?: string[];
-  Style?: string[];
-  Brand?: string[];
-  Material?: string[];
-  Color?: string[];
-  Pattern?: string[];
-  Size?: string[];
+  type?: string[];
+  style?: string[];
+  brand?: string[];
+  material?: string[];
+  color?: string[];
+  pattern?: string[];
+  size?: string[];
 }
 
 export interface FilterOptions extends Partial<FilterArrayValues> {
