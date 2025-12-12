@@ -54,7 +54,6 @@ const ProductsPage = () => {
     error,
     hasMore,
     page,
-    setFilters: setStoreFilters,
   } = useProductStore();
 
   // Local state
@@ -136,16 +135,20 @@ const ProductsPage = () => {
   const displayProducts = useMemo(() => search ? searchResults : products, [search, searchResults, products]);
   const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
 
+  // This one useEffect now handles all data fetching logic for the page
   useEffect(() => {
     if (search) {
       searchProducts(search, currentFilters);
     } else {
-      setStoreFilters(currentFilters);
+      // When filters change, fetch the first page of results
+      fetchProducts({ filters: currentFilters, force: true });
     }
-  }, [search, currentFilters, searchProducts, setStoreFilters]);
+  }, [search, currentFilters, searchProducts, fetchProducts]);
 
   const loadMoreProducts = useCallback(() => {
     if (!loading && hasMore && !search) {
+      // subsequent fetches for infinite scroll don't pass filters,
+      // as the store already holds the correct filters
       fetchProducts();
     }
   }, [loading, hasMore, fetchProducts, search]);
@@ -162,7 +165,7 @@ const ProductsPage = () => {
     if (search) {
       searchProducts(search, currentFilters);
     } else {
-      fetchProducts({ force: true });
+      fetchProducts({ filters: currentFilters, force: true });
     }
   }, [search, currentFilters, searchProducts, fetchProducts]);
 

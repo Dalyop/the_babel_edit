@@ -32,13 +32,12 @@ interface ProductActions {
   setSearchResults: (products: Product[]) => void;
   setCurrentProduct: (product: Product | null) => void;
   setLoading: (loading: boolean) => void;
-  setSearchLoading: (loading: boolean) => void;
+  setSearchLoading: (searchLoading: boolean) => void;
   setError: (error: string | null) => void;
-  setFilters: (filters: FilterOptions) => void;
   setSearchQuery: (query: string) => void;
   
   // API Actions
-  fetchProducts: (options?: { force?: boolean }) => Promise<void>;
+  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean }) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
   prefetchProductById: (id: string) => Promise<void>;
@@ -127,18 +126,15 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number): URLSearchP
             queryParams.append('sortOrder', 'desc');
         }
       } else if (Array.isArray(value)) {
-        // If the value is an array, append each item separately
         value.forEach(item => {
           queryParams.append(key, item);
         });
       } else {
-        // Otherwise, append as a string
         queryParams.append(key, String(value));
       }
     }
   });
 
-  // Add pagination
   queryParams.append('page', String(page));
   
   return queryParams;
@@ -169,25 +165,29 @@ export const useProductStore = create<ProductStore>()(
     setError: (error) => set({ error }),
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     
-    setFilters: (newFilters) => {
-      // The component's useEffect is already responsible for checking if filters have changed.
-      // This action will now unconditionally reset and fetch.
-      set({ filters: newFilters, page: 1, products: [], hasMore: true });
-      get().fetchProducts({ force: true });
-    },
+    // NOTE: setFilters is removed as fetchProducts now handles filter updates directly.
     
     fetchProducts: async (options = {}) => {
-      const { force = false } = options;
-      const { page: pageToFetch, hasMore, loading, filters } = get();
+      const { force = false, filters: newFilters } = options;
+      const { page, hasMore, loading, filters: currentFilters } = get();
 
-      if (loading || (!force && !hasMore)) {
-        return;
-      }
+      const isNewFilterSearch = newFilters !== undefined;
+
+      if (loading) return;
+      if (!isNewFilterSearch && !hasMore && !force) return;
+
+      const pageToFetch = isNewFilterSearch ? 1 : page;
+      const filtersToUse = newFilters || currentFilters;
 
       set({ loading: true, error: null });
+      
+      // If it's a new filter search, reset products immediately
+      if (isNewFilterSearch) {
+        set({ products: [], page: 1, hasMore: true });
+      }
 
       try {
-        const queryParams = buildQueryParams(filters, pageToFetch);
+        const queryParams = buildQueryParams(filtersToUse, pageToFetch);
         const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
         
         const data = await apiRequest<{
@@ -207,6 +207,7 @@ export const useProductStore = create<ProductStore>()(
           pagination: data.pagination,
           page: state.page + 1,
           hasMore: data.pagination.page < data.pagination.pages,
+          filters: filtersToUse, // Always update to the latest filters used
           lastFetchTime: Date.now(),
         }));
         
@@ -363,16 +364,13 @@ export const useProductStore = create<ProductStore>()(
     },
 
     loadFromCache: () => {
-      const { setProducts, setFeaturedProducts, setFilters } = get();
+      const { setProducts, setFeaturedProducts } = get();
       
       const cachedProducts = getCachedData<{ products: Product[] }>(CACHE_KEYS.PRODUCTS);
       if (cachedProducts?.products?.length) setProducts(cachedProducts.products);
       
       const cachedFeatured = getCachedData<{ featuredProducts: Product[] }>(CACHE_KEYS.FEATURED);
       if (cachedFeatured?.featuredProducts?.length) setFeaturedProducts(cachedFeatured.featuredProducts);
-      
-      const cachedFilters = getCachedData<{ filters: FilterOptions }>(CACHE_KEYS.FILTERS);
-      if (cachedFilters?.filters) setFilters(cachedFilters.filters);
     },
 
     reset: () => {

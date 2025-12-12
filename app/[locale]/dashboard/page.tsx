@@ -545,7 +545,7 @@ function Dashboard() {
                 </div>
               ) : featuredProducts.length > 0 ? (
                 // Real products from backend - Using square cards
-                featuredProducts.map((product) => (
+                featuredProducts.filter(p => p.stock > 0).map((product) => (
                   <SquareProductCard key={product.id} product={product} />
                 ))
               ) : (
