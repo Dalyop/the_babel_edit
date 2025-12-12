@@ -169,26 +169,39 @@ export const useProductStore = create<ProductStore>()(
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     
     fetchProducts: async (options = {}) => {
+      console.log('%c[fetchProducts] Start', 'color: #00A8F7', { options });
       const { force = false, filters: newFilters, limit } = options;
       const { page: currentPage, hasMore, loading, filters: currentFilters } = get();
 
-      const isNewFilterSearch = newFilters !== undefined;
+      console.log('[fetchProducts] Current state:', { currentPage, hasMore, loading, currentFilters });
 
-      if (loading) return;
-      if (!isNewFilterSearch && !hasMore && !force) return;
+      const isNewFilterSearch = newFilters !== undefined;
+      console.log('[fetchProducts] Is this a new filter search?', isNewFilterSearch);
+      
+      if (loading) {
+        console.log('[fetchProducts] Exiting: Already loading.');
+        return;
+      }
+      if (!isNewFilterSearch && !hasMore && !force) {
+        console.log('[fetchProducts] Exiting: Not a new search, no more pages to load, and not forced.');
+        return;
+      }
 
       const pageToFetch = isNewFilterSearch ? 1 : currentPage;
       const filtersToUse = newFilters || currentFilters;
+      console.log('[fetchProducts] Determined params:', { pageToFetch, filtersToUse });
 
       set({ loading: true, error: null });
 
       if (isNewFilterSearch) {
+        console.log('[fetchProducts] Resetting products for new filter search.');
         set({ products: [], page: 1, hasMore: true });
       }
 
       try {
         const queryParams = buildQueryParams(filtersToUse, pageToFetch, limit);
         const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
+        console.log(`%c[fetchProducts] Calling API: ${endpoint}`, 'color: #7ED321');
         
         const data = await apiRequest<{
           products: Product[];
@@ -199,17 +212,24 @@ export const useProductStore = create<ProductStore>()(
             pages: number;
           };
         }>(endpoint);
+
+        console.log('[fetchProducts] API response received:', data);
         
         if (!data.products) throw new Error('Invalid response format');
         
-        set((state) => ({
-          products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
-          pagination: data.pagination,
-          page: pageToFetch + 1,
-          hasMore: data.pagination.page < data.pagination.pages,
-          filters: filtersToUse,
-          lastFetchTime: Date.now(),
-        }));
+        console.log('[fetchProducts] Current state before setting new data:', get());
+        set((state) => {
+          const newState = {
+            products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
+            pagination: data.pagination,
+            page: pageToFetch + 1,
+            hasMore: data.pagination.page < data.pagination.pages,
+            filters: filtersToUse,
+            lastFetchTime: Date.now(),
+          };
+          console.log('[fetchProducts] Setting new state:', newState);
+          return newState;
+        });
         
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -217,6 +237,7 @@ export const useProductStore = create<ProductStore>()(
         set({ error: errorMessage, hasMore: false });
       } finally {
         set({ loading: false });
+        console.log('%c[fetchProducts] End', 'color: #D0021B');
       }
     },
 

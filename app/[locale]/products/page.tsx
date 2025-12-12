@@ -36,6 +36,7 @@ const ProductsPage = () => {
 
   // Centralized effect for fetching products
   useEffect(() => {
+    console.log('%c[ProductsPage] Effect triggered', 'color: #FFA500', { debouncedActiveFilters, sortBy, category, search });
     // Consolidate all filter criteria
     const filtersToFetch: FilterOptions = {
       ...debouncedActiveFilters,
@@ -48,6 +49,7 @@ const ProductsPage = () => {
       filtersToFetch.search = search;
     }
 
+    console.log('[ProductsPage] Calling fetchProducts with:', { filtersToFetch });
     fetchProducts({ filters: filtersToFetch, limit: PAGE_LIMIT });
     // Note: `fetchProducts` is stable and doesn't need to be in the dependency array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,6 +57,7 @@ const ProductsPage = () => {
 
 
   const handleFilterChange = useCallback((filterKey: keyof FilterOptions, value: string) => {
+    console.log(`%c[ProductsPage] Filter changed:`, 'color: #FFD700', { filterKey, value });
     setActiveFilters(prev => {
       const newFilters = { ...prev };
       const currentValues = (newFilters[filterKey] as string[] | undefined) || [];
@@ -69,6 +72,7 @@ const ProductsPage = () => {
       } else {
         newFilters[filterKey] = [...currentValues, value];
       }
+      console.log('[ProductsPage] New activeFilters state:', newFilters);
       return newFilters;
     });
   }, []);
