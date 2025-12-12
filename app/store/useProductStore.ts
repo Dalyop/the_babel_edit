@@ -170,20 +170,18 @@ export const useProductStore = create<ProductStore>()(
     
     fetchProducts: async (options = {}) => {
       const { force = false, filters: newFilters, limit } = options;
-      const { page, hasMore, loading, filters: currentFilters } = get();
+      const { page: currentPage, hasMore, loading, filters: currentFilters } = get();
 
       const isNewFilterSearch = newFilters !== undefined;
-      
-      // If it's a new filter search, we always proceed. For pagination, we check if there's more.
-      if (loading || (!isNewFilterSearch && !hasMore && !force)) {
-        return;
-      }
 
-      const pageToFetch = isNewFilterSearch ? 1 : page;
+      if (loading) return;
+      if (!isNewFilterSearch && !hasMore && !force) return;
+
+      const pageToFetch = isNewFilterSearch ? 1 : currentPage;
       const filtersToUse = newFilters || currentFilters;
 
       set({ loading: true, error: null });
-      
+
       if (isNewFilterSearch) {
         set({ products: [], page: 1, hasMore: true });
       }
