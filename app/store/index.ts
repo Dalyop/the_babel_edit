@@ -18,6 +18,7 @@ export type {
   ApiError,
   PaginatedResponse,
   FilterOptions,
+  SortByType,
 } from './types';
 
 // Export storage utilities
