@@ -207,7 +207,7 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
           pagination: data.pagination,
-          page: state.page + 1,
+          page: pageToFetch + 1,
           hasMore: data.pagination.page < data.pagination.pages,
           filters: filtersToUse,
           lastFetchTime: Date.now(),
