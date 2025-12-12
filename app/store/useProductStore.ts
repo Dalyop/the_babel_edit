@@ -37,7 +37,7 @@ interface ProductActions {
   setSearchQuery: (query: string) => void;
   
   // API Actions
-  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean }) => Promise<void>;
+  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean; limit?: number }) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
   prefetchProductById: (id: string) => Promise<void>;
@@ -96,7 +96,7 @@ const handleError = (error: unknown, defaultMessage: string): string => {
 };
 
 // Query parameter builder
-const buildQueryParams = (filters: FilterOptions = {}, page: number): URLSearchParams => {
+const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: number): URLSearchParams => {
   const queryParams = new URLSearchParams();
   
   // Add filters
@@ -136,6 +136,9 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number): URLSearchP
   });
 
   queryParams.append('page', String(page));
+  if (limit) {
+    queryParams.append('limit', String(limit));
+  }
   
   return queryParams;
 };
@@ -165,29 +168,28 @@ export const useProductStore = create<ProductStore>()(
     setError: (error) => set({ error }),
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     
-    // NOTE: setFilters is removed as fetchProducts now handles filter updates directly.
-    
     fetchProducts: async (options = {}) => {
-      const { force = false, filters: newFilters } = options;
+      const { force = false, filters: newFilters, limit } = options;
       const { page, hasMore, loading, filters: currentFilters } = get();
 
       const isNewFilterSearch = newFilters !== undefined;
-
-      if (loading) return;
-      if (!isNewFilterSearch && !hasMore && !force) return;
+      
+      // If it's a new filter search, we always proceed. For pagination, we check if there's more.
+      if (loading || (!isNewFilterSearch && !hasMore && !force)) {
+        return;
+      }
 
       const pageToFetch = isNewFilterSearch ? 1 : page;
       const filtersToUse = newFilters || currentFilters;
 
       set({ loading: true, error: null });
       
-      // If it's a new filter search, reset products immediately
       if (isNewFilterSearch) {
         set({ products: [], page: 1, hasMore: true });
       }
 
       try {
-        const queryParams = buildQueryParams(filtersToUse, pageToFetch);
+        const queryParams = buildQueryParams(filtersToUse, pageToFetch, limit);
         const endpoint = `${API_ENDPOINTS.PRODUCTS.LIST}?${queryParams.toString()}`;
         
         const data = await apiRequest<{
@@ -207,7 +209,7 @@ export const useProductStore = create<ProductStore>()(
           pagination: data.pagination,
           page: state.page + 1,
           hasMore: data.pagination.page < data.pagination.pages,
-          filters: filtersToUse, // Always update to the latest filters used
+          filters: filtersToUse,
           lastFetchTime: Date.now(),
         }));
         
@@ -364,13 +366,11 @@ export const useProductStore = create<ProductStore>()(
     },
 
     loadFromCache: () => {
-      const { setProducts, setFeaturedProducts } = get();
+      const { setProducts } = get();
       
       const cachedProducts = getCachedData<{ products: Product[] }>(CACHE_KEYS.PRODUCTS);
       if (cachedProducts?.products?.length) setProducts(cachedProducts.products);
       
-      const cachedFeatured = getCachedData<{ featuredProducts: Product[] }>(CACHE_KEYS.FEATURED);
-      if (cachedFeatured?.featuredProducts?.length) setFeaturedProducts(cachedFeatured.featuredProducts);
     },
 
     reset: () => {

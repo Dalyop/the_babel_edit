@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './products.module.css';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
@@ -8,35 +8,6 @@ import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCardSkeleton';
 import { useProductStore, Product } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
-
-// A simple Intersection Observer hook
-const useIntersectionObserver = (callback: () => void, options?: IntersectionObserverInit) => {
-  const observer = useRef<IntersectionObserver | null>(null);
-  const target = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (observer.current) observer.current.disconnect();
-
-    observer.current = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        callback();
-      }
-    }, options);
-
-    if (target.current) {
-      observer.current.observe(target.current);
-    }
-
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [callback, options]);
-
-  return target;
-};
-
 
 const ProductsPage = () => {
   const searchParams = useSearchParams();
@@ -59,17 +30,18 @@ const ProductsPage = () => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Initial data fetch
+  // Initial data fetch to get ALL products for client-side filtering
   useEffect(() => {
     const filtersToFetch = category ? { category } : {};
     if (search) {
+      // Search is still a backend operation
       searchProducts(search, filtersToFetch);
     } else {
-      fetchProducts({ filters: filtersToFetch, force: true });
+      // Fetch all products for the category to enable client-side filtering
+      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category]);
-
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -92,30 +64,32 @@ const ProductsPage = () => {
 
   // Memoized, client-side filtered and sorted products
   const displayProducts = useMemo(() => {
-    let filtered = search ? searchResults : products;
+    let sourceProducts = search ? searchResults : products;
 
-    // Apply active filters
-    if (Object.keys(activeFilters).length > 0) {
-      filtered = filtered.filter(product => {
-        return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
-          if (!filterValues || filterValues.length === 0) {
-            return true;
-          }
-          // Assuming product properties are lowercase (e.g., product.type, product.material)
-          const productValue = product[filterKey as keyof Product];
+    // Apply active filters (client-side)
+    const filtered = sourceProducts.filter(product => {
+      return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
+        if (!filterValues || filterValues.length === 0) {
+          return true;
+        }
+        
+        const productValue = product[filterKey as keyof Product] as string | string[] | undefined;
 
+        if (!productValue) return false;
+
+        // Use .some() to see if any filter value matches
+        return filterValues.some(val => {
           if (Array.isArray(productValue)) {
-            // e.g., for 'sizes' or 'colors' array on the product
-            return productValue.some(val => filterValues.includes(val));
+            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
+            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
           } else if (typeof productValue === 'string') {
-            // e.g., for 'type' or 'material' string on the product
-            return filterValues.includes(productValue);
+            // Check if the product's value (e.g., its 'type') includes the filter value
+            return productValue.toLowerCase().includes(val.toLowerCase());
           }
-          
           return false;
         });
       });
-    }
+    });
 
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
@@ -132,8 +106,7 @@ const ProductsPage = () => {
           return b.avgRating - a.avgRating;
         case 'newest':
         default:
-          // Assuming products are fetched newest first, so we don't need to re-sort
-          return 0; 
+          return 0; // The initial fetch order is assumed to be newest
       }
     });
 
@@ -191,7 +164,7 @@ const ProductsPage = () => {
     if (search) {
       searchProducts(search, filtersToFetch);
     } else {
-      fetchProducts({ filters: filtersToFetch, force: true });
+      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category]);
@@ -255,7 +228,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                {displayProducts.length} product(s) found
+                Showing {displayProducts.length} of {products.length} products
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -355,8 +328,7 @@ const ProductsPage = () => {
 
           <div className={styles.productsGrid}>
             {loading ? (
-              // Skeletons for initial load
-              Array.from({ length: 8 }).map((_, index) => (
+              Array.from({ length: 12 }).map((_, index) => (
                 <ProductCardSkeleton key={`skeleton-${index}`} />
               ))
             ) : error ? (
@@ -384,7 +356,6 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        {/* Infinite scroll is no longer needed with client-side filtering */}
         <div className={styles.loaderContainer}>
             {!loading && displayProducts.length > 0 && (
               <p className={styles.endOfResults}>You've seen all {displayProducts.length} results.</p>
