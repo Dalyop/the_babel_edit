@@ -190,17 +190,42 @@ const ProductsPage = () => {
   
   const currentCategoryFilters = useMemo(() => {
     if (!category) return [];
-    const categoryMap: { [key: string]: string } = {
-      'new-arrivals': 'new arrivals',
-      'newarrivals': 'new arrivals', 
-      'clothes': 'clothing',
-      'clothing': 'clothing',
-      'accessories': 'accessories',
-      'bags': 'bags',
-      'shoes': 'shoes'
+    const lowerCaseCategory = category.toLowerCase();
+
+    // Helper to check for singular/plural match or keyword inclusion
+    const matchesCategory = (filterKey: string, targetCategory: string) => {
+      // Direct equality check
+      if (filterKey === targetCategory) return true;
+
+      // Check for singular/plural forms
+      const singularFilterKey = filterKey.endsWith('s') ? filterKey.slice(0, -1) : filterKey;
+      const pluralFilterKey = filterKey.endsWith('s') ? filterKey : `${filterKey}s`;
+
+      if (targetCategory === singularFilterKey || targetCategory === pluralFilterKey) return true;
+
+      // Check if targetCategory contains the filterKey (or its singular/plural) as a keyword
+      if (targetCategory.includes(singularFilterKey) || targetCategory.includes(pluralFilterKey)) return true;
+      
+      // Check if filterKey contains the targetCategory (or its singular/plural) as a keyword
+      if (filterKey.includes(singularFilterKey) || filterKey.includes(pluralFilterKey)) return true;
+
+      return false;
     };
-    const categoryKey = categoryMap[category.toLowerCase()] || category.toLowerCase();
-    return CATEGORY_FILTERS[categoryKey as keyof typeof CATEGORY_FILTERS] || [];
+
+    // Find the best matching category key from CATEGORY_FILTERS
+    let matchedCategoryKey: string | null = null;
+    for (const key in CATEGORY_FILTERS) {
+      if (matchesCategory(key, lowerCaseCategory)) {
+        matchedCategoryKey = key;
+        break;
+      }
+    }
+
+    if (matchedCategoryKey) {
+      return CATEGORY_FILTERS[matchedCategoryKey as keyof typeof CATEGORY_FILTERS] || [];
+    }
+
+    return []; // Return empty if no match
   }, [category]);
 
 

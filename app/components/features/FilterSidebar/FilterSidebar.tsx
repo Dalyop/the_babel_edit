@@ -62,9 +62,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               onClick={() => toggleFilterSection(filterGroup.title)}
             >
               {filterGroup.title}
-              {currentValues.length > 0 && (
-                <span className={styles.filterCount}>({currentValues.length})</span>
-              )}
             </div>
             <div className={`${styles.filterOptions} ${isExpanded ? styles.expanded : ''}`}>
               {filterGroup.options.map((option, optionIndex) => {
