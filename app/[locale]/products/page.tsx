@@ -70,17 +70,34 @@ const ProductsPage = () => {
     const match = (productValue: string, filterValue: string): boolean => {
       const pVal = productValue.toLowerCase();
       const fVal = filterValue.toLowerCase();
-      
-      const singularFVal = fVal.endsWith('s') ? fVal.slice(0, -1) : fVal;
-      const pluralFVal = fVal.endsWith('s') ? fVal : `${fVal}s`;
 
-      return pVal.includes(singularFVal) || pVal.includes(pluralFVal);
+      // Case 1: Direct match or substring
+      if (pVal.includes(fVal)) return true;
+
+      // Case 2: Handle simple plurals (from filter to product value)
+      // e.g., fVal="dresses", pVal="dress"
+      if (fVal.endsWith('s')) {
+        let singular = fVal.slice(0, -1);
+        if (fVal.endsWith('es')) {
+          singular = fVal.slice(0, -2);
+        }
+        if (pVal.includes(singular)) return true;
+      } 
+      // Case 3: Handle simple plurals (from product to filter value)
+      // e.g., fVal="dress", pVal="dresses"
+      else {
+        const pluralS = `${fVal}s`;
+        const pluralEs = `${fVal}es`;
+        if (pVal.includes(pluralS) || pVal.includes(pluralEs)) return true;
+      }
+
+      return false;
     };
 
     // 1. Filter by URL category first
     const categoryFilteredProducts = category
       ? sourceProducts.filter(product => {
-          const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...product.tags];
+          const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...(product.tags || [])];
           return fieldsToTest.some(field => field && match(field, category));
         })
       : sourceProducts;
