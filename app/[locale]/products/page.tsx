@@ -6,11 +6,10 @@ import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspe
 import Footer from '@/app/components/features/Footer/Footer';
 import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCardSkeleton';
-import { useProductStore, Product, FilterOptions, SortByType } from '@/app/store';
+import { useProductStore, Product, SortByType, FilterOptions } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
-import { useDebounce } from '@/app/hooks/useDebounce';
 
-const PAGE_LIMIT = 24;
+import FilterSidebar from '@/app/components/features/FilterSidebar/FilterSidebar';
 
 const ProductsPage = () => {
   const searchParams = useSearchParams();
@@ -20,44 +19,36 @@ const ProductsPage = () => {
   // Store selectors
   const {
     fetchProducts,
+    searchProducts,
     products,
-    pagination,
+    searchResults,
     loading,
+    searchLoading,
     error,
-    hasMore,
   } = useProductStore();
 
   // Local state for filter UI
   const [sortBy, setSortBy] = useState<SortByType>('newest');
-  const [activeFilters, setActiveFilters] = useState<Partial<FilterOptions>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  const debouncedActiveFilters = useDebounce(activeFilters, 300);
-
-  // Centralized effect for fetching products
+  // Initial data fetch to get ALL products for client-side filtering
   useEffect(() => {
-    // Consolidate all filter criteria
-    const filtersToFetch: FilterOptions = {
-      ...debouncedActiveFilters,
-      sortBy,
-    };
-    if (category) {
-      filtersToFetch.category = category;
-    }
+    const filtersToFetch = category ? { category } : {};
     if (search) {
-      filtersToFetch.search = search;
+      // Search is still a backend operation
+      searchProducts(search, filtersToFetch);
+    } else {
+      // Fetch all products for the category to enable client-side filtering
+      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
-
-    fetchProducts({ filters: filtersToFetch, limit: PAGE_LIMIT });
-    // Note: `fetchProducts` is stable and doesn't need to be in the dependency array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedActiveFilters, sortBy, category, search]);
+  }, [search, category]);
 
-
-  const handleFilterChange = useCallback((filterKey: keyof FilterOptions, value: string) => {
+  const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      const currentValues = (newFilters[filterKey] as string[] | undefined) || [];
+      const currentValues = newFilters[filterKey] || [];
       
       if (currentValues.includes(value)) {
         const updatedValues = currentValues.filter(v => v !== value);
@@ -73,12 +64,57 @@ const ProductsPage = () => {
     });
   }, []);
 
-  const handleLoadMore = useCallback(() => {
-    // Filters are taken from the store's state, we just need to trigger the fetch
-    if (hasMore && !loading) {
-      fetchProducts({ limit: PAGE_LIMIT });
-    }
-  }, [hasMore, loading, fetchProducts]);
+  // Memoized, client-side filtered and sorted products
+  const displayProducts = useMemo(() => {
+    let sourceProducts = search ? searchResults : products;
+
+    // Apply active filters (client-side)
+    const filtered = sourceProducts.filter(product => {
+      return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
+        if (!filterValues || filterValues.length === 0) {
+          return true;
+        }
+        
+        const productValue = product[filterKey as keyof Product] as string | string[] | undefined;
+
+        if (!productValue) return false;
+
+        // Use .some() to see if any filter value matches
+        return filterValues.some(val => {
+          if (Array.isArray(productValue)) {
+            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
+            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
+          } else if (typeof productValue === 'string') {
+            // Check if the product's value (e.g., its 'type') includes the filter value
+            return productValue.toLowerCase().includes(val.toLowerCase());
+          }
+          return false;
+        });
+      });
+    });
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'rating':
+          return b.avgRating - a.avgRating;
+        case 'newest':
+        default:
+          return 0; // The initial fetch order is assumed to be newest
+      }
+    });
+
+    return sorted;
+  }, [search, searchResults, products, activeFilters, sortBy]);
+
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
@@ -91,10 +127,10 @@ const ProductsPage = () => {
     }));
   }, []);
 
-  const removeFilter = useCallback((filterKey: keyof FilterOptions, value: string) => {
+  const removeFilter = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      const currentValues = (newFilters[filterKey] as string[] | undefined) || [];
+      const currentValues = newFilters[filterKey] || [];
       const updatedValues = currentValues.filter(v => v !== value);
       
       if (updatedValues.length === 0) {
@@ -119,17 +155,21 @@ const ProductsPage = () => {
     }
   }, [category]);
 
-  const handleSortChange = useCallback((newSortBy: SortByType) => {
+  const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
+
+  const handleSortChange = useCallback((newSortBy: any) => {
     setSortBy(newSortBy);
   }, []);
   
   const handleRetry = useCallback(() => {
-    const filtersToFetch: FilterOptions = { ...activeFilters, sortBy };
-    if (category) filtersToFetch.category = category;
-    if (search) filtersToFetch.search = search;
-    
-    fetchProducts({ filters: filtersToFetch, force: true, limit: PAGE_LIMIT });
-  }, [activeFilters, sortBy, category, search, fetchProducts]);
+    const filtersToFetch = category ? { category } : {};
+    if (search) {
+      searchProducts(search, filtersToFetch);
+    } else {
+      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -138,13 +178,7 @@ const ProductsPage = () => {
   }, [search, category]);
 
   const activeFilterCount = useMemo(() => {
-    return Object.entries(activeFilters).reduce((count, [key, values]) => {
-      // We only count filters that are arrays of selections, not single values like 'sortBy'
-      if (Array.isArray(values)) {
-        return count + values.length;
-      }
-      return count;
-    }, 0);
+    return Object.values(activeFilters).reduce((count, values) => count + values.length, 0);
   }, [activeFilters]);
   
   const currentCategoryFilters = useMemo(() => {
@@ -184,18 +218,19 @@ const ProductsPage = () => {
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value as SortByType)}
               className={styles.sortSelect}
-              disabled={loading && products.length === 0}
+              disabled={loading}
             >
               <option value="newest">Newest</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="name_asc">Name: A to Z</option>
               <option value="name_desc">Name: Z to A</option>
+              <option value="rating">Highest Rated</option>
             </select>
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                Showing {products.length} of {pagination?.total || 0} products
+                Showing {displayProducts.length} of {products.length} products
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -217,7 +252,7 @@ const ProductsPage = () => {
                   const filterGroup = currentCategoryFilters.find(g => g.key === filterKey);
                   const filterTitle = filterGroup ? filterGroup.title : filterKey;
 
-                  return (values as string[]).map((value, index) => {
+                  return values.map((value, index) => {
                     const option = filterGroup?.options.find(o => o.value === value);
                     const optionLabel = option ? option.label : value;
 
@@ -226,7 +261,7 @@ const ProductsPage = () => {
                         <span>{filterTitle}: {optionLabel}</span>
                         <button 
                           className={styles.removeFilterButton}
-                          onClick={() => removeFilter(filterKey as keyof FilterOptions, value)}
+                          onClick={() => removeFilter(filterKey, value)}
                           aria-label={`Remove ${filterTitle}: ${optionLabel} filter`}
                         >
                           ×
@@ -240,64 +275,18 @@ const ProductsPage = () => {
         )}
 
         <div className={styles.catalogContent}>
-          <div className={styles.filtersContainer}>
-            {currentCategoryFilters.length > 0 && (
-               <div className={styles.filtersHeader}>
-                <span>Filters</span>
-                {activeFilterCount > 0 && (
-                  <button 
-                    className={styles.clearAllButton}
-                    onClick={clearAllFilters}
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-            )}
-            
-            {currentCategoryFilters.map((filterGroup, groupIndex) => {
-              const currentValues = (activeFilters[filterGroup.key as keyof FilterOptions] as string[]) || [];
-              const isExpanded = expandedSections[filterGroup.title] ?? true;
-              
-              return (
-                <div key={groupIndex} className={styles.filterSection}>
-                  <div 
-                    className={`${styles.filterTitle} ${isExpanded ? styles.expanded : ''}`}
-                    onClick={() => toggleFilterSection(filterGroup.title)}
-                  >
-                    {filterGroup.title}
-                    {currentValues.length > 0 && (
-                      <span className={styles.filterCount}>({currentValues.length})</span>
-                    )}
-                  </div>
-                  <div className={`${styles.filterOptions} ${isExpanded ? styles.expanded : ''}`}>
-                    {filterGroup.options.map((option, optionIndex) => {
-                      const isChecked = currentValues.includes(option.value);
-                      return (
-                        <div key={optionIndex} className={styles.filterOption}>
-                          <input
-                            type="checkbox"
-                            id={`${filterGroup.key}-${option.value}`}
-                            checked={isChecked}
-                            onChange={() => handleFilterChange(filterGroup.key as keyof FilterOptions, option.value)}
-                          />
-                          <label 
-                            htmlFor={`${filterGroup.key}-${option.value}`}
-                            className={isChecked ? styles.checkedLabel : ''}
-                          >
-                            {option.label}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <FilterSidebar
+            activeFilters={activeFilters}
+            activeFilterCount={activeFilterCount}
+            expandedSections={expandedSections}
+            category={category}
+            handleFilterChange={handleFilterChange}
+            clearAllFilters={clearAllFilters}
+            toggleFilterSection={toggleFilterSection}
+          />
 
           <div className={styles.productsGrid}>
-            {loading && products.length === 0 ? (
+            {isLoading ? (
               Array.from({ length: 12 }).map((_, index) => (
                 <ProductCardSkeleton key={`skeleton-${index}`} />
               ))
@@ -308,8 +297,8 @@ const ProductsPage = () => {
                   Retry
                 </button>
               </div>
-            ) : products.length > 0 ? (
-              products.map((product: Product) => (
+            ) : displayProducts.length > 0 ? (
+              displayProducts.map((product: Product) => (
                 <ProductCard key={`${product.id}-${product.name}`} product={product} />
               ))
             ) : (
@@ -327,16 +316,8 @@ const ProductsPage = () => {
         </div>
         
         <div className={styles.loaderContainer}>
-            {loading && products.length > 0 && (
-              <ProductCardSkeleton />
-            )}
-            {!loading && hasMore && products.length > 0 && (
-              <button className={styles.loadMoreButton} onClick={handleLoadMore}>
-                Load More
-              </button>
-            )}
-            {!loading && !hasMore && products.length > 0 && (
-              <p className={styles.endOfResults}>You've seen all {pagination?.total || 0} results.</p>
+            {!loading && displayProducts.length > 0 && (
+              <p className={styles.endOfResults}>You've seen all {displayProducts.length} results.</p>
             )}
         </div>
       </main>

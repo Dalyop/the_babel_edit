@@ -15,20 +15,80 @@ export interface CategoryFilters {
 
 export const CATEGORY_FILTERS: CategoryFilters = {
   clothing: [
-    // All filters were removed as they do not exist in the Product model.
-    // To add filters for clothing, first add corresponding fields to the
-    // 'Product' model in 'prisma/schema.prisma' (e.g., type: String, style: String).
+    {
+      title: 'Type',
+      key: 'type',
+      options: [
+        { label: 'T-Shirts', value: 't-shirts' },
+        { label: 'Blouses & Shirts', value: 'blouses-shirts' },
+        { label: 'Sweaters & Cardigans', value: 'sweaters-cardigans' },
+        { label: 'Jeans', value: 'jeans' },
+        { label: 'Pants & Trousers', value: 'pants-trousers' },
+        { label: 'Skirts', value: 'skirts' },
+        { label: 'Shorts', value: 'shorts' },
+        { label: 'Dresses', value: 'dresses' },
+        { label: 'Jackets & Coats', value: 'jackets-coats' }
+      ]
+    }
   ],
   
   bags: [
-    // All filters were removed as they do not exist in the Product model.
+    {
+      title: 'Type',
+      key: 'type',
+      options: [
+        { label: 'Backpacks', value: 'backpacks' },
+        { label: 'Handbags', value: 'handbags' },
+        { label: 'Tote Bags', value: 'tote-bags' },
+        { label: 'Shoulder Bags', value: 'shoulder-bags' },
+        { label: 'Clutches', value: 'clutches' },
+        { label: 'Travel Bags', value: 'travel-bags' },
+        { label: 'Wallets', value: 'wallets' }
+      ]
+    },
+    {
+      title: 'Material',
+      key: 'material',
+      options: [
+        { label: 'Leather', value: 'leather' },
+        { label: 'Canvas', value: 'canvas' },
+        { label: 'Nylon', value: 'nylon' },
+        { label: 'Polyester', value: 'polyester' },
+        { label: 'Cotton', value: 'cotton' }
+      ]
+    }
   ],
   
   accessories: [
-    // All filters were removed as they do not exist in the Product model.
+    {
+      title: 'Type',
+      key: 'type',
+      options: [
+        { label: 'Bags', value: 'bags' },
+        { label: 'Hats', value: 'hats' },
+        { label: 'Scarves', value: 'scarves' },
+        { label: 'Belts', value: 'belts' },
+        { label: 'Jewelry', value: 'jewelry' },
+        { label: 'Sunglasses', value: 'sunglasses' },
+        { label: 'Watches', value: 'watches' }
+      ]
+    }
   ],
   
   shoes: [
-    // All filters were removed as they do not exist in the Product model.
+    {
+      title: 'Type',
+      key: 'type',
+      options: [
+        { label: 'Sneakers', value: 'sneakers' },
+        { label: 'Boots', value: 'boots' },
+        { label: 'Sandals', value: 'sandals' },
+        { label: 'Flats', value: 'flats' },
+        { label: 'Heels', value: 'heels' },
+        { label: 'Loafers', value: 'loafers' },
+        { label: 'Athletic', value: 'athletic' },
+        { label: 'Casual', value: 'casual' }
+      ]
+    }
   ]
 };
