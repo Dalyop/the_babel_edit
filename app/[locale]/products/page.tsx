@@ -32,18 +32,17 @@ const ProductsPage = () => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Initial data fetch to get ALL products for client-side filtering
+  // Initial data fetch
   useEffect(() => {
-    const filtersToFetch = category ? { category } : {};
     if (search) {
       // Search is still a backend operation
-      searchProducts(search, filtersToFetch);
+      searchProducts(search, {});
     } else {
-      // Fetch all products for the category to enable client-side filtering
-      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
+      // Fetch all products to enable full client-side filtering
+      fetchProducts({ force: true, limit: 1000 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
+  }, [search]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -78,8 +77,16 @@ const ProductsPage = () => {
       return pVal.includes(singularFVal) || pVal.includes(pluralFVal);
     };
 
-    // Apply active filters (client-side)
-    const filtered = sourceProducts.filter(product => {
+    // 1. Filter by URL category first
+    const categoryFilteredProducts = category
+      ? sourceProducts.filter(product => {
+          const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...product.tags];
+          return fieldsToTest.some(field => field && match(field, category));
+        })
+      : sourceProducts;
+
+    // 2. Apply active filters from the sidebar
+    const filtered = categoryFilteredProducts.filter(product => {
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
         if (!filterValues || filterValues.length === 0) {
           return true;
@@ -100,7 +107,7 @@ const ProductsPage = () => {
       });
     });
 
-    // Apply sorting
+    // 3. Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
@@ -120,7 +127,7 @@ const ProductsPage = () => {
     });
 
     return sorted;
-  }, [search, searchResults, products, activeFilters, sortBy]);
+  }, [search, searchResults, products, activeFilters, sortBy, category]);
 
 
   const clearAllFilters = useCallback(() => {
@@ -261,9 +268,7 @@ const ProductsPage = () => {
             </select>
             
             <div className={styles.filterSummary}>
-              <span className={styles.resultCount}>
-                Showing {displayProducts.length} of {products.length} products
-              </span>
+
               {activeFilterCount > 0 && (
                 <button 
                   className={styles.clearFiltersButton}
