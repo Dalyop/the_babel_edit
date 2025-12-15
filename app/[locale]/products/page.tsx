@@ -68,6 +68,16 @@ const ProductsPage = () => {
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
 
+    const match = (productValue: string, filterValue: string): boolean => {
+      const pVal = productValue.toLowerCase();
+      const fVal = filterValue.toLowerCase();
+      
+      const singularFVal = fVal.endsWith('s') ? fVal.slice(0, -1) : fVal;
+      const pluralFVal = fVal.endsWith('s') ? fVal : `${fVal}s`;
+
+      return pVal.includes(singularFVal) || pVal.includes(pluralFVal);
+    };
+
     // Apply active filters (client-side)
     const filtered = sourceProducts.filter(product => {
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
@@ -79,14 +89,11 @@ const ProductsPage = () => {
 
         if (!productValue) return false;
 
-        // Use .some() to see if any filter value matches
         return filterValues.some(val => {
           if (Array.isArray(productValue)) {
-            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
-            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
+            return productValue.some(prodVal => match(prodVal, val));
           } else if (typeof productValue === 'string') {
-            // Check if the product's value (e.g., its 'type') includes the filter value
-            return productValue.toLowerCase().includes(val.toLowerCase());
+            return match(productValue, val);
           }
           return false;
         });
