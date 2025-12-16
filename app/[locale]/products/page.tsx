@@ -9,9 +9,25 @@ import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCa
 import { useProductStore, Product, SortByType, FilterOptions } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 
+const CATEGORY_MAP: { [key: string]: string } = {
+  'new-arrivals': 'new arrivals',
+  'newarrivals': 'new arrivals',
+  'clothes': 'clothing',
+  'clothing': 'clothing',
+  'dresses': 'clothing',
+  'dress': 'clothing',
+  't-shirt': 'clothing',
+  'shirt': 'clothing',
+  'accessories': 'accessories',
+  'bags': 'bag',
+  'bag': 'bag',
+  'shoes': 'shoe',
+  'shoe': 'shoe',
+};
+
 const ProductsPage = () => {
   const searchParams = useSearchParams();
-  const category = searchParams.get('category');
+  const urlCategory = searchParams.get('category');
   const search = searchParams.get('search');
 
   // Store selectors
@@ -30,18 +46,18 @@ const ProductsPage = () => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Initial data fetch to get ALL products for client-side filtering
+  // Determine the correct category to send to the API
+  const apiCategory = urlCategory ? CATEGORY_MAP[urlCategory.toLowerCase()] || urlCategory : undefined;
+
+  // Initial data fetch
   useEffect(() => {
-    const filtersToFetch = category ? { category } : {};
+    const filtersToFetch = apiCategory ? { category: apiCategory } : {};
     if (search) {
-      // Search is still a backend operation
       searchProducts(search, filtersToFetch);
     } else {
-      // Fetch all products for the category to enable client-side filtering
       fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
+  }, [search, apiCategory]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -66,6 +82,23 @@ const ProductsPage = () => {
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
 
+    const match = (productValue: string, filterValue: string): boolean => {
+      const pVal = productValue.toLowerCase();
+      const fVal = filterValue.toLowerCase();
+      if (pVal.includes(fVal)) return true;
+
+      if (fVal.endsWith('s')) {
+        const singular = fVal.endsWith('es') ? fVal.slice(0, -2) : fVal.slice(0, -1);
+        if (pVal.includes(singular)) return true;
+      } else {
+        const plural = `${fVal}s`;
+        if (pVal.includes(plural)) return true;
+        const pluralEs = `${fVal}es`;
+        if (pVal.includes(pluralEs)) return true;
+      }
+      return false;
+    };
+
     // Apply active filters (client-side)
     const filtered = sourceProducts.filter(product => {
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
@@ -77,14 +110,11 @@ const ProductsPage = () => {
 
         if (!productValue) return false;
 
-        // Use .some() to see if any filter value matches
         return filterValues.some(val => {
           if (Array.isArray(productValue)) {
-            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
-            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
+            return productValue.some(prodVal => match(prodVal, val));
           } else if (typeof productValue === 'string') {
-            // Check if the product's value (e.g., its 'type') includes the filter value
-            return productValue.toLowerCase().includes(val.toLowerCase());
+            return match(productValue, val);
           }
           return false;
         });
@@ -106,7 +136,7 @@ const ProductsPage = () => {
           return b.avgRating - a.avgRating;
         case 'newest':
         default:
-          return 0; // The initial fetch order is assumed to be newest
+          return 0;
       }
     });
 
@@ -141,17 +171,17 @@ const ProductsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (category) {
-      const normalizedCategory = category.toLowerCase() === 'clothes' ? 'clothing' : category.toLowerCase();
-      if (CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS]) {
+    if (urlCategory) {
+      const mappedCategory = CATEGORY_MAP[urlCategory.toLowerCase()] || urlCategory;
+      if (CATEGORY_FILTERS[mappedCategory as keyof typeof CATEGORY_FILTERS]) {
         const initialExpanded: {[key: string]: boolean} = {};
-        CATEGORY_FILTERS[normalizedCategory as keyof typeof CATEGORY_FILTERS].forEach(filterGroup => {
+        CATEGORY_FILTERS[mappedCategory as keyof typeof CATEGORY_FILTERS].forEach(filterGroup => {
           initialExpanded[filterGroup.title] = true;
         });
         setExpandedSections(initialExpanded);
       }
     }
-  }, [category]);
+  }, [urlCategory]);
 
   const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
 
@@ -160,39 +190,30 @@ const ProductsPage = () => {
   }, []);
   
   const handleRetry = useCallback(() => {
-    const filtersToFetch = category ? { category } : {};
+    const filtersToFetch = apiCategory ? { category: apiCategory } : {};
     if (search) {
       searchProducts(search, filtersToFetch);
     } else {
       fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
+  }, [search, apiCategory]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
-    if (category) return category.charAt(0).toUpperCase() + category.slice(1);
+    if (urlCategory) return urlCategory.charAt(0).toUpperCase() + urlCategory.slice(1);
     return 'All Products';
-  }, [search, category]);
+  }, [search, urlCategory]);
 
   const activeFilterCount = useMemo(() => {
     return Object.values(activeFilters).reduce((count, values) => count + values.length, 0);
   }, [activeFilters]);
   
   const currentCategoryFilters = useMemo(() => {
-    if (!category) return [];
-    const categoryMap: { [key: string]: string } = {
-      'new-arrivals': 'new arrivals',
-      'newarrivals': 'new arrivals', 
-      'clothes': 'clothing',
-      'clothing': 'clothing',
-      'accessories': 'accessories',
-      'bags': 'bags',
-      'shoes': 'shoes'
-    };
-    const categoryKey = categoryMap[category.toLowerCase()] || category.toLowerCase();
-    return CATEGORY_FILTERS[categoryKey as keyof typeof CATEGORY_FILTERS] || [];
-  }, [category]);
+    if (!urlCategory) return [];
+    const mappedCategory = CATEGORY_MAP[urlCategory.toLowerCase()] || urlCategory;
+    return CATEGORY_FILTERS[mappedCategory as keyof typeof CATEGORY_FILTERS] || [];
+  }, [urlCategory]);
+
 
 
   return (
@@ -227,9 +248,7 @@ const ProductsPage = () => {
             </select>
             
             <div className={styles.filterSummary}>
-              <span className={styles.resultCount}>
-                Showing {displayProducts.length} of {products.length} products
-              </span>
+
               {activeFilterCount > 0 && (
                 <button 
                   className={styles.clearFiltersButton}
