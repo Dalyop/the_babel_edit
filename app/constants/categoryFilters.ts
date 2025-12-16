@@ -19,15 +19,15 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       title: 'Type',
       key: 'type',
       options: [
-        { label: 'T-Shirts', value: 't-shirts' },
-        { label: 'Blouses & Shirts', value: 'blouses-shirts' },
-        { label: 'Sweaters & Cardigans', value: 'sweaters-cardigans' },
-        { label: 'Jeans', value: 'jeans' },
-        { label: 'Pants & Trousers', value: 'pants-trousers' },
-        { label: 'Skirts', value: 'skirts' },
-        { label: 'Shorts', value: 'shorts' },
-        { label: 'Dresses', value: 'dresses' },
-        { label: 'Jackets & Coats', value: 'jackets-coats' }
+        { label: 'T-Shirt', value: 't-shirts' },
+        { label: 'Blouse & Shirt', value: 'blouses-shirts' },
+        { label: 'Sweater & Cardigan', value: 'sweaters-cardigans' },
+        { label: 'Jean', value: 'jeans' },
+        { label: 'Pant & Trouser', value: 'pants-trousers' },
+        { label: 'Skirt', value: 'skirts' },
+        { label: 'Short', value: 'shorts' },
+        { label: 'Dress', value: 'dresses' },
+        { label: 'Jacket & Coat', value: 'jackets-coats' }
       ]
     }
   ],
@@ -37,13 +37,13 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       title: 'Type',
       key: 'type',
       options: [
-        { label: 'Backpacks', value: 'backpacks' },
-        { label: 'Handbags', value: 'handbags' },
-        { label: 'Tote Bags', value: 'tote-bags' },
-        { label: 'Shoulder Bags', value: 'shoulder-bags' },
-        { label: 'Clutches', value: 'clutches' },
-        { label: 'Travel Bags', value: 'travel-bags' },
-        { label: 'Wallets', value: 'wallets' }
+        { label: 'Backpack', value: 'backpacks' },
+        { label: 'Handbag', value: 'handbags' },
+        { label: 'Tote Bag', value: 'tote-bags' },
+        { label: 'Shoulder Bag', value: 'shoulder-bags' },
+        { label: 'Clutch', value: 'clutches' },
+        { label: 'Travel Bag', value: 'travel-bags' },
+        { label: 'Wallet', value: 'wallets' }
       ]
     },
     {
@@ -64,13 +64,13 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       title: 'Type',
       key: 'type',
       options: [
-        { label: 'Bags', value: 'bags' },
-        { label: 'Hats', value: 'hats' },
-        { label: 'Scarves', value: 'scarves' },
-        { label: 'Belts', value: 'belts' },
+        { label: 'Bag', value: 'bags' },
+        { label: 'Hat', value: 'hats' },
+        { label: 'Scarf', value: 'scarves' },
+        { label: 'Belt', value: 'belts' },
         { label: 'Jewelry', value: 'jewelry' },
-        { label: 'Sunglasses', value: 'sunglasses' },
-        { label: 'Watches', value: 'watches' }
+        { label: 'Sunglass', value: 'sunglasses' },
+        { label: 'Watch', value: 'watches' }
       ]
     }
   ],
@@ -80,12 +80,12 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       title: 'Type',
       key: 'type',
       options: [
-        { label: 'Sneakers', value: 'sneakers' },
-        { label: 'Boots', value: 'boots' },
-        { label: 'Sandals', value: 'sandals' },
-        { label: 'Flats', value: 'flats' },
-        { label: 'Heels', value: 'heels' },
-        { label: 'Loafers', value: 'loafers' },
+        { label: 'Sneaker', value: 'sneakers' },
+        { label: 'Boot', value: 'boots' },
+        { label: 'Sandal', value: 'sandals' },
+        { label: 'Flat', value: 'flats' },
+        { label: 'Heel', value: 'heels' },
+        { label: 'Loafer', value: 'loafers' },
         { label: 'Athletic', value: 'athletic' },
         { label: 'Casual', value: 'casual' }
       ]

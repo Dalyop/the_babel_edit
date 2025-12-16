@@ -228,7 +228,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                Showing {displayProducts.length} of {products.length} products
+                Showing {displayProducts.length} products
               </span>
               {activeFilterCount > 0 && (
                 <button 
