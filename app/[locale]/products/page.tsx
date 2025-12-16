@@ -32,15 +32,16 @@ const ProductsPage = () => {
 
   // Initial data fetch to get ALL products for client-side filtering
   useEffect(() => {
+    const filtersToFetch = category ? { category } : {};
     if (search) {
       // Search is still a backend operation
-      searchProducts(search, {});
+      searchProducts(search, filtersToFetch);
     } else {
-      // Fetch all products to enable full client-side filtering
-      fetchProducts({ force: true, limit: 1000 });
+      // Fetch all products for the category to enable client-side filtering
+      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [search, category]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -65,32 +66,8 @@ const ProductsPage = () => {
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
 
-    const match = (productValue: string, filterValue: string): boolean => {
-      const pVal = productValue.toLowerCase();
-      const fVal = filterValue.toLowerCase();
-      if (pVal.includes(fVal)) return true;
-
-      if (fVal.endsWith('s')) {
-        const singular = fVal.endsWith('es') ? fVal.slice(0, -2) : fVal.slice(0, -1);
-        if (pVal.includes(singular)) return true;
-      } else {
-        const plural = `${fVal}s`;
-        const pluralEs = `${fVal}es`;
-        if (pVal.includes(plural) || pVal.includes(pluralEs)) return true;
-      }
-      return false;
-    };
-
-    // 1. Filter by URL category first (client-side)
-    const categoryFilteredProducts = category
-      ? sourceProducts.filter(product => {
-          const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...(product.tags || [])];
-          return fieldsToTest.some(field => field && match(field, category));
-        })
-      : sourceProducts;
-
-    // 2. Apply active sidebar filters (client-side)
-    const filtered = categoryFilteredProducts.filter(product => {
+    // Apply active filters (client-side)
+    const filtered = sourceProducts.filter(product => {
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
         if (!filterValues || filterValues.length === 0) {
           return true;
@@ -100,18 +77,21 @@ const ProductsPage = () => {
 
         if (!productValue) return false;
 
+        // Use .some() to see if any filter value matches
         return filterValues.some(val => {
           if (Array.isArray(productValue)) {
-            return productValue.some(prodVal => match(prodVal, val));
+            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
+            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
           } else if (typeof productValue === 'string') {
-            return match(productValue, val);
+            // Check if the product's value (e.g., its 'type') includes the filter value
+            return productValue.toLowerCase().includes(val.toLowerCase());
           }
           return false;
         });
       });
     });
 
-    // 3. Apply sorting
+    // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
@@ -131,7 +111,7 @@ const ProductsPage = () => {
     });
 
     return sorted;
-  }, [search, searchResults, products, category, activeFilters, sortBy]);
+  }, [search, searchResults, products, activeFilters, sortBy]);
 
 
   const clearAllFilters = useCallback(() => {
@@ -247,6 +227,9 @@ const ProductsPage = () => {
             </select>
             
             <div className={styles.filterSummary}>
+              <span className={styles.resultCount}>
+                Showing {displayProducts.length} of {products.length} products
+              </span>
               {activeFilterCount > 0 && (
                 <button 
                   className={styles.clearFiltersButton}
