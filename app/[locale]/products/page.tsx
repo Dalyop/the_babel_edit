@@ -63,54 +63,40 @@ const ProductsPage = () => {
     });
   }, []);
 
-  // Memoized, client-side filtered and sorted products
-  const displayProducts = useMemo(() => {
+  const match = (productValue: string, filterValue: string): boolean => {
+    const pVal = productValue.toLowerCase();
+    const fVal = filterValue.toLowerCase();
+
+    if (pVal.includes(fVal)) return true;
+
+    if (fVal.endsWith('s')) {
+      let singular = fVal.endsWith('es') ? fVal.slice(0, -2) : fVal.slice(0, -1);
+      if (pVal.includes(singular)) return true;
+    } else {
+      const pluralS = `${fVal}s`;
+      const pluralEs = `${fVal}es`;
+      if (pVal.includes(pluralS) || pVal.includes(pluralEs)) return true;
+    }
+    return false;
+  };
+
+  const categoryFilteredProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
+    if (!category) {
+      return sourceProducts;
+    }
+    return sourceProducts.filter(product => {
+      const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...(product.tags || [])];
+      return fieldsToTest.some(field => field && match(field, category));
+    });
+  }, [search, searchResults, products, category]);
 
-    const match = (productValue: string, filterValue: string): boolean => {
-      const pVal = productValue.toLowerCase();
-      const fVal = filterValue.toLowerCase();
-
-      // Case 1: Direct match or substring
-      if (pVal.includes(fVal)) return true;
-
-      // Case 2: Handle simple plurals (from filter to product value)
-      // e.g., fVal="dresses", pVal="dress"
-      if (fVal.endsWith('s')) {
-        let singular = fVal.slice(0, -1);
-        if (fVal.endsWith('es')) {
-          singular = fVal.slice(0, -2);
-        }
-        if (pVal.includes(singular)) return true;
-      } 
-      // Case 3: Handle simple plurals (from product to filter value)
-      // e.g., fVal="dress", pVal="dresses"
-      else {
-        const pluralS = `${fVal}s`;
-        const pluralEs = `${fVal}es`;
-        if (pVal.includes(pluralS) || pVal.includes(pluralEs)) return true;
-      }
-
-      return false;
-    };
-
-    // 1. Filter by URL category first
-    const categoryFilteredProducts = category
-      ? sourceProducts.filter(product => {
-          const fieldsToTest = [product.category, product.subcategory, product.type, product.name, ...(product.tags || [])];
-          return fieldsToTest.some(field => field && match(field, category));
-        })
-      : sourceProducts;
-
-    // 2. Apply active filters from the sidebar
+  const displayProducts = useMemo(() => {
     const filtered = categoryFilteredProducts.filter(product => {
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
-        if (!filterValues || filterValues.length === 0) {
-          return true;
-        }
+        if (!filterValues || filterValues.length === 0) return true;
         
         const productValue = product[filterKey as keyof Product] as string | string[] | undefined;
-
         if (!productValue) return false;
 
         return filterValues.some(val => {
@@ -124,27 +110,17 @@ const ProductsPage = () => {
       });
     });
 
-    // 3. Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case 'price_asc':
-          return a.price - b.price;
-        case 'price_desc':
-          return b.price - a.price;
-        case 'name_asc':
-          return a.name.localeCompare(b.name);
-        case 'name_desc':
-          return b.name.localeCompare(a.name);
-        case 'rating':
-          return b.avgRating - a.avgRating;
-        case 'newest':
-        default:
-          return 0; // The initial fetch order is assumed to be newest
+        case 'price_asc': return a.price - b.price;
+        case 'price_desc': return b.price - a.price;
+        case 'name_asc': return a.name.localeCompare(b.name);
+        case 'name_desc': return b.name.localeCompare(a.name);
+        case 'rating': return b.avgRating - a.avgRating;
+        default: return 0;
       }
     });
-
-    return sorted;
-  }, [search, searchResults, products, activeFilters, sortBy, category]);
+  }, [categoryFilteredProducts, activeFilters, sortBy]);
 
 
   const clearAllFilters = useCallback(() => {
@@ -268,6 +244,13 @@ const ProductsPage = () => {
       </div>
 
       <main className={styles.catalogMain}>
+        <div style={{ background: 'lightgray', padding: '10px', marginBottom: '20px', border: '1px solid black', color: 'black' }}>
+          <h3 style={{ margin: 0 }}>Debug Info:</h3>
+          <p>Total products from store: {products.length}</p>
+          <p>URL Category: {category || 'None'}</p>
+          <p>Products after category filter: {categoryFilteredProducts.length}</p>
+          <p>Final displayed products: {displayProducts.length}</p>
+        </div>
         <div className={styles.sortContainer}>
           <div className={styles.sortAndFilter}>
             <select
