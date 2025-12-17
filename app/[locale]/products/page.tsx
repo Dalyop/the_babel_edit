@@ -68,6 +68,7 @@ const ProductsPage = () => {
 
     // Apply active filters (client-side)
     const filtered = sourceProducts.filter(product => {
+      console.log('Filtering product:', product, 'with filters:', activeFilters);
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
         if (!filterValues || filterValues.length === 0) {
           return true;
@@ -356,11 +357,7 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        <div className={styles.loaderContainer}>
-            {!loading && displayProducts.length > 0 && (
-              <p className={styles.endOfResults}>You've seen all {displayProducts.length} results.</p>
-            )}
-        </div>
+        
       </main>
       <Footer />
     </div>
