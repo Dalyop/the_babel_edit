@@ -6,27 +6,11 @@ import { useParams } from 'next/navigation';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
 import { useAuth } from '@/app/context/AuthContext';
-import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { Loader2, Package, AlertCircle, Star } from 'lucide-react';
 import { API_ENDPOINTS } from '@/app/lib/api';
-
-// Define the structure of an order based on your backend's API response
-interface Order {
-  id: string;
-  orderNumber: string;
-  createdAt: string;
-  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-  total: number;
-  items: {
-    id: string;
-    quantity: number;
-    price: number;
-    product: {
-      id: string;
-      name: string;
-      imageUrl: string;
-    };
-  }[];
-}
+import { toast } from 'react-hot-toast';
+import ReviewModal from '@/app/components/features/Modal/ReviewModal';
+import { Order } from '@/app/lib/types';
 
 const OrdersPage = () => {
   const params = useParams();
@@ -36,6 +20,8 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; imageUrl: string } | null>(null);
 
   useEffect(() => {
     if (authLoading) {
@@ -80,6 +66,25 @@ const OrdersPage = () => {
     }
   };
 
+  const handleReviewSubmit = async ({ rating, comment }: { rating: number; comment: string }) => {
+    if (!selectedProductForReview) return;
+
+    try {
+        await authenticatedFetch(API_ENDPOINTS.REVIEWS.CREATE, {
+            method: 'POST',
+            body: JSON.stringify({
+                productId: selectedProductForReview.id,
+                rating,
+                comment,
+            }),
+        });
+        toast.success('Review submitted successfully!');
+        setReviewModalOpen(false);
+    } catch (error) {
+        toast.error('Failed to submit review.');
+    }
+  };
+
   const OrderCard = ({ order }: { order: Order }) => (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-shadow duration-300 hover:shadow-md">
       <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
@@ -98,7 +103,7 @@ const OrdersPage = () => {
       </div>
       <div className="p-6">
         <div className="space-y-4 mb-6">
-          {order.items.slice(0, 2).map(item => (
+          {order.items.map(item => (
             <div key={item.id} className="flex items-center gap-4">
               <img
                 src={item.product?.imageUrl || '/placeholder-product.png'}
@@ -108,15 +113,21 @@ const OrdersPage = () => {
               <div className='flex-grow'>
                 <p className="font-semibold text-gray-800">{item.product?.name || 'Product no longer available'}</p>
                 <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                {item.product && (
+                    <button 
+                        onClick={() => {
+                            setSelectedProductForReview(item.product);
+                            setReviewModalOpen(true);
+                        }}
+                        className="text-sm text-[var(--color-primary-light)] hover:underline"
+                    >
+                        Leave a Review
+                    </button>
+                )}
               </div>
               <p className="text-sm font-semibold text-gray-700">${(item.price * item.quantity).toFixed(2)}</p>
             </div>
           ))}
-          {order.items.length > 2 && (
-             <p className="text-sm text-gray-500 pt-2 text-center">
-               + {order.items.length - 2} more item(s)
-             </p>
-          )}
         </div>
         <Link href={`/${locale}/orders/${order.id}`} className="inline-block w-full text-center bg-[var(--color-primary-light)] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[var(--color-primary)] transition-colors duration-300">
             View Order Details
@@ -168,6 +179,14 @@ const OrdersPage = () => {
         )}
       </main>
       <Footer />
+      {reviewModalOpen && selectedProductForReview && (
+          <ReviewModal
+            isOpen={reviewModalOpen}
+            onClose={() => setReviewModalOpen(false)}
+            product={selectedProductForReview}
+            onSubmit={handleReviewSubmit}
+          />
+      )}
     </div>
   );
 };
