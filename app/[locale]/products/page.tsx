@@ -23,6 +23,9 @@ const ProductsPage = () => {
     loading,
     searchLoading,
     error,
+    page,
+    pagination,
+    setPage,
   } = useProductStore();
 
   // Local state for filter UI
@@ -30,18 +33,18 @@ const ProductsPage = () => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Initial data fetch to get ALL products for client-side filtering
+  // Initial data fetch
   useEffect(() => {
     const filtersToFetch = category ? { category } : {};
     if (search) {
-      // Search is still a backend operation
+      // Search is a backend operation
       searchProducts(search, filtersToFetch);
     } else {
-      // Fetch all products for the category to enable client-side filtering
-      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
+      // Fetch products for the current page and filters
+      fetchProducts({ filters: { ...filtersToFetch, ...activeFilters }, force: true, page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
+  }, [search, category, page, activeFilters]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -60,39 +63,15 @@ const ProductsPage = () => {
       }
       return newFilters;
     });
-  }, []);
+    setPage(1);
+  }, [setPage]);
 
-  // Memoized, client-side filtered and sorted products
+  // Memoized, sorted products
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
 
-    // Apply active filters (client-side)
-    const filtered = sourceProducts.filter(product => {
-      return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
-        if (!filterValues || filterValues.length === 0) {
-          return true;
-        }
-        
-        const productValue = product[filterKey as keyof Product] as string | string[] | undefined;
-
-        if (!productValue) return false;
-
-        // Use .some() to see if any filter value matches
-        return filterValues.some(val => {
-          if (Array.isArray(productValue)) {
-            // Check if any of the product's values (e.g., in its 'sizes' array) includes the filter value
-            return productValue.some(prodVal => prodVal.toLowerCase().includes(val.toLowerCase()));
-          } else if (typeof productValue === 'string') {
-            // Check if the product's value (e.g., its 'type') includes the filter value
-            return productValue.toLowerCase().includes(val.toLowerCase());
-          }
-          return false;
-        });
-      });
-    });
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
+    // Sorting is still done client-side after fetching
+    const sorted = [...sourceProducts].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
           return a.price - b.price;
@@ -106,17 +85,24 @@ const ProductsPage = () => {
           return b.avgRating - a.avgRating;
         case 'newest':
         default:
-          return 0; // The initial fetch order is assumed to be newest
+          return 0; // Backend handles newest sorting
       }
     });
 
     return sorted;
-  }, [search, searchResults, products, activeFilters, sortBy]);
+  }, [search, searchResults, products, sortBy]);
 
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
-  }, []);
+    setPage(1);
+  }, [setPage]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= (pagination?.pages || 1)) {
+      setPage(newPage);
+    }
+  };
 
   const toggleFilterSection = useCallback((sectionTitle: string) => {
     setExpandedSections(prev => ({
@@ -159,16 +145,6 @@ const ProductsPage = () => {
     setSortBy(newSortBy);
   }, []);
   
-  const handleRetry = useCallback(() => {
-    const filtersToFetch = category ? { category } : {};
-    if (search) {
-      searchProducts(search, filtersToFetch);
-    } else {
-      fetchProducts({ filters: filtersToFetch, force: true, limit: 500 });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
-
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
     if (category) return category.charAt(0).toUpperCase() + category.slice(1);
@@ -334,9 +310,6 @@ const ProductsPage = () => {
             ) : error ? (
               <div className={styles.errorContainer}>
                 <p>{error}</p>
-                <button className={styles.retryButton} onClick={handleRetry}>
-                  Retry
-                </button>
               </div>
             ) : displayProducts.length > 0 ? (
               displayProducts.map((product: Product) => (
@@ -356,7 +329,25 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        
+        <div className={styles.paginationContainer}>
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1 || loading}
+            className={styles.paginationButton}
+          >
+            Previous
+          </button>
+          <span className={styles.paginationInfo}>
+            Page {page} of {pagination?.pages || 1}
+          </span>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= (pagination?.pages || 1) || loading}
+            className={styles.paginationButton}
+          >
+            Next
+          </button>
+        </div>
       </main>
       <Footer />
     </div>

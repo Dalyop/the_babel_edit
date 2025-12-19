@@ -555,6 +555,50 @@
   
   .filterTag {
     font-size: 11px;
-    padding: 4px 10px;
+      padding: 4px 10px;
+    }
   }
-}
+  
+  /* Pagination Styles */
+  .paginationContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--spacing-8);
+    padding: var(--spacing-4);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .paginationButton {
+    background: var(--color-text);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .paginationButton:hover:not(:disabled) {
+    background: var(--color-primary);
+    transform: translateY(-1px);
+  }
+  
+  .paginationButton:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .paginationInfo {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    margin: 0 var(--spacing-4);
+  }
+  

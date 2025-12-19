@@ -35,9 +35,10 @@ interface ProductActions {
   setSearchLoading: (searchLoading: boolean) => void;
   setError: (error: string | null) => void;
   setSearchQuery: (query: string) => void;
+  setPage: (page: number) => void;
   
   // API Actions
-  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean; limit?: number }) => Promise<void>;
+  fetchProducts: (options?: { filters?: FilterOptions; force?: boolean; limit?: number, page?: number }) => Promise<void>;
   fetchFeaturedProducts: (limit?: number, force?: boolean) => Promise<void>;
   fetchProductById: (id: string, force?: boolean) => Promise<Product | null>;
   prefetchProductById: (id: string) => Promise<void>;
@@ -167,24 +168,16 @@ export const useProductStore = create<ProductStore>()(
     setSearchLoading: (searchLoading) => set({ searchLoading }),
     setError: (error) => set({ error }),
     setSearchQuery: (searchQuery) => set({ searchQuery }),
+    setPage: (page) => set({ page }),
     
     fetchProducts: async (options = {}) => {
-      const { force = false, filters: newFilters, limit } = options;
-      const { page: currentPage, hasMore, loading, filters: currentFilters } = get();
+      const { force = false, filters: newFilters, limit = 10, page: newPage } = options;
+      const { loading, filters: currentFilters, page: currentPage } = get();
 
-      const isNewFilterSearch = newFilters !== undefined;
-
-      if (loading) return;
-      if (!isNewFilterSearch && !hasMore && !force) return;
-
-      const pageToFetch = isNewFilterSearch ? 1 : currentPage;
+      const pageToFetch = newPage || currentPage;
       const filtersToUse = newFilters || currentFilters;
 
       set({ loading: true, error: null });
-
-      if (isNewFilterSearch) {
-        set({ products: [], page: 1, hasMore: true });
-      }
 
       try {
         const queryParams = buildQueryParams(filtersToUse, pageToFetch, limit);
@@ -202,14 +195,14 @@ export const useProductStore = create<ProductStore>()(
         
         if (!data.products) throw new Error('Invalid response format');
         
-        set((state) => ({
-          products: pageToFetch === 1 ? data.products : [...state.products, ...data.products],
+        set({
+          products: data.products,
           pagination: data.pagination,
-          page: pageToFetch + 1,
+          page: data.pagination.page,
           hasMore: data.pagination.page < data.pagination.pages,
           filters: filtersToUse,
           lastFetchTime: Date.now(),
-        }));
+        });
         
       } catch (error) {
         console.error('Error fetching products:', error);
