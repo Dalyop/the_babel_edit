@@ -8,6 +8,7 @@ import ProductCard from '@/app/components/features/ProductCard/ProductCard';
 import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCardSkeleton';
 import { useProductStore, Product, SortByType, FilterOptions } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
+import { useDebounce } from '@/app/hooks/useDebounce';
 
 const ProductsPage = () => {
   const searchParams = useSearchParams();
@@ -31,6 +32,7 @@ const ProductsPage = () => {
   // Local state for filter UI
   const [sortBy, setSortBy] = useState<SortByType>('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+  const debouncedActiveFilters = useDebounce(activeFilters, 500);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   // Initial data fetch
@@ -41,10 +43,10 @@ const ProductsPage = () => {
       searchProducts(search, filtersToFetch);
     } else {
       // Fetch products for the current page and filters
-      fetchProducts({ filters: { ...filtersToFetch, ...activeFilters }, force: true, page });
+      fetchProducts({ filters: { ...filtersToFetch, ...debouncedActiveFilters }, force: true, page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category, page, activeFilters]);
+  }, [search, category, page, debouncedActiveFilters]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     setActiveFilters(prev => {
@@ -145,6 +147,15 @@ const ProductsPage = () => {
     setSortBy(newSortBy);
   }, []);
   
+  const handleRetry = useCallback(() => {
+    const filtersToFetch = category ? { category } : {};
+    if (search) {
+      searchProducts(search, filtersToFetch);
+    } else {
+      fetchProducts({ filters: { ...filtersToFetch, ...activeFilters }, force: true, page });
+    }
+  }, [search, category, page, activeFilters, fetchProducts, searchProducts]);
+
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
     if (category) return category.charAt(0).toUpperCase() + category.slice(1);

@@ -171,7 +171,7 @@ export const useProductStore = create<ProductStore>()(
     setPage: (page) => set({ page }),
     
     fetchProducts: async (options = {}) => {
-      const { force = false, filters: newFilters, limit = 10, page: newPage } = options;
+      const { force = false, filters: newFilters, limit = 12, page: newPage } = options;
       const { loading, filters: currentFilters, page: currentPage } = get();
 
       const pageToFetch = newPage || currentPage;
