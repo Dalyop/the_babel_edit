@@ -27,7 +27,6 @@ const ProductsPage = () => {
     page,
     pagination,
     setPage,
-    clearCache,
   } = useProductStore();
 
   // Local state for filter UI
@@ -339,14 +338,6 @@ const ProductsPage = () => {
             className={styles.paginationButton}
           >
             Next
-          </button>
-        </div>
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={() => clearCache()}
-            className={styles.paginationButton}
-          >
-            Clear Cache
           </button>
         </div>
       </main>

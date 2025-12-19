@@ -23,7 +23,6 @@ interface ProductState {
     pages: number;
   } | null;
   page: number;
-  hasMore: boolean;
 }
 
 interface ProductActions {
@@ -45,7 +44,6 @@ interface ProductActions {
   searchProducts: (query: string, filters?: FilterOptions) => Promise<void>;
   
   // Cache management
-  clearCache: () => void;
   loadFromCache: () => void;
   reset: () => void;
 }
@@ -69,7 +67,6 @@ const initialState: ProductState = {
   lastFetchTime: null,
   pagination: null,
   page: 1,
-  hasMore: true,
 };
 
 // Debounce helper
@@ -141,6 +138,7 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: num
     queryParams.append('limit', String(limit));
   }
   
+  console.log('Query params:', queryParams.toString());
   return queryParams;
 };
 
@@ -349,13 +347,6 @@ export const useProductStore = create<ProductStore>()(
       }, DEBOUNCE_DELAY);
     },
 
-    clearCache: () => {
-      if (typeof window !== 'undefined') {
-        const keysToRemove = Object.values(CACHE_KEYS);
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-      }
-    },
-
     loadFromCache: () => {
       const { setProducts } = get();
       
@@ -366,7 +357,6 @@ export const useProductStore = create<ProductStore>()(
 
     reset: () => {
       set(initialState);
-      get().clearCache();
     },
   }))
 );
