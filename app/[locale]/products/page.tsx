@@ -27,6 +27,7 @@ const ProductsPage = () => {
     page,
     pagination,
     setPage,
+    clearCache,
   } = useProductStore();
 
   // Local state for filter UI
@@ -44,7 +45,7 @@ const ProductsPage = () => {
       searchProducts(search, filtersToFetch);
     } else {
       // Fetch products for the current page and filters
-      fetchProducts({ filters, force: true, page });
+      fetchProducts({ filters, page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category, page, debouncedActiveFilters]);
@@ -72,28 +73,8 @@ const ProductsPage = () => {
   // Memoized, sorted products
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
-
-    // Sorting is still done client-side after fetching
-    const sorted = [...sourceProducts].sort((a, b) => {
-      switch (sortBy) {
-        case 'price_asc':
-          return a.price - b.price;
-        case 'price_desc':
-          return b.price - a.price;
-        case 'name_asc':
-          return a.name.localeCompare(b.name);
-        case 'name_desc':
-          return b.name.localeCompare(a.name);
-        case 'rating':
-          return b.avgRating - a.avgRating;
-        case 'newest':
-        default:
-          return 0; // Backend handles newest sorting
-      }
-    });
-
-    return sorted;
-  }, [search, searchResults, products, sortBy]);
+    return sourceProducts;
+  }, [search, searchResults, products]);
 
 
   const clearAllFilters = useCallback(() => {
@@ -358,6 +339,14 @@ const ProductsPage = () => {
             className={styles.paginationButton}
           >
             Next
+          </button>
+        </div>
+        <div className={styles.paginationContainer}>
+          <button
+            onClick={() => clearCache()}
+            className={styles.paginationButton}
+          >
+            Clear Cache
           </button>
         </div>
       </main>
