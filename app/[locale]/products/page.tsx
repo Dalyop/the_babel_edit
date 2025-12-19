@@ -68,7 +68,6 @@ const ProductsPage = () => {
 
     // Apply active filters (client-side)
     const filtered = sourceProducts.filter(product => {
-      console.log('Filtering product:', product, 'with filters:', activeFilters);
       return Object.entries(activeFilters).every(([filterKey, filterValues]) => {
         if (!filterValues || filterValues.length === 0) {
           return true;
