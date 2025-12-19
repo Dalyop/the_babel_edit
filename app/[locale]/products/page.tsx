@@ -38,12 +38,13 @@ const ProductsPage = () => {
   // Initial data fetch
   useEffect(() => {
     const filtersToFetch = category ? { category } : {};
+    const filters = { ...filtersToFetch, ...debouncedActiveFilters };
     if (search) {
       // Search is a backend operation
       searchProducts(search, filtersToFetch);
     } else {
       // Fetch products for the current page and filters
-      fetchProducts({ filters: { ...filtersToFetch, ...debouncedActiveFilters }, force: true, page });
+      fetchProducts({ filters, force: true, page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category, page, debouncedActiveFilters]);
@@ -141,7 +142,7 @@ const ProductsPage = () => {
     }
   }, [category]);
 
-  const isLoading = useMemo(() => search ? searchLoading : loading, [search, searchLoading, loading]);
+  const isLoading = search ? searchLoading : loading;
 
   const handleSortChange = useCallback((newSortBy: any) => {
     setSortBy(newSortBy);
@@ -152,9 +153,9 @@ const ProductsPage = () => {
     if (search) {
       searchProducts(search, filtersToFetch);
     } else {
-      fetchProducts({ filters: { ...filtersToFetch, ...activeFilters }, force: true, page });
+      fetchProducts({ filters: { ...filtersToFetch, ...debouncedActiveFilters }, force: true, page });
     }
-  }, [search, category, page, activeFilters, fetchProducts, searchProducts]);
+  }, [search, category, page, debouncedActiveFilters, fetchProducts, searchProducts]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
