@@ -138,7 +138,6 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: num
     queryParams.append('limit', String(limit));
   }
   
-  console.log('Query params:', queryParams.toString());
   return queryParams;
 };
 

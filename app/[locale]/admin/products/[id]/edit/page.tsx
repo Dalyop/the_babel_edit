@@ -210,7 +210,6 @@ const EditProductPage = () => {
       });
 
       toast.success('Product updated successfully!');
-      useProductStore.getState().clearCache();
       router.push(`/${locale}/admin`);
     } catch (error: any) {
       console.error('Error updating product:', error);

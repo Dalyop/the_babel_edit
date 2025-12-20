@@ -236,7 +236,6 @@ const AdminPage = () => {
       );
 
       toast.success(`Product "${name}" soft-deleted successfully`);
-      useProductStore.getState().clearCache();
       await fetchProducts();
       closeDeleteModal();
     } catch (error: any) {
@@ -269,7 +268,6 @@ const AdminPage = () => {
       );
 
       toast.success(`Product "${name}" permanently deleted successfully`);
-      useProductStore.getState().clearCache();
       await fetchProducts();
       closeDeleteModal();
     } catch (error: any) {

@@ -197,7 +197,6 @@ const CreateProductPage = () => {
       });
 
       toast.success('Product created successfully!');
-      useProductStore.getState().clearCache();
       router.push(`/${locale}/admin`);
     } catch (error: any) {
       console.error('Error creating product:', error);
