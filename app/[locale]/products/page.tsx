@@ -34,65 +34,52 @@ const ProductsPage = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [debugMode, setDebugMode] = useState(false);
 
-  const convertFiltersToBackendParams = useCallback((filters: Record<string, string[]>) => {
-    const backendParams: Record<string, string> = {};
+  // This hook converts active UI filters into a search query string and structured filters
+  const { combinedSearchQuery, structuredFilters } = useMemo(() => {
+    const searchableKeys = ['material', 'style', 'brand', 'tag', 'type', 'occasion', 'fit', 'length', 'sleeve', 'neckline', 'pattern'];
+    const structuredKeys = ['size', 'color'];
     
-    const filterMapping: Record<string, string> = {
-      'size': 'sizes',
-      'sizes': 'sizes',
-      'color': 'colors',
-      'colors': 'colors',
-      'material': 'tags',
-      'style': 'tags',
-      'brand': 'tags',
-      'tag': 'tags',
-      'tags': 'tags',
-      'type': 'tags',
-      'occasion': 'tags',
-      'fit': 'tags',
-      'length': 'tags',
-      'sleeve': 'tags',
-      'neckline': 'tags',
-      'pattern': 'tags',
-    };
+    const searchTerms = new Set<string>();
+    if (search) {
+      searchTerms.add(search);
+    }
 
-    Object.entries(filters).forEach(([key, values]) => {
-      if (values.length > 0) {
-        const backendKey = filterMapping[key.toLowerCase()] || key;
-        
-        if (backendParams[backendKey]) {
-          backendParams[backendKey] += ',' + values.join(',');
-        } else {
-          backendParams[backendKey] = values.join(',');
-        }
+    const newStructuredFilters: Record<string, string[]> = {};
+
+    Object.entries(debouncedActiveFilters).forEach(([key, values]) => {
+      if (searchableKeys.includes(key)) {
+        values.forEach(value => searchTerms.add(value));
+      } else if (structuredKeys.includes(key)) {
+        newStructuredFilters[key] = values;
       }
     });
 
-    if (debugMode) {
-      console.log('🔍 Frontend Filters:', filters);
-      console.log('🔍 Backend Params:', backendParams);
-    }
-    
-    return backendParams;
-  }, [debugMode]);
+    return {
+      combinedSearchQuery: Array.from(searchTerms).join(' '),
+      structuredFilters: newStructuredFilters,
+    };
+  }, [debouncedActiveFilters, search]);
 
   useEffect(() => {
-    const baseFilters = category ? { category } : {};
-    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
-    const allFilters = { ...baseFilters, ...convertedFilters };
+    const baseFilters: FilterOptions = {
+      ...structuredFilters,
+    };
+    if (category) {
+      baseFilters.category = category;
+    }
+    
+    // Always use searchProducts if there's a query, otherwise fetch all
+    if (combinedSearchQuery) {
+      searchProducts(combinedSearchQuery, baseFilters);
+    } else {
+      fetchProducts({ filters: baseFilters, page });
+    }
     
     if (debugMode) {
-      console.log('📡 Fetching with filters:', allFilters);
-      console.log('📡 Category:', category);
-      console.log('📡 Page:', page);
+      console.log('📡 Fetching with query:', combinedSearchQuery);
+      console.log('📡 and filters:', baseFilters);
     }
-    
-    if (search) {
-      searchProducts(search, allFilters);
-    } else {
-      fetchProducts({ filters: allFilters, page });
-    }
-  }, [search, category, page, debouncedActiveFilters, convertFiltersToBackendParams, debugMode]);
+  }, [combinedSearchQuery, structuredFilters, category, page, searchProducts, fetchProducts, debugMode]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     if (debugMode) {
@@ -200,16 +187,19 @@ const ProductsPage = () => {
   }, []);
   
   const handleRetry = useCallback(() => {
-    const baseFilters = category ? { category } : {};
-    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
-    const allFilters = { ...baseFilters, ...convertedFilters };
-    
-    if (search) {
-      searchProducts(search, allFilters);
-    } else {
-      fetchProducts({ filters: allFilters, force: true, page });
+    const baseFilters: FilterOptions = {
+      ...structuredFilters,
+    };
+    if (category) {
+      baseFilters.category = category;
     }
-  }, [search, category, page, debouncedActiveFilters, fetchProducts, searchProducts, convertFiltersToBackendParams]);
+    
+    if (combinedSearchQuery) {
+      searchProducts(combinedSearchQuery, baseFilters);
+    } else {
+      fetchProducts({ filters: baseFilters, force: true, page });
+    }
+  }, [combinedSearchQuery, structuredFilters, category, page, searchProducts, fetchProducts]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -272,7 +262,8 @@ const ProductsPage = () => {
             <div style={{ marginTop: '10px', fontSize: '12px', fontFamily: 'monospace' }}>
               <div><strong>Category:</strong> {category || 'None'}</div>
               <div><strong>Active Filters:</strong> {JSON.stringify(activeFilters)}</div>
-              <div><strong>Converted Params:</strong> {JSON.stringify(convertFiltersToBackendParams(activeFilters))}</div>
+              <div><strong>Combined Search:</strong> {combinedSearchQuery}</div>
+              <div><strong>Structured Filters:</strong> {JSON.stringify(structuredFilters)}</div>
               <div><strong>Total Products:</strong> {displayProducts.length}</div>
               <div><strong>Sample Product Tags:</strong> {displayProducts[0]?.tags?.join(', ') || 'No tags'}</div>
               <div><strong>Sample Product Name:</strong> {displayProducts[0]?.name || 'No products'}</div>
