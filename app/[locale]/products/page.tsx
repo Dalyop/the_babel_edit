@@ -35,16 +35,51 @@ const ProductsPage = () => {
   const debouncedActiveFilters = useDebounce(activeFilters, 500);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  // Initial data fetch
+  // Convert frontend filter keys to backend parameter names
+  const convertFiltersToBackendParams = useCallback((filters: Record<string, string[]>) => {
+    const backendParams: Record<string, string> = {};
+    
+    // Map frontend filter keys to backend parameter names
+    const filterMapping: Record<string, string> = {
+      'size': 'sizes',
+      'sizes': 'sizes',
+      'color': 'colors',
+      'colors': 'colors',
+      'material': 'tags',
+      'style': 'tags',
+      'brand': 'tags',
+      'tag': 'tags',
+      'tags': 'tags',
+    };
+
+    Object.entries(filters).forEach(([key, values]) => {
+      if (values.length > 0) {
+        const backendKey = filterMapping[key.toLowerCase()] || key;
+        
+        // Combine multiple filter values into comma-separated string
+        if (backendParams[backendKey]) {
+          backendParams[backendKey] += ',' + values.join(',');
+        } else {
+          backendParams[backendKey] = values.join(',');
+        }
+      }
+    });
+
+    return backendParams;
+  }, []);
+
+  // Initial data fetch with converted filters
   useEffect(() => {
-    const filtersToFetch = category ? { category } : {};
-    const filters = { ...filtersToFetch, ...debouncedActiveFilters };
+    const baseFilters = category ? { category } : {};
+    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
+    const allFilters = { ...baseFilters, ...convertedFilters };
+    
     if (search) {
       // Search is a backend operation
-      searchProducts(search, filtersToFetch);
+      searchProducts(search, allFilters);
     } else {
       // Fetch products for the current page and filters
-      fetchProducts({ filters, page });
+      fetchProducts({ filters: allFilters, page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category, page, debouncedActiveFilters]);
@@ -66,15 +101,34 @@ const ProductsPage = () => {
       }
       return newFilters;
     });
-    setPage(1);
+    setPage(1); // Reset to first page when filters change
   }, [setPage]);
 
   // Memoized, sorted products
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
-    return sourceProducts;
-  }, [search, searchResults, products]);
-
+    
+    // Client-side sorting since backend doesn't handle all sort options
+    const sorted = [...sourceProducts].sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'rating':
+          return (b.avgRating || 0) - (a.avgRating || 0);
+        case 'newest':
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+    });
+    
+    return sorted;
+  }, [search, searchResults, products, sortBy]);
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
@@ -84,6 +138,7 @@ const ProductsPage = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= (pagination?.pages || 1)) {
       setPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -129,13 +184,16 @@ const ProductsPage = () => {
   }, []);
   
   const handleRetry = useCallback(() => {
-    const filtersToFetch = category ? { category } : {};
+    const baseFilters = category ? { category } : {};
+    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
+    const allFilters = { ...baseFilters, ...convertedFilters };
+    
     if (search) {
-      searchProducts(search, filtersToFetch);
+      searchProducts(search, allFilters);
     } else {
-      fetchProducts({ filters: { ...filtersToFetch, ...debouncedActiveFilters }, force: true, page });
+      fetchProducts({ filters: allFilters, force: true, page });
     }
-  }, [search, category, page, debouncedActiveFilters, fetchProducts, searchProducts]);
+  }, [search, category, page, debouncedActiveFilters, fetchProducts, searchProducts, convertFiltersToBackendParams]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -161,7 +219,6 @@ const ProductsPage = () => {
     const categoryKey = categoryMap[category.toLowerCase()] || category.toLowerCase();
     return CATEGORY_FILTERS[categoryKey as keyof typeof CATEGORY_FILTERS] || [];
   }, [category]);
-
 
   return (
     <div className={styles.pageBg}>
@@ -196,7 +253,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                Showing {displayProducts.length} products
+                Showing {displayProducts.length} of {pagination?.total || 0} products
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -302,6 +359,7 @@ const ProductsPage = () => {
             ) : error ? (
               <div className={styles.errorContainer}>
                 <p>{error}</p>
+                <button onClick={handleRetry}>Retry</button>
               </div>
             ) : displayProducts.length > 0 ? (
               displayProducts.map((product: Product) => (
@@ -321,25 +379,27 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        <div className={styles.paginationContainer}>
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1 || loading}
-            className={styles.paginationButton}
-          >
-            Previous
-          </button>
-          <span className={styles.paginationInfo}>
-            Page {page} of {pagination?.pages || 1}
-          </span>
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= (pagination?.pages || 1) || loading}
-            className={styles.paginationButton}
-          >
-            Next
-          </button>
-        </div>
+        {!isLoading && displayProducts.length > 0 && (
+          <div className={styles.paginationContainer}>
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1 || loading}
+              className={styles.paginationButton}
+            >
+              Previous
+            </button>
+            <span className={styles.paginationInfo}>
+              Page {page} of {pagination?.pages || 1}
+            </span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= (pagination?.pages || 1) || loading}
+              className={styles.paginationButton}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
       <Footer />
     </div>

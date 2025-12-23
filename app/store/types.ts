@@ -53,6 +53,7 @@ export interface Product {
   avgRating: number;
   reviewCount: number;
   discountPercentage: number;
+  createdAt: string;
 }
 
 export type SortByType = 'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'rating';

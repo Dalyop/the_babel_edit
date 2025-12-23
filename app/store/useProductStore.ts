@@ -23,6 +23,7 @@ interface ProductState {
     pages: number;
   } | null;
   page: number;
+  hasMore: boolean;
 }
 
 interface ProductActions {
@@ -67,6 +68,7 @@ const initialState: ProductState = {
   lastFetchTime: null,
   pagination: null,
   page: 1,
+  hasMore: false,
 };
 
 // Debounce helper
