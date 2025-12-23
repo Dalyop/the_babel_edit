@@ -19,15 +19,19 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       title: 'Type',
       key: 'type',
       options: [
-        { label: 'T-Shirt', value: 't-shirt' },
-        { label: 'Blouse & Shirt', value: 'blouse-shirt' },
-        { label: 'Sweater & Cardigan', value: 'sweater-cardigan' },
+        { label: 'T-Shirt', value: 'tshirt' },
+        { label: 'Blouse & Shirt', value: 'blouse' },
+        { label: 'Shirt', value: 'shirt' },
+        { label: 'Sweater & Cardigan', value: 'sweater' },
+        { label: 'Cardigan', value: 'cardigan' },
         { label: 'Jean', value: 'jean' },
-        { label: 'Pant & Trouser', value: 'pant-trouser' },
+        { label: 'Pant & Trouser', value: 'pant' },
+        { label: 'Trouser', value: 'trouser' },
         { label: 'Skirt', value: 'skirt' },
         { label: 'Short', value: 'short' },
         { label: 'Dress', value: 'dress' },
-        { label: 'Jacket & Coat', value: 'jacket-coat' }
+        { label: 'Jacket', value: 'jacket' },
+        { label: 'Coat', value: 'coat' }
       ]
     }
   ],
@@ -39,10 +43,10 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       options: [
         { label: 'Backpack', value: 'backpack' },
         { label: 'Handbag', value: 'handbag' },
-        { label: 'Tote Bag', value: 'tote-bag' },
-        { label: 'Shoulder Bag', value: 'shoulder-bag' },
+        { label: 'Tote Bag', value: 'tote' },
+        { label: 'Shoulder Bag', value: 'shoulder' },
         { label: 'Clutch', value: 'clutch' },
-        { label: 'Travel Bag', value: 'travel-bag' },
+        { label: 'Travel Bag', value: 'travel' },
         { label: 'Wallet', value: 'wallet' }
       ]
     },
@@ -88,6 +92,19 @@ export const CATEGORY_FILTERS: CategoryFilters = {
         { label: 'Loafer', value: 'loafer' },
         { label: 'Athletic', value: 'athletic' },
         { label: 'Casual', value: 'casual' }
+      ]
+    }
+  ],
+
+  'new arrivals': [
+    {
+      title: 'Category',
+      key: 'type',
+      options: [
+        { label: 'Clothing', value: 'clothing' },
+        { label: 'Bags', value: 'bag' },
+        { label: 'Shoes', value: 'shoe' },
+        { label: 'Accessories', value: 'accessory' }
       ]
     }
   ]

@@ -30,69 +30,133 @@ const ProductsPage = () => {
 
   const [sortBy, setSortBy] = useState<SortByType>('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
-  const debouncedActiveFilters = useDebounce(activeFilters, 500);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [debugMode, setDebugMode] = useState(false);
 
-  const convertFiltersToBackendParams = useCallback((filters: Record<string, string[]>) => {
-    const backendParams: Record<string, string> = {};
-    
-    const filterMapping: Record<string, string> = {
-      'size': 'sizes',
-      'sizes': 'sizes',
-      'color': 'colors',
-      'colors': 'colors',
-      'material': 'tags',
-      'style': 'tags',
-      'brand': 'tags',
-      'tag': 'tags',
-      'tags': 'tags',
-      'type': 'tags',
-      'occasion': 'tags',
-      'fit': 'tags',
-      'length': 'tags',
-      'sleeve': 'tags',
-      'neckline': 'tags',
-      'pattern': 'tags',
-    };
-
-    Object.entries(filters).forEach(([key, values]) => {
-      if (values.length > 0) {
-        const backendKey = filterMapping[key.toLowerCase()] || key;
-        
-        if (backendParams[backendKey]) {
-          backendParams[backendKey] += ',' + values.join(',');
-        } else {
-          backendParams[backendKey] = values.join(',');
-        }
-      }
-    });
-
-    if (debugMode) {
-      console.log('🔍 Frontend Filters:', filters);
-      console.log('🔍 Backend Params:', backendParams);
-    }
-    
-    return backendParams;
-  }, [debugMode]);
-
+  // Fetch all products without filters - we'll filter client-side
   useEffect(() => {
-    const baseFilters = category ? { category } : {};
-    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
-    const allFilters = { ...baseFilters, ...convertedFilters };
-    
-    if (debugMode) {
-      console.log('📡 Fetching with filters:', allFilters);
-      console.log('📡 Category:', category);
-      console.log('📡 Page:', page);
+    const baseFilters: FilterOptions = {};
+    if (category) {
+      baseFilters.category = category;
     }
     
     if (search) {
-      searchProducts(search, allFilters);
+      searchProducts(search, baseFilters);
     } else {
-      fetchProducts({ filters: allFilters, page });
+      // Fetch ALL products - we'll filter them client-side
+      fetchProducts({ filters: baseFilters, limit: 100 });
     }
-  }, [search, category, page, debouncedActiveFilters, convertFiltersToBackendParams, debugMode]);
+  }, [search, category, fetchProducts, searchProducts]);
+
+  // CLIENT-SIDE FILTERING - Flexible matching for all filter types
+  const filteredProducts = useMemo(() => {
+    let sourceProducts = search ? searchResults : products;
+    
+    if (debugMode) {
+      console.log('🔍 Starting with', sourceProducts.length, 'products');
+      console.log('🔍 Active filters:', activeFilters);
+    }
+    
+    // If no filters, return all products
+    if (Object.keys(activeFilters).length === 0) {
+      return sourceProducts;
+    }
+
+    // Apply filters
+    return sourceProducts.filter(product => {
+      // Check each filter group
+      for (const [filterKey, filterValues] of Object.entries(activeFilters)) {
+        if (filterValues.length === 0) continue;
+
+        // For each filter value, check if product matches ANY of them (OR logic within a filter)
+        const matchesFilter = filterValues.some(filterValue => {
+          const searchTerm = filterValue.toLowerCase();
+          // Also create a version without hyphens/spaces for flexible matching
+          const searchTermNoHyphens = searchTerm.replace(/[-\s]/g, '');
+          
+          // Helper function to check if text matches (with or without hyphens/spaces)
+          const textMatches = (text: string) => {
+            const lowerText = text.toLowerCase();
+            const textNoHyphens = lowerText.replace(/[-\s]/g, '');
+            return lowerText.includes(searchTerm) || 
+                   textNoHyphens.includes(searchTermNoHyphens) ||
+                   lowerText.includes(searchTermNoHyphens);
+          };
+          
+          // Check product name
+          if (textMatches(product.name)) {
+            if (debugMode) console.log(`✅ ${product.name} matches name with "${filterValue}"`);
+            return true;
+          }
+          
+          // Check product description
+          if (product.description && textMatches(product.description)) {
+            if (debugMode) console.log(`✅ ${product.name} matches description with "${filterValue}"`);
+            return true;
+          }
+          
+          // Check product tags
+          if (product.tags?.some(tag => textMatches(tag))) {
+            if (debugMode) console.log(`✅ ${product.name} matches tags with "${filterValue}"`);
+            return true;
+          }
+          
+          // Check sizes (exact match for size filter)
+          if (filterKey === 'size' && product.sizes?.some(size => 
+            size.toLowerCase() === searchTerm || size.toLowerCase().includes(searchTerm)
+          )) {
+            if (debugMode) console.log(`✅ ${product.name} matches size`);
+            return true;
+          }
+          
+          // Check colors (flexible match)
+          if (filterKey === 'color' && product.colors?.some(color => 
+            textMatches(color)
+          )) {
+            if (debugMode) console.log(`✅ ${product.name} matches color`);
+            return true;
+          }
+          
+          return false;
+        });
+
+        // If product doesn't match this filter group, exclude it (AND logic between filter groups)
+        if (!matchesFilter) {
+          if (debugMode) console.log(`❌ ${product.name} excluded by ${filterKey}`);
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [products, searchResults, search, activeFilters, debugMode]);
+
+  // Apply sorting to filtered products
+  const displayProducts = useMemo(() => {
+    const sorted = [...filteredProducts].sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return a.price - b.price;
+        case 'price_desc':
+          return b.price - a.price;
+        case 'name_asc':
+          return a.name.localeCompare(b.name);
+        case 'name_desc':
+          return b.name.localeCompare(a.name);
+        case 'rating':
+          return (b.avgRating || 0) - (a.avgRating || 0);
+        case 'newest':
+        default:
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }
+    });
+    
+    if (debugMode) {
+      console.log('📊 Final sorted products:', sorted.length);
+    }
+    
+    return sorted;
+  }, [filteredProducts, sortBy, debugMode]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     if (debugMode) {
@@ -119,44 +183,11 @@ const ProductsPage = () => {
       }
       return newFilters;
     });
-    setPage(1);
-  }, [setPage, debugMode]);
-
-  const displayProducts = useMemo(() => {
-    let sourceProducts = search ? searchResults : products;
-    
-    const sorted = [...sourceProducts].sort((a, b) => {
-      switch (sortBy) {
-        case 'price_asc':
-          return a.price - b.price;
-        case 'price_desc':
-          return b.price - a.price;
-        case 'name_asc':
-          return a.name.localeCompare(b.name);
-        case 'name_desc':
-          return b.name.localeCompare(a.name);
-        case 'rating':
-          return (b.avgRating || 0) - (a.avgRating || 0);
-        case 'newest':
-        default:
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      }
-    });
-    
-    return sorted;
-  }, [search, searchResults, products, sortBy]);
+  }, [debugMode]);
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
-    setPage(1);
-  }, [setPage]);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= (pagination?.pages || 1)) {
-      setPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  }, []);
 
   const toggleFilterSection = useCallback((sectionTitle: string) => {
     setExpandedSections(prev => ({
@@ -200,16 +231,17 @@ const ProductsPage = () => {
   }, []);
   
   const handleRetry = useCallback(() => {
-    const baseFilters = category ? { category } : {};
-    const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
-    const allFilters = { ...baseFilters, ...convertedFilters };
+    const baseFilters: FilterOptions = {};
+    if (category) {
+      baseFilters.category = category;
+    }
     
     if (search) {
-      searchProducts(search, allFilters);
+      searchProducts(search, baseFilters);
     } else {
-      fetchProducts({ filters: allFilters, force: true, page });
+      fetchProducts({ filters: baseFilters, force: true, limit: 100 });
     }
-  }, [search, category, page, debouncedActiveFilters, fetchProducts, searchProducts, convertFiltersToBackendParams]);
+  }, [search, category, fetchProducts, searchProducts]);
 
   const getCategoryTitle = useCallback(() => {
     if (search) return `Search Results for "${search}"`;
@@ -225,7 +257,8 @@ const ProductsPage = () => {
     if (!category) return [];
     const categoryMap: { [key: string]: string } = {
       'new-arrivals': 'new arrivals',
-      'newarrivals': 'new arrivals', 
+      'newarrivals': 'new arrivals',
+      'arrivals': 'new arrivals',
       'clothes': 'clothing',
       'clothing': 'clothing',
       'accessories': 'accessories',
@@ -272,10 +305,17 @@ const ProductsPage = () => {
             <div style={{ marginTop: '10px', fontSize: '12px', fontFamily: 'monospace' }}>
               <div><strong>Category:</strong> {category || 'None'}</div>
               <div><strong>Active Filters:</strong> {JSON.stringify(activeFilters)}</div>
-              <div><strong>Converted Params:</strong> {JSON.stringify(convertFiltersToBackendParams(activeFilters))}</div>
-              <div><strong>Total Products:</strong> {displayProducts.length}</div>
-              <div><strong>Sample Product Tags:</strong> {displayProducts[0]?.tags?.join(', ') || 'No tags'}</div>
-              <div><strong>Sample Product Name:</strong> {displayProducts[0]?.name || 'No products'}</div>
+              <div><strong>Total Source Products:</strong> {(search ? searchResults : products).length}</div>
+              <div><strong>Filtered Products:</strong> {filteredProducts.length}</div>
+              <div><strong>Final Displayed:</strong> {displayProducts.length}</div>
+              {displayProducts[0] && (
+                <>
+                  <div><strong>Sample Product Name:</strong> {displayProducts[0].name}</div>
+                  <div><strong>Sample Product Tags:</strong> {displayProducts[0].tags?.join(', ') || 'No tags'}</div>
+                  <div><strong>Sample Product Sizes:</strong> {displayProducts[0].sizes?.join(', ') || 'No sizes'}</div>
+                  <div><strong>Sample Product Colors:</strong> {displayProducts[0].colors?.join(', ') || 'No colors'}</div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -298,7 +338,7 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                Showing {displayProducts.length} of {pagination?.total || 0} products
+                Showing {displayProducts.length} products
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -423,28 +463,6 @@ const ProductsPage = () => {
             )}
           </div>
         </div>
-        
-        {!isLoading && displayProducts.length > 0 && (
-          <div className={styles.paginationContainer}>
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page <= 1 || loading}
-              className={styles.paginationButton}
-            >
-              Previous
-            </button>
-            <span className={styles.paginationInfo}>
-              Page {page} of {pagination?.pages || 1}
-            </span>
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page >= (pagination?.pages || 1) || loading}
-              className={styles.paginationButton}
-            >
-              Next
-            </button>
-          </div>
-        )}
       </main>
       <Footer />
     </div>
