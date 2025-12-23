@@ -15,7 +15,6 @@ const ProductsPage = () => {
   const category = searchParams.get('category');
   const search = searchParams.get('search');
 
-  // Store selectors
   const {
     fetchProducts,
     searchProducts,
@@ -29,17 +28,15 @@ const ProductsPage = () => {
     setPage,
   } = useProductStore();
 
-  // Local state for filter UI
   const [sortBy, setSortBy] = useState<SortByType>('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const debouncedActiveFilters = useDebounce(activeFilters, 500);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [debugMode, setDebugMode] = useState(false);
 
-  // Convert frontend filter keys to backend parameter names
   const convertFiltersToBackendParams = useCallback((filters: Record<string, string[]>) => {
     const backendParams: Record<string, string> = {};
     
-    // Map frontend filter keys to backend parameter names
     const filterMapping: Record<string, string> = {
       'size': 'sizes',
       'sizes': 'sizes',
@@ -50,13 +47,19 @@ const ProductsPage = () => {
       'brand': 'tags',
       'tag': 'tags',
       'tags': 'tags',
+      'type': 'tags',
+      'occasion': 'tags',
+      'fit': 'tags',
+      'length': 'tags',
+      'sleeve': 'tags',
+      'neckline': 'tags',
+      'pattern': 'tags',
     };
 
     Object.entries(filters).forEach(([key, values]) => {
       if (values.length > 0) {
         const backendKey = filterMapping[key.toLowerCase()] || key;
         
-        // Combine multiple filter values into comma-separated string
         if (backendParams[backendKey]) {
           backendParams[backendKey] += ',' + values.join(',');
         } else {
@@ -65,26 +68,37 @@ const ProductsPage = () => {
       }
     });
 
+    if (debugMode) {
+      console.log('🔍 Frontend Filters:', filters);
+      console.log('🔍 Backend Params:', backendParams);
+    }
+    
     return backendParams;
-  }, []);
+  }, [debugMode]);
 
-  // Initial data fetch with converted filters
   useEffect(() => {
     const baseFilters = category ? { category } : {};
     const convertedFilters = convertFiltersToBackendParams(debouncedActiveFilters);
     const allFilters = { ...baseFilters, ...convertedFilters };
     
+    if (debugMode) {
+      console.log('📡 Fetching with filters:', allFilters);
+      console.log('📡 Category:', category);
+      console.log('📡 Page:', page);
+    }
+    
     if (search) {
-      // Search is a backend operation
       searchProducts(search, allFilters);
     } else {
-      // Fetch products for the current page and filters
       fetchProducts({ filters: allFilters, page });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category, page, debouncedActiveFilters]);
+  }, [search, category, page, debouncedActiveFilters, convertFiltersToBackendParams, debugMode]);
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
+    if (debugMode) {
+      console.log('🎯 Filter Change:', filterKey, '=', value);
+    }
+    
     setActiveFilters(prev => {
       const newFilters = { ...prev };
       const currentValues = newFilters[filterKey] || [];
@@ -99,16 +113,18 @@ const ProductsPage = () => {
       } else {
         newFilters[filterKey] = [...currentValues, value];
       }
+      
+      if (debugMode) {
+        console.log('🎯 New Active Filters:', newFilters);
+      }
       return newFilters;
     });
-    setPage(1); // Reset to first page when filters change
-  }, [setPage]);
+    setPage(1);
+  }, [setPage, debugMode]);
 
-  // Memoized, sorted products
   const displayProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
     
-    // Client-side sorting since backend doesn't handle all sort options
     const sorted = [...sourceProducts].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
@@ -235,6 +251,35 @@ const ProductsPage = () => {
       </div>
 
       <main className={styles.catalogMain}>
+        {/* DEBUG PANEL */}
+        <div style={{ background: '#f0f0f0', padding: '10px', marginBottom: '20px', borderRadius: '8px' }}>
+          <button 
+            onClick={() => setDebugMode(!debugMode)}
+            style={{ 
+              padding: '8px 16px', 
+              background: debugMode ? '#4CAF50' : '#666',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginBottom: debugMode ? '10px' : '0'
+            }}
+          >
+            {debugMode ? '🐛 Debug Mode ON' : '🐛 Debug Mode OFF'}
+          </button>
+          
+          {debugMode && (
+            <div style={{ marginTop: '10px', fontSize: '12px', fontFamily: 'monospace' }}>
+              <div><strong>Category:</strong> {category || 'None'}</div>
+              <div><strong>Active Filters:</strong> {JSON.stringify(activeFilters)}</div>
+              <div><strong>Converted Params:</strong> {JSON.stringify(convertFiltersToBackendParams(activeFilters))}</div>
+              <div><strong>Total Products:</strong> {displayProducts.length}</div>
+              <div><strong>Sample Product Tags:</strong> {displayProducts[0]?.tags?.join(', ') || 'No tags'}</div>
+              <div><strong>Sample Product Name:</strong> {displayProducts[0]?.name || 'No products'}</div>
+            </div>
+          )}
+        </div>
+
         <div className={styles.sortContainer}>
           <div className={styles.sortAndFilter}>
             <select

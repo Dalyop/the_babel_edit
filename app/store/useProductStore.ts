@@ -95,7 +95,7 @@ const handleError = (error: unknown, defaultMessage: string): string => {
   return defaultMessage;
 };
 
-// Query parameter builder
+// Query parameter builder - FIXED VERSION
 const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: number): URLSearchParams => {
   const queryParams = new URLSearchParams();
   
@@ -126,10 +126,16 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: num
             queryParams.append('sortOrder', 'desc');
         }
       } else if (Array.isArray(value)) {
+        // Handle arrays: append each item separately
         value.forEach(item => {
           queryParams.append(key, item);
         });
+      } else if (typeof value === 'string' && value.includes(',')) {
+        // Handle comma-separated strings: split and append
+        // This is the KEY FIX - your backend expects comma-separated values as a single param
+        queryParams.append(key, value);
       } else {
+        // Handle single values
         queryParams.append(key, String(value));
       }
     }
@@ -139,6 +145,8 @@ const buildQueryParams = (filters: FilterOptions = {}, page: number, limit?: num
   if (limit) {
     queryParams.append('limit', String(limit));
   }
+  
+  console.log('🔧 Built Query Params:', queryParams.toString());
   
   return queryParams;
 };
