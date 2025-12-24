@@ -8,10 +8,9 @@
 }
 
 .catalogMain {
-  max-width: calc(var(--max-width-7xl) + 250px); /* Adjust max-width to account for fixed sidebar */
+  max-width: var(--max-width-7xl);
   margin: 0 auto;
   padding: 0 var(--spacing-6) var(--spacing-8);
-  padding-left: calc(250px + var(--spacing-6)); /* Add padding-left for fixed sidebar */
   width: 100%;
 }
 
@@ -208,19 +207,20 @@
 .filtersContainer {
   width: 250px;
   flex-shrink: 0;
-  position: fixed; /* Changed from sticky to fixed */
-  top: 0; /* Changed from 80px to 0 */
-  left: 0; /* Added to position it to the left */
-  height: 100vh; /* Set to full viewport height */
-  max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+  position: sticky; /* Reverted to sticky */
+  top: 80px; /* Original top value */
+  align-self: start;
+  height: calc(90vh - 80px); /* Adjusted to 90vh minus top offset */
+  max-height: calc(90vh - 80px); /* Adjusted to 90vh minus top offset */
   overflow-y: auto;
   background: white;
-  border-radius: 0 8px 8px 0; /* Adjusted border-radius for fixed position */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px; /* Reverted border-radius */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); /* Reverted box-shadow */
+  border: 1px solid rgba(0, 0, 0, 0.05); /* Reverted border */
   padding-bottom: 16px;
-  padding-top: 80px; /* Added padding to account for navbar height */
-  z-index: 50; /* Ensure it stays on top */
+  /* Removed left: 0; */
+  /* Removed z-index: 50; */
+  padding-top: 0; /* Removed padding-top here as top: 80px handles space */
 }
 
 .filtersContainer::-webkit-scrollbar {
@@ -395,7 +395,6 @@
   gap: var(--spacing-6);
   align-items: start;
   grid-auto-rows: min-content;
-  margin-left: 250px; /* Add margin-left to create space for the fixed sidebar */
 }
 
 /* Loading States */
@@ -502,8 +501,6 @@
 @media (max-width: 1024px) {
   .catalogMain {
     padding: 0 var(--spacing-4) var(--spacing-8);
-    max-width: var(--max-width-7xl); /* Reset max-width */
-    padding-left: 0; /* Reset padding-left */
   }
   
   .catalogContent {
@@ -511,20 +508,6 @@
     gap: var(--spacing-6);
   }
   
-  .filtersContainer { /* Reset for smaller screens */
-    position: relative;
-    top: auto;
-    left: auto;
-    height: auto;
-    max-height: none;
-    padding-top: 16px; /* Reset to default padding or a suitable value */
-    z-index: auto;
-    width: 100%; /* Make it full width on smaller screens */
-    border-radius: 8px; /* Revert border-radius */
-    box-shadow: none; /* Remove box-shadow */
-    border: none; /* Remove border */
-  }
-
   .productsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
