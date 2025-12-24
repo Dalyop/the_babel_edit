@@ -560,45 +560,58 @@
   }
   
   /* Pagination Styles */
-  .paginationContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: var(--spacing-8);
-    padding: var(--spacing-4);
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-  }
-  
-  .paginationButton {
-    background: var(--color-text);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .paginationButton:hover:not(:disabled) {
-    background: var(--color-primary);
-    transform: translateY(-1px);
-  }
-  
-  .paginationButton:disabled {
-    background: #e5e7eb;
-    color: #9ca3af;
-    cursor: not-allowed;
-  }
-  
-  .paginationInfo {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--color-text);
-    margin: 0 var(--spacing-4);
-  }
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--spacing-8);
+  padding: var(--spacing-4);
+}
+
+.paginationButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  color: #374151;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.paginationButton:hover:not(:disabled) {
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.paginationButton.active {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+  color: white;
+  font-weight: 700;
+}
+
+.paginationButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.paginationDots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #9ca3af;
+}
   

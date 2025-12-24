@@ -9,6 +9,10 @@ import ProductCardSkeleton from '@/app/components/features/ProductCard/ProductCa
 import { useProductStore, Product, SortByType, FilterOptions } from '@/app/store';
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 import { useDebounce } from '@/app/hooks/useDebounce';
+import { usePagination, DOTS } from '@/app/hooks/usePagination';
+
+
+
 
 const ProductsPage = () => {
   const searchParams = useSearchParams();
@@ -31,7 +35,7 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState<SortByType>('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  const [debugMode, setDebugMode] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
 
@@ -53,12 +57,7 @@ const ProductsPage = () => {
   // CLIENT-SIDE FILTERING - Flexible matching for all filter types
   const filteredProducts = useMemo(() => {
     let sourceProducts = search ? searchResults : products;
-    
-    if (debugMode) {
-      console.log('🔍 Starting with', sourceProducts.length, 'products');
-      console.log('🔍 Active filters:', activeFilters);
-    }
-    
+
     // If no filters, return all products
     if (Object.keys(activeFilters).length === 0) {
       return sourceProducts;
@@ -87,13 +86,11 @@ const ProductsPage = () => {
           
           // Check product name (NO DESCRIPTION FILTERING)
           if (textMatches(product.name)) {
-            if (debugMode) console.log(`✅ ${product.name} matches name with "${filterValue}"`);
             return true;
           }
           
           // Check product tags (NO DESCRIPTION FILTERING)
           if (product.tags?.some(tag => textMatches(tag))) {
-            if (debugMode) console.log(`✅ ${product.name} matches tags with "${filterValue}"`);
             return true;
           }
           
@@ -101,7 +98,6 @@ const ProductsPage = () => {
           if (filterKey === 'size' && product.sizes?.some(size => 
             size.toLowerCase() === searchTerm || size.toLowerCase().includes(searchTerm)
           )) {
-            if (debugMode) console.log(`✅ ${product.name} matches size`);
             return true;
           }
           
@@ -109,7 +105,6 @@ const ProductsPage = () => {
           if (filterKey === 'color' && product.colors?.some(color => 
             textMatches(color)
           )) {
-            if (debugMode) console.log(`✅ ${product.name} matches color`);
             return true;
           }
           
@@ -118,14 +113,13 @@ const ProductsPage = () => {
 
         // If product doesn't match this filter group, exclude it (AND logic between filter groups)
         if (!matchesFilter) {
-          if (debugMode) console.log(`❌ ${product.name} excluded by ${filterKey}`);
           return false;
         }
       }
       
       return true;
     });
-  }, [products, searchResults, search, activeFilters, debugMode]);
+  }, [products, searchResults, search, activeFilters]);
 
   // Apply sorting to filtered products
   const sortedProducts = useMemo(() => {
@@ -147,12 +141,8 @@ const ProductsPage = () => {
       }
     });
     
-    if (debugMode) {
-      console.log('📊 Total sorted products:', sorted.length);
-    }
-    
     return sorted;
-  }, [filteredProducts, sortBy, debugMode]);
+  }, [filteredProducts, sortBy]);
 
   // Paginate the sorted products
   const paginatedProducts = useMemo(() => {
@@ -166,14 +156,18 @@ const ProductsPage = () => {
     return Math.ceil(sortedProducts.length / ITEMS_PER_PAGE);
   }, [sortedProducts]);
 
+  const paginationRange = usePagination({
+    currentPage,
+    totalCount: sortedProducts.length,
+    siblingCount: 1,
+    pageSize: ITEMS_PER_PAGE
+  });
+
+
   // Display products = paginated products
   const displayProducts = paginatedProducts;
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
-    if (debugMode) {
-      console.log('🎯 Filter Change:', filterKey, '=', value);
-    }
-    
     setActiveFilters(prev => {
       const newFilters = { ...prev };
       const currentValues = newFilters[filterKey] || [];
@@ -189,15 +183,12 @@ const ProductsPage = () => {
         newFilters[filterKey] = [...currentValues, value];
       }
       
-      if (debugMode) {
-        console.log('🎯 New Active Filters:', newFilters);
-      }
       return newFilters;
     });
     
     // Reset to page 1 when filters change
     setCurrentPage(1);
-  }, [debugMode]);
+  }, []);
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
@@ -305,44 +296,7 @@ const ProductsPage = () => {
       </div>
 
       <main className={styles.catalogMain}>
-        {/* DEBUG PANEL */}
-        <div style={{ background: '#f0f0f0', padding: '10px', marginBottom: '20px', borderRadius: '8px' }}>
-          <button 
-            onClick={() => setDebugMode(!debugMode)}
-            style={{ 
-              padding: '8px 16px', 
-              background: debugMode ? '#4CAF50' : '#666',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              marginBottom: debugMode ? '10px' : '0'
-            }}
-          >
-            {debugMode ? '🐛 Debug Mode ON' : '🐛 Debug Mode OFF'}
-          </button>
-          
-          {debugMode && (
-            <div style={{ marginTop: '10px', fontSize: '12px', fontFamily: 'monospace' }}>
-              <div><strong>Category:</strong> {category || 'None'}</div>
-              <div><strong>Active Filters:</strong> {JSON.stringify(activeFilters)}</div>
-              <div><strong>Total Source Products:</strong> {(search ? searchResults : products).length}</div>
-              <div><strong>Filtered Products:</strong> {filteredProducts.length}</div>
-              <div><strong>Total Pages:</strong> {totalPages}</div>
-              <div><strong>Current Page:</strong> {currentPage}</div>
-              <div><strong>Displayed on Page:</strong> {displayProducts.length}</div>
-              {displayProducts[0] && (
-                <>
-                  <div><strong>Sample Product Name:</strong> {displayProducts[0].name}</div>
-                  <div><strong>Sample Product Tags:</strong> {displayProducts[0].tags?.join(', ') || 'No tags'}</div>
-                  <div><strong>Sample Product Sizes:</strong> {displayProducts[0].sizes?.join(', ') || 'No sizes'}</div>
-                  <div><strong>Sample Product Colors:</strong> {displayProducts[0].colors?.join(', ') || 'No colors'}</div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
+        
         <div className={styles.sortContainer}>
           <div className={styles.sortAndFilter}>
             <select
@@ -360,11 +314,7 @@ const ProductsPage = () => {
             </select>
             
             <div className={styles.filterSummary}>
-              <span className={styles.resultCount}>
-                Showing {displayProducts.length} of {sortedProducts.length} products
-                {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
-              </span>
-              {activeFilterCount > 0 && (
+                            {activeFilterCount > 0 && (
                 <button 
                   className={styles.clearFiltersButton}
                   onClick={clearAllFilters}
@@ -489,85 +439,40 @@ const ProductsPage = () => {
         </div>
         
         {/* PAGINATION */}
-        {!isLoading && sortedProducts.length > 0 && (
+        {!isLoading && totalPages > 1 && (
           <div className={styles.paginationContainer}>
             <button
               onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
+              disabled={currentPage === 1}
               className={styles.paginationButton}
-              style={{ 
-                opacity: currentPage <= 1 ? 0.5 : 1,
-                cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
-              }}
+              aria-label="Go to previous page"
             >
-              Previous
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {/* First page */}
-              {currentPage > 3 && (
-                <>
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    className={styles.paginationButton}
-                    style={{ minWidth: '40px' }}
-                  >
-                    1
-                  </button>
-                  {currentPage > 4 && <span>...</span>}
-                </>
-              )}
-              
-              {/* Page numbers around current page */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(pageNum => {
-                  return pageNum === currentPage || 
-                         pageNum === currentPage - 1 || 
-                         pageNum === currentPage + 1 ||
-                         (pageNum === currentPage - 2 && currentPage <= 3) ||
-                         (pageNum === currentPage + 2 && currentPage >= totalPages - 2);
-                })
-                .map(pageNum => (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={styles.paginationButton}
-                    style={{
-                      minWidth: '40px',
-                      background: pageNum === currentPage ? '#333' : 'transparent',
-                      color: pageNum === currentPage ? 'white' : 'inherit',
-                      fontWeight: pageNum === currentPage ? 'bold' : 'normal'
-                    }}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-              
-              {/* Last page */}
-              {currentPage < totalPages - 2 && (
-                <>
-                  {currentPage < totalPages - 3 && <span>...</span>}
-                  <button
-                    onClick={() => handlePageChange(totalPages)}
-                    className={styles.paginationButton}
-                    style={{ minWidth: '40px' }}
-                  >
-                    {totalPages}
-                  </button>
-                </>
-              )}
-            </div>
+            {paginationRange?.map((pageNumber, index) => {
+              if (pageNumber === DOTS) {
+                return <span key={`dots-${index}`} className={styles.paginationDots}>...</span>;
+              }
+
+              return (
+                <button
+                  key={pageNumber}
+                  onClick={() => handlePageChange(pageNumber as number)}
+                  className={`${styles.paginationButton} ${currentPage === pageNumber ? styles.active : ''}`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
             
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
+              disabled={currentPage === totalPages}
               className={styles.paginationButton}
-              style={{ 
-                opacity: currentPage >= totalPages ? 0.5 : 1,
-                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
-              }}
+              aria-label="Go to next page"
             >
-              Next
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
         )}
