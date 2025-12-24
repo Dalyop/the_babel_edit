@@ -89,12 +89,6 @@ const ProductsPage = () => {
             return true;
           }
           
-          // Check product description
-          if (product.description && textMatches(product.description)) {
-            if (debugMode) console.log(`✅ ${product.name} matches description with "${filterValue}"`);
-            return true;
-          }
-          
           // Check product tags
           if (product.tags?.some(tag => textMatches(tag))) {
             if (debugMode) console.log(`✅ ${product.name} matches tags with "${filterValue}"`);
