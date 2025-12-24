@@ -32,6 +32,8 @@ const ProductsPage = () => {
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [debugMode, setDebugMode] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   // Fetch all products without filters - we'll filter client-side
   useEffect(() => {
@@ -83,13 +85,13 @@ const ProductsPage = () => {
                    lowerText.includes(searchTermNoHyphens);
           };
           
-          // Check product name
+          // Check product name (NO DESCRIPTION FILTERING)
           if (textMatches(product.name)) {
             if (debugMode) console.log(`✅ ${product.name} matches name with "${filterValue}"`);
             return true;
           }
           
-          // Check product tags
+          // Check product tags (NO DESCRIPTION FILTERING)
           if (product.tags?.some(tag => textMatches(tag))) {
             if (debugMode) console.log(`✅ ${product.name} matches tags with "${filterValue}"`);
             return true;
@@ -126,7 +128,7 @@ const ProductsPage = () => {
   }, [products, searchResults, search, activeFilters, debugMode]);
 
   // Apply sorting to filtered products
-  const displayProducts = useMemo(() => {
+  const sortedProducts = useMemo(() => {
     const sorted = [...filteredProducts].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
@@ -146,11 +148,26 @@ const ProductsPage = () => {
     });
     
     if (debugMode) {
-      console.log('📊 Final sorted products:', sorted.length);
+      console.log('📊 Total sorted products:', sorted.length);
     }
     
     return sorted;
   }, [filteredProducts, sortBy, debugMode]);
+
+  // Paginate the sorted products
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return sortedProducts.slice(startIndex, endIndex);
+  }, [sortedProducts, currentPage]);
+
+  // Calculate total pages
+  const totalPages = useMemo(() => {
+    return Math.ceil(sortedProducts.length / ITEMS_PER_PAGE);
+  }, [sortedProducts]);
+
+  // Display products = paginated products
+  const displayProducts = paginatedProducts;
 
   const handleFilterChange = useCallback((filterKey: string, value: string) => {
     if (debugMode) {
@@ -177,10 +194,14 @@ const ProductsPage = () => {
       }
       return newFilters;
     });
+    
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
   }, [debugMode]);
 
   const clearAllFilters = useCallback(() => {
     setActiveFilters({});
+    setCurrentPage(1);
   }, []);
 
   const toggleFilterSection = useCallback((sectionTitle: string) => {
@@ -222,6 +243,12 @@ const ProductsPage = () => {
 
   const handleSortChange = useCallback((newSortBy: any) => {
     setSortBy(newSortBy);
+    setCurrentPage(1); // Reset to page 1 when sorting changes
+  }, []);
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
   
   const handleRetry = useCallback(() => {
@@ -301,7 +328,9 @@ const ProductsPage = () => {
               <div><strong>Active Filters:</strong> {JSON.stringify(activeFilters)}</div>
               <div><strong>Total Source Products:</strong> {(search ? searchResults : products).length}</div>
               <div><strong>Filtered Products:</strong> {filteredProducts.length}</div>
-              <div><strong>Final Displayed:</strong> {displayProducts.length}</div>
+              <div><strong>Total Pages:</strong> {totalPages}</div>
+              <div><strong>Current Page:</strong> {currentPage}</div>
+              <div><strong>Displayed on Page:</strong> {displayProducts.length}</div>
               {displayProducts[0] && (
                 <>
                   <div><strong>Sample Product Name:</strong> {displayProducts[0].name}</div>
@@ -332,7 +361,8 @@ const ProductsPage = () => {
             
             <div className={styles.filterSummary}>
               <span className={styles.resultCount}>
-                Showing {displayProducts.length} products
+                Showing {displayProducts.length} of {sortedProducts.length} products
+                {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
               </span>
               {activeFilterCount > 0 && (
                 <button 
@@ -457,6 +487,90 @@ const ProductsPage = () => {
             )}
           </div>
         </div>
+        
+        {/* PAGINATION */}
+        {!isLoading && sortedProducts.length > 0 && (
+          <div className={styles.paginationContainer}>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className={styles.paginationButton}
+              style={{ 
+                opacity: currentPage <= 1 ? 0.5 : 1,
+                cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Previous
+            </button>
+            
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* First page */}
+              {currentPage > 3 && (
+                <>
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    className={styles.paginationButton}
+                    style={{ minWidth: '40px' }}
+                  >
+                    1
+                  </button>
+                  {currentPage > 4 && <span>...</span>}
+                </>
+              )}
+              
+              {/* Page numbers around current page */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(pageNum => {
+                  return pageNum === currentPage || 
+                         pageNum === currentPage - 1 || 
+                         pageNum === currentPage + 1 ||
+                         (pageNum === currentPage - 2 && currentPage <= 3) ||
+                         (pageNum === currentPage + 2 && currentPage >= totalPages - 2);
+                })
+                .map(pageNum => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={styles.paginationButton}
+                    style={{
+                      minWidth: '40px',
+                      background: pageNum === currentPage ? '#333' : 'transparent',
+                      color: pageNum === currentPage ? 'white' : 'inherit',
+                      fontWeight: pageNum === currentPage ? 'bold' : 'normal'
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              
+              {/* Last page */}
+              {currentPage < totalPages - 2 && (
+                <>
+                  {currentPage < totalPages - 3 && <span>...</span>}
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    className={styles.paginationButton}
+                    style={{ minWidth: '40px' }}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+            </div>
+            
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className={styles.paginationButton}
+              style={{ 
+                opacity: currentPage >= totalPages ? 0.5 : 1,
+                cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
