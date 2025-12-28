@@ -21,6 +21,16 @@ interface Testimonial {
     };
 }
 
+interface Feedback {
+  id: string;
+  message: string;
+  user: {
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  } | null;
+}
+
 // Your original components would be imported here
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense'
 import Carousel from '@/app/components/features/Carousel/Carousel';
@@ -270,6 +280,8 @@ function Dashboard() {
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(true);
+  const [featuredFeedbacks, setFeaturedFeedbacks] = useState<Feedback[]>([]);
+  const [feedbacksLoading, setFeedbacksLoading] = useState(true);
 
   useEffect(() => {
     // Fetch featured products from backend
@@ -295,6 +307,20 @@ function Dashboard() {
         }
     };
     fetchTestimonials();
+  }, []);
+
+  useEffect(() => {
+    const fetchFeaturedFeedbacks = async () => {
+      try {
+        const data = await apiRequest<Feedback[]>(API_ENDPOINTS.FEEDBACK.FEATURED);
+        setFeaturedFeedbacks(data);
+      } catch (error) {
+        console.error('Failed to fetch featured feedbacks:', error);
+      } finally {
+        setFeedbacksLoading(false);
+      }
+    };
+    fetchFeaturedFeedbacks();
   }, []);
 
   // Fetch collections for the highlight section
@@ -662,27 +688,22 @@ function Dashboard() {
             <h2 className="text-3xl md:text-4xl font-bold mb-2">THEY SAYS</h2>
             <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
           </div>
-          {testimonialsLoading ? (
+          {feedbacksLoading ? (
             <div>Loading testimonials...</div>
-          ) : testimonials.length > 0 ? (
-            <div> {/* Add this wrapper div */}
+          ) : featuredFeedbacks.length > 0 ? (
+            <div>
               <blockquote className="text-lg md:text-xl text-gray-600 italic mb-8 max-w-2xl mx-auto">
-                {testimonials[0].comment}
+                {featuredFeedbacks[0].message}
               </blockquote>
               <div className="flex justify-center items-center space-x-4 mb-8">
                   <img
-                      src={testimonials[0].user.avatar || "/images/babel_logo_black.jpg"}
+                      src={featuredFeedbacks[0].user?.avatar || "/images/babel_logo_black.jpg"}
                       alt="avatar"
                       className="w-12 h-12 rounded-full"
                   />
-                  <span className="font-bold text-gray-900">{testimonials[0].user.firstName} {testimonials[0].user.lastName}</span>
+                  <span className="font-bold text-gray-900">{featuredFeedbacks[0].user?.firstName} {featuredFeedbacks[0].user?.lastName}</span>
               </div>
-              <div className="flex justify-center">
-                  {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-6 h-6 ${i < testimonials[0].rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-              </div>
-            </div> /* Close the wrapper div */
+            </div>
           ) : (
             <p>No testimonials yet.</p>
           )}

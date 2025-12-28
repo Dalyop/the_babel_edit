@@ -10,6 +10,13 @@ import { useProductStore, Product, SortByType, FilterOptions } from '@/app/store
 import { CATEGORY_FILTERS } from '@/app/constants/categoryFilters';
 import { useDebounce } from '@/app/hooks/useDebounce';
 import { usePagination, DOTS } from '@/app/hooks/usePagination';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 
 
@@ -35,6 +42,7 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState<SortByType>('newest');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -281,6 +289,61 @@ const ProductsPage = () => {
     return CATEGORY_FILTERS[categoryKey as keyof typeof CATEGORY_FILTERS] || [];
   }, [category]);
 
+  const filterContent = (
+    <>
+      {activeFilterCount > 0 && (
+        <div className={styles.filtersHeader}>
+          <button 
+            className={styles.clearAllButton}
+            onClick={clearAllFilters}
+          >
+            Clear All
+          </button>
+        </div>
+      )}
+      
+      {currentCategoryFilters.map((filterGroup, groupIndex) => {
+        const currentValues = activeFilters[filterGroup.key] || [];
+        const isExpanded = expandedSections[filterGroup.title] ?? true;
+        
+        return (
+          <div key={groupIndex} className={styles.filterSection}>
+            <div 
+              className={`${styles.filterTitle} ${isExpanded ? styles.expanded : ''}`}
+              onClick={() => toggleFilterSection(filterGroup.title)}
+            >
+              {filterGroup.title}
+              {currentValues.length > 0 && (
+                <span className={styles.filterCount}>({currentValues.length})</span>
+              )}
+            </div>
+            <div className={`${styles.filterOptions} ${isExpanded ? styles.expanded : ''}`}>
+              {filterGroup.options.map((option, optionIndex) => {
+                const isChecked = currentValues.includes(option.value);
+                return (
+                  <div key={optionIndex} className={styles.filterOption}>
+                    <input
+                      type="checkbox"
+                      id={`${filterGroup.key}-${option.value}`}
+                      checked={isChecked}
+                      onChange={() => handleFilterChange(filterGroup.key, option.value)}
+                    />
+                    <label 
+                      htmlFor={`${filterGroup.key}-${option.value}`}
+                      className={isChecked ? styles.checkedLabel : ''}
+                    >
+                      {option.label}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
+
   return (
     <div className={styles.pageBg}>
       <NavbarWithSuspense />
@@ -314,7 +377,22 @@ const ProductsPage = () => {
             </select>
             
             <div className={styles.filterSummary}>
-                            {activeFilterCount > 0 && (
+              <div className="md:hidden">
+                <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <DialogTrigger asChild>
+                    <button className={styles.clearFiltersButton}>
+                      Filter
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Filters</DialogTitle>
+                    </DialogHeader>
+                    {filterContent}
+                  </DialogContent>
+                </Dialog>
+              </div>
+              {activeFilterCount > 0 && (
                 <button 
                   className={styles.clearFiltersButton}
                   onClick={clearAllFilters}
@@ -357,57 +435,8 @@ const ProductsPage = () => {
         )}
 
         <div className={styles.catalogContent}>
-          <div className={styles.filtersContainer}>
-            {activeFilterCount > 0 && (
-              <div className={styles.filtersHeader}>
-                <button 
-                  className={styles.clearAllButton}
-                  onClick={clearAllFilters}
-                >
-                  Clear All
-                </button>
-              </div>
-            )}
-            
-            {currentCategoryFilters.map((filterGroup, groupIndex) => {
-              const currentValues = activeFilters[filterGroup.key] || [];
-              const isExpanded = expandedSections[filterGroup.title] ?? true;
-              
-              return (
-                <div key={groupIndex} className={styles.filterSection}>
-                  <div 
-                    className={`${styles.filterTitle} ${isExpanded ? styles.expanded : ''}`}
-                    onClick={() => toggleFilterSection(filterGroup.title)}
-                  >
-                    {filterGroup.title}
-                    {currentValues.length > 0 && (
-                      <span className={styles.filterCount}>({currentValues.length})</span>
-                    )}
-                  </div>
-                  <div className={`${styles.filterOptions} ${isExpanded ? styles.expanded : ''}`}>
-                    {filterGroup.options.map((option, optionIndex) => {
-                      const isChecked = currentValues.includes(option.value);
-                      return (
-                        <div key={optionIndex} className={styles.filterOption}>
-                          <input
-                            type="checkbox"
-                            id={`${filterGroup.key}-${option.value}`}
-                            checked={isChecked}
-                            onChange={() => handleFilterChange(filterGroup.key, option.value)}
-                          />
-                          <label 
-                            htmlFor={`${filterGroup.key}-${option.value}`}
-                            className={isChecked ? styles.checkedLabel : ''}
-                          >
-                            {option.label}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          <div className={`${styles.filtersContainer} hidden md:block`}>
+            {filterContent}
           </div>
 
           <div className={styles.productsGrid}>

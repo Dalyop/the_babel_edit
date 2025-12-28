@@ -352,5 +352,6 @@ export const API_ENDPOINTS = {
     CREATE: '/feedback',
     UPDATE: (feedbackId: string) => `/feedback/${feedbackId}`,
     DELETE: (feedbackId: string) => `/feedback/${feedbackId}`,
+    FEATURED: '/feedback/featured',
   },
 } as const;

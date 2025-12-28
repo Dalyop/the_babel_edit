@@ -47,6 +47,7 @@ interface Feedback {
   message: string;
   pageUrl: string;
   isResolved: boolean;
+  isFeatured: boolean;
   createdAt: string;
   user: {
     id: string;
@@ -273,6 +274,25 @@ const AdminPage = () => {
       toast.error('Failed to delete feedback.');
     } finally {
       setActionLoading(prev => ({ ...prev, [`delete-feedback-${id}`]: false }));
+    }
+  };
+
+  const handleToggleFeatureFeedback = async (feedback: Feedback) => {
+    const isFeatured = feedback.isFeatured;
+    const action = isFeatured ? 'unfeature' : 'feature';
+    setActionLoading(prev => ({ ...prev, [`feature-feedback-${feedback.id}`]: true }));
+    try {
+      await apiRequest(API_ENDPOINTS.FEEDBACK.UPDATE(feedback.id), {
+        method: 'PUT',
+        body: { isFeatured: !isFeatured },
+        requireAuth: true,
+      });
+      toast.success(`Feedback ${action}d successfully.`);
+      fetchFeedbacks();
+    } catch (error) {
+      toast.error(`Failed to ${action} feedback.`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`feature-feedback-${feedback.id}`]: false }));
     }
   };
 
@@ -627,6 +647,12 @@ const AdminPage = () => {
   ];
 
   const feedbackActions: Action<Feedback>[] = [
+    {
+      label: (feedback) => feedback.isFeatured ? 'Unfeature' : 'Feature',
+      onClick: (feedback) => handleToggleFeatureFeedback(feedback),
+      variant: (feedback) => feedback.isFeatured ? 'outline' : 'primary',
+      loading: (feedback) => actionLoading[`feature-feedback-${feedback.id}`]
+    },
     {
       label: 'Mark as Resolved',
       onClick: (feedback) => handleToggleResolve(feedback.id, true),

@@ -549,7 +549,7 @@
   }
   
   .productsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-4);
     margin-left: 0; /* Reset margin-left for smaller screens */
   }
