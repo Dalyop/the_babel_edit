@@ -318,6 +318,7 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/orders/${id}`,
     CREATE: '/orders',
     CONFIRM_PAYMENT: (id: string) => `/orders/${id}/confirm-payment`,
+    CANCEL: (orderId: string) => `/orders/${orderId}/cancel`,
   },
   ADDRESSES: {
     LIST: '/addresses',
@@ -345,5 +346,11 @@ export const API_ENDPOINTS = {
       REMOVE: (reviewId: string) => `/admin/testimonials/${reviewId}`, // DELETE to remove
       PUBLIC_LIST: '/testimonials/public', // GET public testimonials (non-admin)
     }
-  }
+  },
+  FEEDBACK: {
+    LIST: '/feedback',
+    CREATE: '/feedback',
+    UPDATE: (feedbackId: string) => `/feedback/${feedbackId}`,
+    DELETE: (feedbackId: string) => `/feedback/${feedbackId}`,
+  },
 } as const;

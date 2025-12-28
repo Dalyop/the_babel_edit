@@ -10,13 +10,20 @@ import { Loader2, AlertCircle, Package, ArrowLeft } from 'lucide-react';
 import { API_ENDPOINTS } from '@/app/lib/api';
 import { toast } from 'react-hot-toast';
 
-// Assuming the same Order interface as the orders list page
 interface Order {
   id: string;
   orderNumber: string;
   createdAt: string;
-  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  status: 'PENDING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'CONFIRMED' | 'PROCESSING' | 'REFUNDED';
+  paymentStatus: 'PENDING' | 'PAID' | 'REFUNDED';
+  paymentMethod: string;
   total: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  trackingNumber?: string | null;
+  estimatedDelivery?: string | null;
   shippingAddress: {
     street: string;
     city: string;
@@ -29,7 +36,7 @@ interface Order {
     quantity: number;
     price: number;
     product: {
-      id: string;
+      id:string;
       name: string;
       imageUrl: string;
     };
@@ -46,6 +53,27 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+
+    setIsCancelling(true);
+    try {
+      await authenticatedFetch(API_ENDPOINTS.ORDERS.CANCEL(order.id), {
+        method: 'PATCH',
+      });
+      toast.success('Order cancelled successfully!');
+      // Refetch order details to show updated status
+      const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.BY_ID(order.id));
+      setOrder(data.order);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to cancel order.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+  
   useEffect(() => {
     if (authLoading) {
       return; // Wait for authentication to resolve
@@ -149,7 +177,7 @@ const OrderDetailPage = () => {
                 </div>
             </div>
 
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Shipping Address</h2>
                     <address className="not-italic text-gray-600 space-y-1">
@@ -165,10 +193,44 @@ const OrderDetailPage = () => {
                     </address>
                 </div>
                 <div>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Order Status & Tracking</h2>
+                    <div className="space-y-3 text-gray-600">
+                        <div className="flex items-center gap-2">
+                            <span className="font-semibold">Payment:</span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                                {order.paymentStatus}
+                            </span>
+                        </div>
+                        {order.trackingNumber && (
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold">Tracking #:</span>
+                                <a href={`https://www.google.com/search?q=${order.trackingNumber}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{order.trackingNumber}</a>
+                            </div>
+                        )}
+                        {order.estimatedDelivery && (
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold">Est. Delivery:</span>
+                                <span>{new Date(order.estimatedDelivery).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                        )}
+                        {order.status === 'PENDING' && (
+                            <button 
+                                onClick={handleCancelOrder}
+                                disabled={isCancelling}
+                                className="mt-4 w-full bg-red-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 disabled:bg-red-400 transition-colors"
+                            >
+                                {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+                <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Payment Summary</h2>
                     <div className="space-y-2 text-gray-600">
-                        <div className="flex justify-between"><span>Subtotal</span> <span>${order.total.toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span>Shipping</span> <span className='text-[var(--color-success)]'>FREE</span></div>
+                        <div className="flex justify-between"><span>Subtotal</span> <span>${order.subtotal.toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span>Shipping</span> <span>{order.shipping > 0 ? `$${order.shipping.toFixed(2)}` : <span className='text-[var(--color-success)]'>FREE</span>}</span></div>
+                        <div className="flex justify-between"><span>Tax</span> <span>${order.tax.toFixed(2)}</span></div>
+                        {order.discount > 0 && <div className="flex justify-between text-[var(--color-success)]"><span>Discount</span> <span>-${order.discount.toFixed(2)}</span></div>}
                         <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2 mt-2"><span>Total</span> <span>${order.total.toFixed(2)}</span></div>
                     </div>
                 </div>

@@ -41,6 +41,21 @@ interface Review {
     };
 }
 
+interface Feedback {
+  id: string;
+  type: string;
+  message: string;
+  pageUrl: string;
+  isResolved: boolean;
+  createdAt: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+}
+
 interface ErrorState {
   type: 'products' | 'users' | 'reviews' | 'action';
   message: string;
@@ -48,7 +63,7 @@ interface ErrorState {
 
 interface DeleteConfirmState {
   isOpen: boolean;
-  type: 'product' | 'user' | 'review';
+  type: 'product' | 'user' | 'review' | 'feedback';
   id: string;
   name: string;
   hard: boolean;
@@ -58,11 +73,13 @@ const AdminPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [featuredReviewIds, setFeaturedReviewIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'users' | 'reviews'>('products');
+  const [feedbacksLoading, setFeedbacksLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'products' | 'users' | 'reviews' | 'feedback'>('products');
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
@@ -92,6 +109,8 @@ const AdminPage = () => {
     } else if (activeTab === 'reviews') {
       fetchReviews();
       fetchFeaturedReviews();
+    } else if (activeTab === 'feedback') {
+      fetchFeedbacks();
     }
   }, [pagination.page, searchTerm, activeTab]);
 
@@ -174,6 +193,18 @@ const AdminPage = () => {
     }
   };
 
+  const fetchFeedbacks = async () => {
+    setFeedbacksLoading(true);
+    try {
+      const response = await apiRequest<Feedback[]>(API_ENDPOINTS.FEEDBACK.LIST, { requireAuth: true });
+      setFeedbacks(response);
+    } catch (error) {
+      toast.error('Failed to fetch feedbacks.');
+    } finally {
+      setFeedbacksLoading(false);
+    }
+  };
+
   const fetchFeaturedReviews = async () => {
     try {
       const response = await apiRequest<string[]>(API_ENDPOINTS.ADMIN.TESTIMONIALS.LIST, { requireAuth: true });
@@ -214,6 +245,34 @@ const AdminPage = () => {
       toast.error('Failed to delete review.');
     } finally {
       setActionLoading(prev => ({ ...prev, [`delete-review-${id}`]: false }));
+    }
+  };
+
+  const handleToggleResolve = async (feedbackId: string, isResolved: boolean) => {
+    setActionLoading(prev => ({ ...prev, [`resolve-feedback-${feedbackId}`]: true }));
+    try {
+      await apiRequest(API_ENDPOINTS.FEEDBACK.UPDATE(feedbackId), { method: 'PUT', body: { isResolved }, requireAuth: true });
+      toast.success(`Feedback marked as ${isResolved ? 'resolved' : 'unresolved'}.`);
+      fetchFeedbacks();
+    } catch (error) {
+      toast.error('Failed to update feedback status.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`resolve-feedback-${feedbackId}`]: false }));
+    }
+  };
+
+  const handleDeleteFeedback = async () => {
+    const { id, name } = deleteConfirm;
+    setActionLoading(prev => ({ ...prev, [`delete-feedback-${id}`]: true }));
+    try {
+      await apiRequest(API_ENDPOINTS.FEEDBACK.DELETE(id), { method: 'DELETE', requireAuth: true });
+      toast.success(`Feedback from ${name} deleted successfully`);
+      fetchFeedbacks();
+      closeDeleteModal();
+    } catch (error) {
+      toast.error('Failed to delete feedback.');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`delete-feedback-${id}`]: false }));
     }
   };
 
@@ -345,7 +404,7 @@ const AdminPage = () => {
     }
   };
 
-  const showDeleteConfirm = (type: 'product' | 'user' | 'review', id: string, name: string, hard = false) => {
+  const showDeleteConfirm = (type: 'product' | 'user' | 'review' | 'feedback', id: string, name: string, hard = false) => {
     setDeleteConfirm({ isOpen: true, type, id, name, hard });
   };
 
@@ -534,6 +593,54 @@ const AdminPage = () => {
       }
   ];
 
+  const feedbackColumns: Column<Feedback>[] = [
+    {
+      key: 'author',
+      header: 'Author',
+      cell: (feedback) => feedback.user ? `${feedback.user.firstName} ${feedback.user.lastName} (${feedback.user.email})` : 'Anonymous'
+    },
+    {
+      key: 'type',
+      header: 'Type',
+    },
+    {
+      key: 'message',
+      header: 'Message',
+      width: '40%'
+    },
+    {
+      key: 'pageUrl',
+      header: 'Page URL',
+    },
+    {
+      key: 'isResolved',
+      header: 'Status',
+      cell: (feedback) => (
+        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${feedback.isResolved
+            ? 'bg-green-100 text-green-800'
+            : 'bg-yellow-100 text-yellow-800'
+          }`}>
+          {feedback.isResolved ? 'Resolved' : 'Unresolved'}
+        </span>
+      )
+    },
+  ];
+
+  const feedbackActions: Action<Feedback>[] = [
+    {
+      label: 'Mark as Resolved',
+      onClick: (feedback) => handleToggleResolve(feedback.id, true),
+      variant: 'outline',
+      loading: (feedback) => actionLoading[`resolve-feedback-${feedback.id}`]
+    },
+    {
+      label: 'Delete',
+      onClick: (feedback) => showDeleteConfirm('feedback', feedback.id, `feedback by ${feedback.user?.firstName || 'Anonymous'}`),
+      variant: 'danger',
+      loading: (feedback) => actionLoading[`delete-feedback-${feedback.id}`]
+    }
+  ];
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -570,7 +677,7 @@ const AdminPage = () => {
     );
   };
 
-  const renderTabButton = (tab: 'products' | 'users' | 'reviews', icon: React.ReactNode, label: string) => (
+  const renderTabButton = (tab: 'products' | 'users' | 'reviews' | 'feedback', icon: React.ReactNode, label: string) => (
     <button
       className={`whitespace-nowrap py-4 px-1 border-b-2 text-sm font-medium flex items-center space-x-2 ${activeTab === tab
           ? 'border-blue-500 text-blue-600'
@@ -617,6 +724,7 @@ const AdminPage = () => {
                   {renderTabButton('products', <Package className="h-4 w-4" />, 'Products')}
                   {renderTabButton('users', <Users className="h-4 w-4" />, 'Users')}
                   {renderTabButton('reviews', <MessageSquare className="h-4 w-4" />, 'Reviews')}
+                  {renderTabButton('feedback', <MessageSquare className="h-4 w-4" />, 'Feedback')}
                 </nav>
               </div>
 
@@ -704,6 +812,24 @@ const AdminPage = () => {
                   />
                 </div>
               )}
+
+              {activeTab === 'feedback' && (
+                <div className="p-6">
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Feedback Management</h2>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Manage user feedback and suggestions.
+                    </p>
+                  </div>
+                  <DataTable
+                    data={feedbacks}
+                    columns={feedbackColumns}
+                    actions={feedbackActions}
+                    loading={feedbacksLoading}
+                    emptyMessage="No feedback found"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -714,7 +840,8 @@ const AdminPage = () => {
           onConfirm={
             deleteConfirm.type === 'product' ? handleDeleteProduct : 
             deleteConfirm.type === 'user' ? handleDeleteUser : 
-            handleDeleteReview
+            deleteConfirm.type === 'review' ? handleDeleteReview :
+            handleDeleteFeedback
           }
           title={`Delete ${deleteConfirm.type}`}
           message={`Are you sure you want to delete this ${deleteConfirm.type}?`}

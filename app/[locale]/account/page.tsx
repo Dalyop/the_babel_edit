@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/app/lib/api";
 import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { FeedbackForm } from '@/app/components/features/feedback/FeedbackForm';
 
 type Address = {
   id?: string;
@@ -291,6 +292,18 @@ export default function AccountPage() {
       toast.error(`Failed to change password: ${err.message || err}`);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (values: { type: string; message: string; }) => {
+    try {
+      await authenticatedFetch(API_ENDPOINTS.FEEDBACK.CREATE, {
+        method: 'POST',
+        body: JSON.stringify({ ...values, pageUrl: window.location.href }),
+      });
+    } catch (err: any) {
+      console.error('Failed to submit feedback:', err);
+      throw err; // Re-throw to be caught by the form
     }
   };
 
@@ -787,6 +800,15 @@ export default function AccountPage() {
           </div>
         );
 
+      case 'feedback':
+        return (
+          <div className={styles.profileForm}>
+            <h2 className={styles.tabTitle}>Submit Feedback</h2>
+            <p className={styles.tabDescription}>We would love to hear your thoughts, suggestions, or bug reports to help us improve.</p>
+            <FeedbackForm onSubmit={handleFeedbackSubmit} />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -818,6 +840,7 @@ export default function AccountPage() {
               <Link href={`/${currentLocale}/wishlist`}>Wishlist</Link>
             </li>
             <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>Security</li>
+            <li className={activeTab === 'feedback' ? styles.active : ''} onClick={() => setActiveTab('feedback')}>Feedback</li>
           </ul>
           <div className={styles.logout} onClick={handleLogout}>
             Logout
