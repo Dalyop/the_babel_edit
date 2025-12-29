@@ -20,10 +20,10 @@ export const CATEGORY_FILTERS: CategoryFilters = {
       key: 'type',
       options: [
         { label: 'T-Shirt', value: 'tshirt' },
-        { label: 'Blouse & Shirt', value: 'blouse' },
+        { label: 'Blouse', value: 'blouse' },
         { label: 'Shirt', value: 'shirt' },
+        { label: 'Top', value: 'top' },
         { label: 'Sweater & Cardigan', value: 'sweater' },
-        { label: 'Cardigan', value: 'cardigan' },
         { label: 'Jean', value: 'jean' },
         { label: 'Pant & Trouser', value: 'pant' },
         { label: 'Trouser', value: 'trouser' },

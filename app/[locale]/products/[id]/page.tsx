@@ -427,7 +427,7 @@ export default function ProductDetailPage() {
               <label className="block text-sm font-semibold text-gray-900 mb-3">
                 Size: <span className="font-normal text-gray-600">{getCurrentSizeDisplay(selectedSize)}</span>
               </label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {SIZE_DATA[sizeSystem].map((sizeOption) => (
                   <button
                     key={sizeOption.value}

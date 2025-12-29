@@ -66,7 +66,7 @@ const OrderDetailPage = () => {
       toast.success('Order cancelled successfully!');
       // Refetch order details to show updated status
       const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.BY_ID(order.id));
-      setOrder(data.order);
+      setOrder(data);
     } catch (err: any) {
       toast.error(err.message || 'Failed to cancel order.');
     } finally {
@@ -88,7 +88,7 @@ const OrderDetailPage = () => {
 
       try {
         const data = await authenticatedFetch(API_ENDPOINTS.ORDERS.BY_ID(orderId));
-        setOrder(data.order);
+        setOrder(data);
       } catch (err: any) {
         if (err.status === 404) {
             setError('Order not found.');
