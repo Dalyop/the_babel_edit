@@ -364,7 +364,7 @@ export default function ProductDetailPage() {
   return (
     <div className={styles.productDetailBg}>
       <Navbar />
-      <main className="py-8 px-4 max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto py-12">
         <div className={styles.productContent}>
           {/* Left Column - Images */}
           <div className={styles.leftCol}>

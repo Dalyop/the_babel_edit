@@ -20,6 +20,13 @@ import {
 import { API_ENDPOINTS } from "@/app/lib/api";
 import { Loader2, Package, AlertCircle } from 'lucide-react';
 import { FeedbackForm } from '@/app/components/features/feedback/FeedbackForm';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Address = {
   id?: string;
@@ -175,7 +182,7 @@ export default function AccountPage() {
       if (!user) return;
       setRecentOrdersLoading(true);
       try {
-        const data = await authenticatedFetch(`${API_ENDPOINTS.ORDERS.LIST}?limit=3`);
+        const data = await authenticatedFetch(`${API_ENDPOINTS.ORDERS.LIST}?limit=1`);
         setRecentOrders(data.orders || []);
       } catch (err: any) {
         // Don't show an error for this, as it's just a preview
@@ -526,9 +533,11 @@ export default function AccountPage() {
                 <div className="space-y-6">
                   {recentOrders.map(order => <OrderCard key={order.id} order={order} />)}
                   <div className="text-center pt-2">
-                    <Button variant="outline" onClick={() => setActiveTab('orders')}>
-                      View All Orders
-                    </Button>
+                    <Link href={`/${currentLocale}/orders`}>
+                      <Button variant="outline">
+                        View All Orders
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               ) : (
@@ -875,6 +884,22 @@ export default function AccountPage() {
                 {profile?.email || user?.email || 'No email available'}
               </div>
             </div>
+          </div>
+
+          <div className="md:hidden mb-4">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a section" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="profile">Profile Settings</SelectItem>
+                <SelectItem value="orders">Orders</SelectItem>
+                <SelectItem value="addresses">Addresses</SelectItem>
+                <SelectItem value="wishlist">Wishlist</SelectItem>
+                <SelectItem value="security">Security</SelectItem>
+                <SelectItem value="feedback">Feedback</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {renderTabContent()}
