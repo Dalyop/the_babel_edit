@@ -406,6 +406,7 @@ export default function AccountPage() {
       const result = await authenticatedFetch('/auth/profile/avatar', {
         method: 'PUT',
         body: formData,
+        isFormData: true,
       });
 
       const updatedUserData = result.user || result.data || result;
