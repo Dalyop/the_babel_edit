@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/app/lib/api";
-import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { Loader2, Package, AlertCircle, Camera } from 'lucide-react';
 import { FeedbackForm } from '@/app/components/features/feedback/FeedbackForm';
 import {
   Select,
@@ -83,6 +83,9 @@ export default function AccountPage() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+  
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -388,6 +391,36 @@ export default function AccountPage() {
       setSaving(false);
       setDeleteDialogOpen(false);
       setAddressToDelete(null);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const result = await authenticatedFetch('/auth/profile/avatar', {
+        method: 'PUT',
+        body: formData,
+      });
+
+      const updatedUserData = result.user || result.data || result;
+      if (updatedUserData) {
+        updateUser(updatedUserData);
+        setProfile((prevProfile) => prevProfile ? { ...prevProfile, avatar: updatedUserData.avatar } : null);
+        toast.success('Profile picture updated successfully!');
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (err: any) {
+      console.error('Avatar upload error:', err);
+      toast.error(`Failed to upload avatar: ${err.message || 'Please try again.'}`);
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -870,12 +903,32 @@ export default function AccountPage() {
             </div>
           )}
 
-          <div className={styles.profileHeader}>
-            <img
-              src={profile?.avatar || user?.avatar || "/images/babel_logo_black.jpg"}
-              alt="avatar"
-              className={styles.avatar}
+          <div className={`${styles.profileHeader} group`}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              style={{ display: 'none' }}
+              accept="image/png, image/jpeg, image/jpg"
+              disabled={uploadingAvatar}
             />
+            <div className="relative">
+              <img
+                src={profile?.avatar || user?.avatar || "/images/babel_logo_black.jpg"}
+                alt="avatar"
+                className={styles.avatar}
+              />
+              <div 
+                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-full transition-all duration-300 cursor-pointer"
+                onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                )}
+              </div>
+            </div>
             <div>
               <div className={styles.profileName}>
                 {profile?.name || user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'No name available'}

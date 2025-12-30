@@ -23,7 +23,13 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images }) => 
         ))}
       </div>
       <div className={styles.mainImage}>
-        <Image src={images[selectedIdx].src} alt={images[selectedIdx].alt} width={350} height={420} className={styles.mainImg} />
+        <Image 
+          src={images[selectedIdx].src} 
+          alt={images[selectedIdx].alt} 
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className={styles.mainImg} 
+        />
       </div>
     </div>
   );

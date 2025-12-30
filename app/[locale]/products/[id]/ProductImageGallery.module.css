@@ -36,8 +36,9 @@
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
-  width: 350px;
-  height: 420px;
+  width: 100%;
+  aspect-ratio: 350 / 420;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;

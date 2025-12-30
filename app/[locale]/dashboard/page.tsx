@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Menu, X, ShoppingBag, Search, User, Heart, Star } from 'lucide-react';
+import { Menu, X, ShoppingBag, Search, User, Heart, Star, MessageSquarePlus } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
@@ -639,6 +641,19 @@ function Dashboard() {
             </div>
           ))}
         </div>
+      </section>
+
+      <TextDivider text="Share Your Thoughts" />
+      <section className="py-8 px-4 max-w-7xl mx-auto text-center">
+        <p className="text-lg text-gray-600 mb-6 text-center">
+          Your feedback helps us grow! Share your suggestions, report issues, or simply say hello.
+        </p>
+        <Link href={`/${locale}/account?tab=feedback`}>
+          <Button className="px-8 py-3 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300">
+            <MessageSquarePlus className="mr-3 h-5 w-5" />
+            Leave Feedback
+          </Button>
+        </Link>
       </section>
 
       <section className="py-8 px-4 max-w-7xl mx-auto">
