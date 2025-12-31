@@ -344,7 +344,7 @@ export const API_ENDPOINTS = {
       LIST: '/admin/testimonials', // GET all featured testimonial IDs
       ADD: '/admin/testimonials',   // POST to add a reviewId as testimonial
       REMOVE: (reviewId: string) => `/admin/testimonials/${reviewId}`, // DELETE to remove
-      PUBLIC_LIST: '/testimonials/public', // GET public testimonials (non-admin)
+      PUBLIC_LIST: '/admin/testimonials/public', // GET public testimonials (non-admin)
     }
   },
   FEEDBACK: {
