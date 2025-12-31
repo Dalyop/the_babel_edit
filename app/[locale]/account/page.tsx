@@ -7,6 +7,7 @@ import Navbar from "@/app/components/features/Navbar/Navbar";
 import Footer from "@/app/components/features/Footer/Footer";
 import { useAuth } from "@/app/context/AuthContext";
 import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Loading from "@/app/components/ui/Loading/Loading";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ interface Order {
 
 export default function AccountPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const currentLocale = typeof params.locale === 'string' ? params.locale : 'en';
   const router = useRouter();
   const { user, loading, authenticatedFetch, updateUser, logout } = useAuth();
@@ -95,6 +97,13 @@ export default function AccountPage() {
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(true);
 
   const hasFetchedRef = useRef(false);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Redirect if not authenticated after loading completes
   useEffect(() => {

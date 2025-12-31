@@ -42,15 +42,17 @@ const FeedbackCarousel: React.FC<FeedbackCarouselProps> = ({ feedbacks }) => {
         <div className="flex">
           {feedbacks.map((feedback) => (
             <div className="flex-[0_0_100%] min-w-0 p-4" key={feedback.id}>
-              <div className="bg-white rounded-lg p-8 text-center shadow-lg h-full flex flex-col justify-center items-center">
+              <div className="p-8 text-center h-full flex flex-col justify-center items-center">
                 <p className="italic text-gray-600 mb-6 text-lg leading-relaxed">"{feedback.message}"</p>
-                <img
-                  src={feedback.user?.avatar || '/images/babel_logo_black.jpg'}
-                  alt={`${feedback.user?.firstName} ${feedback.user?.lastName}'s avatar`}
-                  className="w-16 h-16 rounded-full mb-4 object-cover"
-                />
-                <div className="font-semibold text-gray-800">
-                  {feedback.user?.firstName} {feedback.user?.lastName}
+                <div className="flex items-center justify-center">
+                  <img
+                    src={feedback.user?.avatar || '/images/babel_logo_black.jpg'}
+                    alt={`${feedback.user?.firstName} ${feedback.user?.lastName}'s avatar`}
+                    className="w-12 h-12 rounded-full mr-4 object-cover"
+                  />
+                  <div className="font-semibold text-gray-800">
+                    {feedback.user?.firstName} {feedback.user?.lastName}
+                  </div>
                 </div>
               </div>
             </div>
