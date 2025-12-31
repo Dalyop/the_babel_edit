@@ -103,6 +103,9 @@ const AdminPage = () => {
   const isAdmin = user?.role && ['admin', 'super_admin'].includes(user.role.toLowerCase());
 
   useEffect(() => {
+    // Only fetch data if the user is an admin
+    if (!isAdmin) return;
+
     if (activeTab === 'products') {
       fetchProducts();
     } else if (activeTab === 'users') {
@@ -113,7 +116,7 @@ const AdminPage = () => {
     } else if (activeTab === 'feedback') {
       fetchFeedbacks();
     }
-  }, [pagination.page, searchTerm, activeTab]);
+  }, [pagination.page, searchTerm, activeTab, isAdmin]);
 
   const fetchProducts = async (retry = false) => {
     setLoading(true);

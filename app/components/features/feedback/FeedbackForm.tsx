@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 const feedbackSchema = z.object({
   type: z.string().nonempty('Feedback type is required'),
@@ -36,14 +36,10 @@ export function FeedbackForm({ onSubmit }: FeedbackFormProps) {
     setIsSubmitting(true);
     try {
       await onSubmit(values);
-      toast.success('Feedback Sent', {
-        description: 'Thank you for your feedback!',
-      });
+      toast.success('Thank you for your feedback!');
       form.reset();
     } catch (error) {
-      toast.error('Error', {
-        description: 'Failed to send feedback. Please try again.',
-      });
+      toast.error('Failed to send feedback. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
