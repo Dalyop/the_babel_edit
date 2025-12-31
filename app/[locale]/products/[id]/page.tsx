@@ -364,15 +364,15 @@ export default function ProductDetailPage() {
   return (
     <div className={styles.productDetailBg}>
       <Navbar />
-      <main className="max-w-7xl mx-auto py-12">
-        <div className={styles.productContent}>
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-12">
           {/* Left Column - Images */}
-          <div className={styles.leftCol}>
+          <div>
             <ProductImageGallery images={productImages} />
           </div>
 
           {/* Right Column - Product Details */}
-          <div className={styles.rightCol}>
+          <div className="mt-10 lg:mt-0">
             <h1 className={styles.productTitle}>{currentProduct.name}</h1>
             
             <div className={styles.productPrice}>
@@ -540,7 +540,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        <ProductTabs tabs={tabs} />
+        <div className="mt-16">
+          <ProductTabs tabs={tabs} />
+        </div>
 
         {/* Related Products */}
         <div className={styles.likeSection}>
