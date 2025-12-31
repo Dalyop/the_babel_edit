@@ -230,7 +230,7 @@ export default function AccountPage() {
       console.log('Submitting form data:', form);
       const updated = await authenticatedFetch(`/auth/profile`, {
         method: "PUT",
-        body: JSON.stringify(form),
+        body: form,
         headers: { "Content-Type": "application/json" },
       });
 
