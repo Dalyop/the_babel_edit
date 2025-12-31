@@ -47,11 +47,11 @@ const FeedbackCarousel: React.FC<FeedbackCarouselProps> = ({ feedbacks }) => {
                 <div className="flex items-center justify-center">
                   <img
                     src={feedback.user?.avatar || '/images/babel_logo_black.jpg'}
-                    alt={`${feedback.user?.firstName} ${feedback.user?.lastName}'s avatar`}
+                    alt={feedback.user ? `${feedback.user.firstName} ${feedback.user.lastName}'s avatar` : 'Anonymous user avatar'}
                     className="w-12 h-12 rounded-full mr-4 object-cover"
                   />
                   <div className="font-semibold text-gray-800">
-                    {feedback.user?.firstName} {feedback.user?.lastName}
+                    {feedback.user ? `${feedback.user.firstName} ${feedback.user.lastName}` : 'Anonymous'}
                   </div>
                 </div>
               </div>
