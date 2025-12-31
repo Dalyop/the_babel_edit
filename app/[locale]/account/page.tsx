@@ -342,8 +342,9 @@ export default function AccountPage() {
     setError('');
 
     try {
-      const method = editingAddress !== null ? 'PUT' : 'POST';
-      const endpoint = editingAddress !== null
+      const isUpdating = editingAddress && editingAddress !== '';
+      const method = isUpdating ? 'PUT' : 'POST';
+      const endpoint = isUpdating
         ? `/user/addresses/${editingAddress}`
         : '/user/addresses';
 

@@ -10,12 +10,12 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({ images }) => 
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   return (
-    <div className={styles.galleryWrapper}>
-      <div className={styles.thumbnails}>
+    <div className="flex flex-col-reverse md:flex-row gap-6">
+      <div className="flex flex-row md:flex-col gap-4 overflow-x-auto">
         {images.map((img, idx) => (
           <div
             key={img.src}
-            className={`${styles.thumbnail} ${idx === selectedIdx ? styles.active : ''}`}
+            className={`${styles.thumbnail} ${idx === selectedIdx ? styles.active : ''} flex-shrink-0`}
             onClick={() => setSelectedIdx(idx)}
           >
             <Image src={img.src} alt={img.alt} width={60} height={80} className={styles.thumbImg} />
