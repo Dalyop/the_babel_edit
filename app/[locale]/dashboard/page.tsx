@@ -184,7 +184,7 @@ const SquareProductCard = ({ product }: { product: Product }) => {
       {/* Product Info */}
       <div className="p-4">
         <div className="mb-2">
-          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">
+          <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 mb-1">
             {product.name}
           </h3>
           {product.collection && (
