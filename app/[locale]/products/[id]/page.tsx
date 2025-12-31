@@ -372,23 +372,23 @@ export default function ProductDetailPage() {
 
           {/* Right Column - Product Details */}
           <div className="mt-10 lg:mt-0">
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-gray-900 mb-4">{currentProduct.name}</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900 mb-3 sm:mb-4">{currentProduct.name}</h1>
             
-            <div className="text-3xl text-gray-900 mb-4">
+            <div className="text-2xl sm:text-3xl text-gray-900 mb-3 sm:mb-4">
               ${currentProduct.price?.toFixed(2)}
               {currentProduct.comparePrice && (
-                <span className="ml-2 text-lg text-gray-500 line-through">
+                <span className="ml-2 text-base sm:text-lg text-gray-500 line-through">
                   ${currentProduct.comparePrice.toFixed(2)}
                 </span>
               )}
             </div>
 
-            <div className="text-base text-gray-700 space-y-4 mb-6">
+            <div className="text-base text-gray-700 space-y-4 mb-4 sm:mb-6">
               {currentProduct.description}
             </div>
 
             {/* Size System Toggle */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-semibold text-gray-900 mb-0">
                   Size System
@@ -404,15 +404,15 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              <div className="bg-white border-2 border-gray-200 rounded-xl p-1 inline-flex">
+              <div className="flex flex-col sm:flex-row gap-2">
                 {(['uk', 'us'] as const).map((system) => (
                   <button
                     key={system}
                     onClick={() => setSizeSystem(system)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    className={`w-full sm:w-auto flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 border-2 ${
                       sizeSystem === system
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-white text-gray-600 border-gray-200 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     {system.toUpperCase()} Sizes
@@ -422,7 +422,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Size Selection */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label className="block text-sm font-semibold text-gray-900 mb-3">
                 Size: <span className="font-normal text-gray-600">{getCurrentSizeDisplay(selectedSize)}</span>
               </label>
@@ -454,11 +454,11 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Color Selection */}
-            <div className="mb-6">
+            <div className="mb-6 sm:mb-8">
               <label className="block text-sm font-semibold text-gray-900 mb-3">
                 Color: <span className="font-normal text-gray-600 capitalize">{selectedColor}</span>
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {availableColors.map((color) => (
                   <button
                     key={color}
@@ -484,12 +484,12 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Quantity Selection */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <label className="block text-sm font-semibold text-gray-900 mb-3">Quantity</label>
               <div className="flex items-center border-2 border-gray-200 rounded-xl w-32">
                 <button
                   onClick={() => handleQuantityChange(-1)}
-                  className="p-3 hover:bg-gray-50 transition-colors duration-200"
+                  className="p-3 hover:bg-gray-50 transition-colors duration-200 rounded-l-lg"
                 >
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -498,7 +498,7 @@ export default function ProductDetailPage() {
                 <span className="flex-1 text-center font-semibold text-gray-900">{quantity}</span>
                 <button
                   onClick={() => handleQuantityChange(1)}
-                  className="p-3 hover:bg-gray-50 transition-colors duration-200"
+                  className="p-3 hover:bg-gray-50 transition-colors duration-200 rounded-r-lg"
                 >
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
