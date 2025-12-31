@@ -871,12 +871,7 @@ export default function AccountPage() {
               <MapPin className="w-5 h-5 mr-2" />
               Addresses
             </li>
-            <li className={activeTab === 'wishlist' ? styles.active : ''}>
-              <Link href={`/${currentLocale}/wishlist`}>
-                <Heart className="w-5 h-5 mr-2" />
-                <span>Wishlist</span>
-              </Link>
-            </li>
+
             <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>
               <Shield className="w-5 h-5 mr-2" />
               Security
@@ -955,7 +950,7 @@ export default function AccountPage() {
                 <SelectItem value="profile">Profile Settings</SelectItem>
                 <SelectItem value="orders">Orders</SelectItem>
                 <SelectItem value="addresses">Addresses</SelectItem>
-                <SelectItem value="wishlist">Wishlist</SelectItem>
+
                 <SelectItem value="security">Security</SelectItem>
                 <SelectItem value="feedback">Feedback</SelectItem>
               </SelectContent>
