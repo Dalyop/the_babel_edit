@@ -95,7 +95,7 @@ const AdminPage = () => {
   });
 
   const MAX_RETRIES = 3;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const locale = (params.locale as string) || 'en';
@@ -103,8 +103,10 @@ const AdminPage = () => {
   const isAdmin = user?.role && ['admin', 'super_admin'].includes(user.role.toLowerCase());
 
   useEffect(() => {
-    // Only fetch data if the user is an admin
-    if (!isAdmin) return;
+    // Wait for authentication to resolve and ensure user is an admin
+    if (authLoading || !isAdmin) {
+      return;
+    }
 
     if (activeTab === 'products') {
       fetchProducts();
@@ -116,7 +118,7 @@ const AdminPage = () => {
     } else if (activeTab === 'feedback') {
       fetchFeedbacks();
     }
-  }, [pagination.page, searchTerm, activeTab, isAdmin]);
+  }, [pagination.page, searchTerm, activeTab, isAdmin, authLoading]);
 
   const fetchProducts = async (retry = false) => {
     setLoading(true);
