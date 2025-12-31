@@ -904,7 +904,7 @@ export default function AccountPage() {
             </div>
           )}
 
-          <div className={`${styles.profileHeader} group`}>
+          <div className={styles.profileHeader}>
             <input
               type="file"
               ref={fileInputRef}
@@ -913,22 +913,26 @@ export default function AccountPage() {
               accept="image/png, image/jpeg, image/jpg"
               disabled={uploadingAvatar}
             />
-            <div className="relative">
+            <div className="flex flex-col items-center gap-2">
               <img
                 src={profile?.avatar || user?.avatar || "/images/babel_logo_black.jpg"}
                 alt="avatar"
                 className={styles.avatar}
               />
-              <div 
-                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-full transition-all duration-300 cursor-pointer"
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="w-full"
               >
                 {uploadingAvatar ? (
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Camera className="mr-2 h-4 w-4" />
                 )}
-              </div>
+                Change
+              </Button>
             </div>
             <div>
               <div className={styles.profileName}>
