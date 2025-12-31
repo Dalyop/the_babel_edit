@@ -309,7 +309,7 @@ export default function AccountPage() {
     try {
       await authenticatedFetch(API_ENDPOINTS.FEEDBACK.CREATE, {
         method: 'POST',
-        body: JSON.stringify({ ...values, pageUrl: window.location.href }),
+        body: { ...values, pageUrl: window.location.href },
       });
     } catch (err: any) {
       console.error('Failed to submit feedback:', err);
