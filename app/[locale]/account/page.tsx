@@ -288,10 +288,10 @@ export default function AccountPage() {
     try {
       await authenticatedFetch('/auth/change-password', {
         method: 'PUT',
-        body: JSON.stringify({
+        body: {
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword
-        }),
+        },
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -349,7 +349,7 @@ export default function AccountPage() {
 
       await authenticatedFetch(endpoint, {
         method,
-        body: JSON.stringify(newAddress),
+        body: newAddress,
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -554,33 +554,6 @@ export default function AccountPage() {
                 {saving ? 'Saving...' : 'Update Profile'}
               </button>
             </form>
-
-            {/* Recent Orders Section */}
-            <div className="mt-12">
-              <h2 className={styles.tabTitle}>Recent Order History</h2>
-              {recentOrdersLoading ? (
-                <div className="text-center py-10">
-                  <Loader2 className="mx-auto w-8 h-8 text-blue-600 animate-spin" />
-                  <p className="mt-2 text-gray-500">Loading recent orders...</p>
-                </div>
-              ) : recentOrders.length > 0 ? (
-                <div className="space-y-6">
-                  {recentOrders.map(order => <OrderCard key={order.id} order={order} />)}
-                  <div className="text-center pt-2">
-                    <Link href={`/${currentLocale}/orders`}>
-                      <Button variant="outline">
-                        View All Orders
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className={`${styles.emptyState} py-10`}>
-                  <Package className="mx-auto w-10 h-10 text-gray-400" />
-                  <p className="mt-2 text-gray-500">You have no recent orders.</p>
-                </div>
-              )}
-            </div>
           </>
         );
 
@@ -889,9 +862,9 @@ export default function AccountPage() {
               Addresses
             </li>
             <li className={activeTab === 'wishlist' ? styles.active : ''}>
-              <Link href={`/${currentLocale}/wishlist`} className="flex items-center w-full">
-                <Heart className="w-5 h-5" />
-                <span className="ml-2">Wishlist</span>
+              <Link href={`/${currentLocale}/wishlist`}>
+                <Heart className="w-5 h-5 mr-2" />
+                <span>Wishlist</span>
               </Link>
             </li>
             <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>
