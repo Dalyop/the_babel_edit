@@ -345,8 +345,8 @@ export default function AccountPage() {
       const isUpdating = editingAddress && editingAddress !== '';
       const method = isUpdating ? 'PUT' : 'POST';
       const endpoint = isUpdating
-        ? `/user/addresses/${editingAddress}`
-        : '/user/addresses';
+        ? `/addresses/${editingAddress}`
+        : '/addresses';
 
       await authenticatedFetch(endpoint, {
         method,

@@ -545,20 +545,24 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Related Products */}
-        <div className={styles.likeSection}>
-          <div className={styles.likeTitle}>{t('youMayAlsoLike')}</div>
-          <div className={styles.likeList}>
-            {featuredProducts.slice(0, 5).map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                locale={locale}
-                className={`${styles.likeCard} smallCard`}
-                imageContainerClassName="smallImageContainer"
-                variant="small"
-                currentCategory={product.category || null}
-              />
-            ))}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-6">{t('youMayAlsoLike')}</h2>
+          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+            <div className="flex space-x-6 overflow-x-auto pb-4">
+              <div className="w-4 sm:w-6 lg:w-8 flex-shrink-0" />
+              {featuredProducts.slice(0, 5).map((product) => (
+                <div key={product.id} className="w-64 flex-shrink-0">
+                  <ProductCard
+                    product={product}
+                    locale={locale}
+                    className="w-full"
+                    variant="small"
+                    currentCategory={product.category || null}
+                  />
+                </div>
+              ))}
+              <div className="w-4 sm:w-6 lg:w-8 flex-shrink-0" />
+            </div>
           </div>
         </div>
       </main>
