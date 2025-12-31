@@ -671,10 +671,10 @@ function Dashboard() {
             <h2 className="text-3xl md:text-4xl font-bold mb-2">THEY SAYS</h2>
             <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
           </div>
-          {testimonialsLoading ? (
+          {feedbacksLoading ? (
             <div>Loading testimonials...</div>
-          ) : testimonials.length > 0 ? (
-            <TestimonialCarousel testimonials={testimonials} />
+          ) : featuredFeedbacks.length > 0 ? (
+            <FeedbackCarousel feedbacks={featuredFeedbacks} />
           ) : (
             <p>No testimonials yet.</p>
           )}
