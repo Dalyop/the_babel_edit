@@ -118,7 +118,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       
       <div className="p-3 md:p-4 flex flex-col gap-2 md:gap-3 flex-grow">
-        <h3 className="text-xs md:text-sm font-medium text-gray-800 line-clamp-2 min-h-[28px] md:min-h-[32px]">
+        <h3 className="text-sm md:text-base font-medium text-gray-800 line-clamp-2 min-h-[28px] md:min-h-[32px]">
             {product.name}
         </h3>
         
