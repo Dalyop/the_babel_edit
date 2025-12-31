@@ -317,9 +317,9 @@ export default function ProductDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className={styles.productDetailBg}>
+      <div className="bg-gray-50 min-h-screen flex flex-col">
         <Navbar />
-        <main className={styles.productDetailMain}>
+        <main className="max-w-7xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8 w-full flex-grow">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -335,9 +335,9 @@ export default function ProductDetailPage() {
   // Error state
   if (error || !currentProduct) {
     return (
-      <div className={styles.productDetailBg}>
+      <div className="bg-gray-50 min-h-screen flex flex-col">
         <Navbar />
-        <main className="py-8 px-4 max-w-7xl mx-auto">
+        <main className="py-8 px-4 max-w-7xl mx-auto w-full flex-grow">
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
               <p className="text-gray-600 mb-4">{error || 'Product not found'}</p>
