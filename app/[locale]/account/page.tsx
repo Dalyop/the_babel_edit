@@ -889,9 +889,9 @@ export default function AccountPage() {
               Addresses
             </li>
             <li className={activeTab === 'wishlist' ? styles.active : ''}>
-              <Link href={`/${currentLocale}/wishlist`} className="flex items-center">
-                <Heart className="w-5 h-5 mr-2" />
-                Wishlist
+              <Link href={`/${currentLocale}/wishlist`} className="flex items-center w-full">
+                <Heart className="w-5 h-5" />
+                <span className="ml-2">Wishlist</span>
               </Link>
             </li>
             <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>

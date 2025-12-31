@@ -171,7 +171,7 @@ function Navbar() {
                   category === item.category ? styles.activeLink : ''
                 }
               >
-                {item.label}
+                <span>{item.label}</span>
               </button>
             </div>
           ))}
