@@ -3,26 +3,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 
-interface Testimonial {
+interface Feedback {
   id: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
+  message: string;
   user: {
     firstName: string;
     lastName: string;
     avatar?: string;
-  };
-  product: {
-    name: string;
-  };
+  } | null;
 }
 
-interface TestimonialCarouselProps {
-  testimonials: Testimonial[];
+interface FeedbackCarouselProps {
+  feedbacks: Feedback[];
 }
 
-const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({ testimonials }) => {
+const FeedbackCarousel: React.FC<FeedbackCarouselProps> = ({ feedbacks }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
@@ -45,17 +40,17 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({ testimonials 
     <div className="overflow-hidden">
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex">
-          {testimonials.map((testimonial) => (
-            <div className="flex-[0_0_100%] min-w-0 p-4" key={testimonial.id}>
+          {feedbacks.map((feedback) => (
+            <div className="flex-[0_0_100%] min-w-0 p-4" key={feedback.id}>
               <div className="bg-white rounded-lg p-8 text-center shadow-lg h-full flex flex-col justify-center items-center">
-                <p className="italic text-gray-600 mb-6 text-lg leading-relaxed">"{testimonial.comment}"</p>
+                <p className="italic text-gray-600 mb-6 text-lg leading-relaxed">"{feedback.message}"</p>
                 <img
-                  src={testimonial.user.avatar || '/images/babel_logo_black.jpg'}
-                  alt={`${testimonial.user.firstName} ${testimonial.user.lastName}'s avatar`}
+                  src={feedback.user?.avatar || '/images/babel_logo_black.jpg'}
+                  alt={`${feedback.user?.firstName} ${feedback.user?.lastName}'s avatar`}
                   className="w-16 h-16 rounded-full mb-4 object-cover"
                 />
                 <div className="font-semibold text-gray-800">
-                  {testimonial.user.firstName} {testimonial.user.lastName}
+                  {feedback.user?.firstName} {feedback.user?.lastName}
                 </div>
               </div>
             </div>
@@ -75,4 +70,4 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({ testimonials 
   );
 };
 
-export default TestimonialCarousel;
+export default FeedbackCarousel;
