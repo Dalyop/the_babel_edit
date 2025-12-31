@@ -77,8 +77,6 @@ export default function CartPage() {
   };
 
   const handleRemove = async (itemId: string) => {
-    if (!confirm('Remove this item from cart?')) return;
-    
     setRemovingItems(prev => new Set(prev).add(itemId));
     
     try {
@@ -92,11 +90,6 @@ export default function CartPage() {
         return next;
       });
     }
-  };
-
-  const handlePromo = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert("Promo code logic not implemented.");
   };
 
   const handleCheckout = async () => {
@@ -318,24 +311,6 @@ export default function CartPage() {
                 <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
                 <span className={styles.summaryAmount}>${totalAmount.toFixed(2)}</span>
               </div>
-              
-              <hr className={styles.summaryDivider} />
-              
-              <form className={styles.promoForm} onSubmit={handlePromo}>
-                <label className={styles.promoLabel}>Promo Code</label>
-                <div className={styles.promoRow}>
-                  <input 
-                    className={styles.promoInput} 
-                    type="text" 
-                    value={promo} 
-                    onChange={e => setPromo(e.target.value)}
-                    placeholder="Enter promo code"
-                  />
-                  <button className={styles.promoBtn} type="submit" disabled={!promo.trim()}>
-                    Apply
-                  </button>
-                </div>
-              </form>
               
               <hr className={styles.summaryDivider} />
               
