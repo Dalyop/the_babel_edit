@@ -56,11 +56,11 @@ export function FeedbackForm({ onSubmit }: FeedbackFormProps) {
           control={form.control}
           name="type"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="text-left">
               <FormLabel>Feedback Type</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Select a feedback type" />
                   </SelectTrigger>
                 </FormControl>
@@ -80,12 +80,12 @@ export function FeedbackForm({ onSubmit }: FeedbackFormProps) {
           control={form.control}
           name="message"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="text-left">
               <FormLabel>Message</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Tell us how we can improve..."
-                  className="resize-none"
+                  className="resize-none bg-white"
                   {...field}
                 />
               </FormControl>

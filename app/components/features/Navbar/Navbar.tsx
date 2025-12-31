@@ -6,7 +6,7 @@ import { IMAGES } from '@/app/constants/constants';
 import SearchInput from '@/app/components/ui/SearchInput/SearchInput';
 import styles from './Navbar.module.css';
 // icon imports
-import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X, Search, Heart, Package } from 'lucide-react';
+import { Shirt, Footprints, BriefcaseBusiness, Gem, PlaneLanding, Tag, ShoppingBasket, Menu, X, Search, Heart, Package, User } from 'lucide-react';
 import Select from '../../ui/Select/Select';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import en from '@/locales/en/common.json';
@@ -110,21 +110,24 @@ function Navbar() {
         />
         <button
           onClick={() => navigateWithLoading(`/${currentLocale}/account`)}
-          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors"
         >
-          {t('account')}
+          <User className="h-3 w-3" />
+          <span>{t('account')}</span>
         </button>
         <button
           onClick={() => navigateWithLoading(`/${currentLocale}/orders`)}
-          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors"
         >
-          {t('orders')}
+          <Package className="h-3 w-3" />
+          <span>{t('orders')}</span>
         </button>
         <button
           onClick={() => navigateWithLoading(`/${currentLocale}/wishlist`)}
-          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 transition-colors"
         >
-          {t('wishlist')}
+          <Heart className="h-3 w-3" />
+          <span>{t('wishlist')}</span>
         </button>
         <button
           onClick={() => navigateWithLoading(`/${currentLocale}/cart`)}

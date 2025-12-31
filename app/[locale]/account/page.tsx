@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/app/lib/api";
-import { Loader2, Package, AlertCircle, Camera } from 'lucide-react';
+import { Loader2, Package, AlertCircle, Camera, CircleUserRound, ShoppingBag, MapPin, Heart, Shield, Megaphone, LogOut } from 'lucide-react';
 import { FeedbackForm } from '@/app/components/features/feedback/FeedbackForm';
 import {
   Select,
@@ -846,8 +846,8 @@ export default function AccountPage() {
       case 'feedback':
         return (
           <div className={styles.profileForm}>
-            <h2 className={styles.tabTitle}>Submit Feedback</h2>
-            <p className={styles.tabDescription}>We would love to hear your thoughts, suggestions, or bug reports to help us improve.</p>
+            <h2 className={styles.tabTitle}>We value your feedback.</h2>
+            <p className={styles.tabDescription}>Your opinion helps us improve our products and services.</p>
             <FeedbackForm onSubmit={handleFeedbackSubmit} />
           </div>
         );
@@ -876,16 +876,35 @@ export default function AccountPage() {
         <div className={styles.sidebar}>
           <div className={styles.sidebarTitle}>My Account</div>
           <ul className={styles.sidebarMenu}>
-            <li className={activeTab === 'profile' ? styles.active : ''} onClick={() => setActiveTab('profile')}>Profile Settings</li>
-            <li className={activeTab === 'orders' ? styles.active : ''} onClick={() => setActiveTab('orders')}>Orders</li>
-            <li className={activeTab === 'addresses' ? styles.active : ''} onClick={() => setActiveTab('addresses')}>Addresses</li>
-            <li className={activeTab === 'wishlist' ? styles.active : ''}>
-              <Link href={`/${currentLocale}/wishlist`}>Wishlist</Link>
+            <li className={activeTab === 'profile' ? styles.active : ''} onClick={() => setActiveTab('profile')}>
+              <CircleUserRound className="w-5 h-5 mr-2" />
+              Profile Settings
             </li>
-            <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>Security</li>
-            <li className={activeTab === 'feedback' ? styles.active : ''} onClick={() => setActiveTab('feedback')}>Feedback</li>
+            <li className={activeTab === 'orders' ? styles.active : ''} onClick={() => setActiveTab('orders')}>
+              <ShoppingBag className="w-5 h-5 mr-2" />
+              Orders
+            </li>
+            <li className={activeTab === 'addresses' ? styles.active : ''} onClick={() => setActiveTab('addresses')}>
+              <MapPin className="w-5 h-5 mr-2" />
+              Addresses
+            </li>
+            <li className={activeTab === 'wishlist' ? styles.active : ''}>
+              <Link href={`/${currentLocale}/wishlist`} className="flex items-center">
+                <Heart className="w-5 h-5 mr-2" />
+                Wishlist
+              </Link>
+            </li>
+            <li className={activeTab === 'security' ? styles.active : ''} onClick={() => setActiveTab('security')}>
+              <Shield className="w-5 h-5 mr-2" />
+              Security
+            </li>
+            <li className={activeTab === 'feedback' ? styles.active : ''} onClick={() => setActiveTab('feedback')}>
+              <Megaphone className="w-5 h-5 mr-2" />
+              Feedback
+            </li>
           </ul>
           <div className={styles.logout} onClick={handleLogout}>
+            <LogOut className="w-5 h-5 mr-2" />
             Logout
           </div>
         </div>
