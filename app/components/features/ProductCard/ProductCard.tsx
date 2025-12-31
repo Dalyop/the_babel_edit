@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './ProductCard.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, ShoppingCart } from 'lucide-react';
@@ -63,16 +62,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isOutOfStock = product.stock === 0;
 
   const cardClasses = `
-    ${styles.card} 
-    ${variant === 'small' ? styles.smallCard : ''} 
+    border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm
+    transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg hover:border-blue-200
+    w-full h-full flex flex-col
+    ${variant === 'small' ? 'max-w-[180px] md:max-w-full' : ''}
     ${isOutOfStock ? 'grayscale opacity-60 pointer-events-none' : ''} 
     ${className}
   `;
-  const imageContainerClasses = `${styles.imageContainer} ${variant === 'small' ? styles.smallImageContainer : ''} ${imageContainerClassName}`;
+  const imageContainerClasses = `
+    relative w-full overflow-hidden
+    ${variant === 'small' ? 'h-40 md:h-32' : 'h-60 md:h-52'}
+    ${imageContainerClassName}
+  `;
+  const imageClasses = "object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out";
 
   return (
-    <div className={cardClasses}>
-      <div className={imageContainerClasses}>
+    <div className={cardClasses.trim()}>
+      <div className={`${imageContainerClasses.trim()} group`}>
         {isOutOfStock && (
           <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
             <span className="bg-black text-white font-bold py-2 px-4 rounded-lg">
@@ -104,40 +110,44 @@ const ProductCard: React.FC<ProductCardProps> = ({
               src={product.images[0] || '/placeholder-product.jpg'}
               alt={product.name}
               fill
-              className={styles.image}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className={imageClasses}
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             />
           </div>
         </Link>
       </div>
       
-      <div className={styles.content}>
-        <h3 className={styles.title}>{product.name}</h3>
+      <div className="p-3 md:p-4 flex flex-col gap-2 md:gap-3 flex-grow">
+        <h3 className="text-xs md:text-sm font-medium text-gray-800 line-clamp-2 min-h-[28px] md:min-h-[32px]">
+            {product.name}
+        </h3>
         
         {/* Rating if available */}
         {product.avgRating > 0 && (
-          <div className="flex items-center gap-1 text-sm text-gray-500">
+          <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
             <span>⭐</span>
             <span>{product.avgRating}</span>
             {product.reviewCount > 0 && <span>({product.reviewCount})</span>}
           </div>
         )}
         
-        <div className={styles.bottomRow}>
-          <div className={styles.priceContainer}>
-            <span className={styles.currentPrice}>${product.price}</span>
+        <div className="flex items-center justify-between gap-2 mt-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-sm md:text-base font-semibold text-blue-600">${product.price}</span>
             {product.comparePrice && (
-              <span className={styles.originalPrice}>${product.comparePrice}</span>
+              <span className="text-xs md:text-sm text-gray-400 line-through">${product.comparePrice}</span>
             )}
           </div>
           
           <button 
-            className={styles.addToBasketBtn}
+            className="flex-shrink-0 bg-blue-600 text-white border-none rounded-md p-2 text-xs font-medium cursor-pointer transition-all duration-300 ease-in-out
+                       flex items-center justify-center gap-2 whitespace-nowrap h-8
+                       hover:bg-blue-700 hover:-translate-y-px hover:shadow-md
+                       disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
             onClick={handleAddToCart}
             disabled={isInCart || isOutOfStock || isAddingToCart}
           >
-            <ShoppingCart className="h-4 w-4" />
-            {isAddingToCart ? 'Adding...' : isInCart ? 'In Cart' : isOutOfStock ? 'Out of Stock' : 'Add'}
+            <ShoppingCart className="h-3 w-3 md:h-4 md:w-4" />
           </button>
         </div>
       </div>
