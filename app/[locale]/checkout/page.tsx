@@ -130,7 +130,7 @@ export default function CheckoutPage() {
       });
       
       console.log("✅ Order created:", orderData);
-      setOrderId(orderData.Objectid);
+      setOrderId(orderData.id);
 
       // Step 2: Create the payment intent for that order
       const { clientSecret: secret } = await apiRequest<{ clientSecret: string }>(
@@ -138,7 +138,7 @@ export default function CheckoutPage() {
         {
           method: 'POST',
           requireAuth: true,
-          body: { orderId: orderData.Objectid },
+          body: { orderId: orderData.id },
         }
       );
       
