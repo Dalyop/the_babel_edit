@@ -6,13 +6,6 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useCartStore } from '@/app/store/useCartStore';
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
 import Footer from '@/app/components/features/Footer/Footer';
-import React, { useState, useEffect, useCallback } from "react";
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
-import { useCartStore } from '@/app/store/useCartStore';
-import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense';
-import Footer from '@/app/components/features/Footer/Footer';
 
 export default function CartPage() {
   const params = useParams();
@@ -222,30 +215,38 @@ export default function CartPage() {
                 const isUpdating = updatingItems.has(item.id);
                 const isRemoving = removingItems.has(item.id);
                 const isItemLoading = isUpdating || isRemoving;
-                
+                const isOutOfStock = item.stock === 0;
+
                 return (
-                  <div 
-                    className="flex flex-col md:flex-row w-full gap-4 bg-white rounded-xl shadow-md p-6 items-start border border-gray-200"
+                  <div
+                    className={`flex flex-col md:flex-row w-full gap-4 bg-white rounded-xl shadow-md p-6 items-start border border-gray-200 ${isOutOfStock ? 'grayscale opacity-60' : ''}`}
                     key={item.id}
                     style={{ opacity: isRemoving ? 0.5 : 1, transition: 'opacity 0.3s' }}
                   >
-                    <div className="w-full md:w-32 h-32 md:h-auto flex-shrink-0">
-                      <img 
-                        src={item.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image'} 
-                        alt={item.name} 
+                    <div className="w-full md:w-32 h-32 md:h-auto flex-shrink-0 relative">
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                          <span className="bg-black text-white font-bold py-2 px-4 rounded-lg">
+                            Out of Stock
+                          </span>
+                        </div>
+                      )}
+                      <img
+                        src={item.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image'}
+                        alt={item.name}
                         className="w-full h-full object-cover rounded-lg border border-gray-200"
                         onError={(e) => {
                           e.currentTarget.src = 'https://via.placeholder.com/300x300?text=No+Image';
                         }}
                       />
                     </div>
-                    
+
                     <div className="flex-1 flex flex-col gap-2">
                       <div className="flex justify-between items-start">
                         <h3 className="text-lg font-bold text-gray-800">{item.name}</h3>
-                        <button 
+                        <button
                           className="text-red-500 hover:text-red-600"
-                          type="button" 
+                          type="button"
                           onClick={() => handleRemove(item.id)}
                           disabled={isItemLoading}
                           title="Remove item"
@@ -257,26 +258,26 @@ export default function CartPage() {
                           )}
                         </button>
                       </div>
-                      
+
                       {(item.size || item.color) && (
                         <div className="text-sm text-gray-500">
                           {item.size && <span className="mr-4">Size: {item.size}</span>}
                           {item.color && <span>Color: {item.color}</span>}
                         </div>
                       )}
-                      
+
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-2">
                         <div className="flex items-center gap-2 text-lg font-bold text-gray-800">
                           <span>Price:</span>
                           <span>${item.price.toFixed(2)}</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 mt-4 md:mt-0">
-                          <button 
+                          <button
                             className="w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                            type="button" 
+                            type="button"
                             onClick={() => handleQuantity(item.id, item.quantity - 1)}
-                            disabled={isItemLoading || item.quantity <= 1}
+                            disabled={isItemLoading || item.quantity <= 1 || isOutOfStock}
                             aria-label="Decrease quantity"
                           >
                             −
@@ -288,17 +289,17 @@ export default function CartPage() {
                               item.quantity
                             )}
                           </span>
-                          <button 
+                          <button
                             className="w-8 h-8 rounded-md border border-gray-300 bg-white text-gray-700 font-semibold hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                            type="button" 
+                            type="button"
                             onClick={() => handleQuantity(item.id, item.quantity + 1)}
-                            disabled={isItemLoading}
+                            disabled={isItemLoading || isOutOfStock}
                             aria-label="Increase quantity"
                           >
                             +
                           </button>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-lg font-bold text-gray-800 mt-4 md:mt-0">
                           <span>Subtotal:</span>
                           <span className="text-red-500">${item.subtotal.toFixed(2)}</span>
@@ -314,7 +315,7 @@ export default function CartPage() {
               <h2 className="text-xl font-bold text-gray-800 mb-4">Order Summary</h2>
               
               <div className="flex justify-between font-bold text-gray-800 mb-2">
-                <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
+                <span>Subtotal ({items.filter(item => item.stock > 0).length} {items.filter(item => item.stock > 0).length === 1 ? 'item' : 'items'})</span>
                 <span className="text-gray-800">${totalAmount.toFixed(2)}</span>
               </div>
               
@@ -332,11 +333,11 @@ export default function CartPage() {
                 <span className="text-2xl font-extrabold text-red-500">${total.toFixed(2)}</span>
               </div>
               
-              <div className={styles.checkoutActions}>
+              <div className="flex flex-col gap-2">
                 <button 
                   className="w-full bg-red-500 text-white rounded-lg py-3 text-lg font-semibold cursor-pointer transition-all duration-200 hover:bg-red-600 hover:-translate-y-px hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
                   type="button" 
-                  disabled={loading || items.length === 0 || updatingItems.size > 0 || removingItems.size > 0 || isCheckingOut}
+                  disabled={loading || items.length === 0 || updatingItems.size > 0 || removingItems.size > 0 || isCheckingOut || items.some(item => item.stock === 0)}
                   onClick={handleCheckout}
                 >
                   {isCheckingOut ? (

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { ClientProviders } from "./providers/ClientProviders";
@@ -7,16 +8,6 @@ import { RouteLoadingProvider } from "./components/providers/RouteLoadingProvide
 import ToastProvider from "./providers/ToastProvider";
 import GlobalLoading from "./components/ui/GlobalLoading/GlobalLoading";
 import { PWAProvider } from "./providers/PWAProvider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   // Basic SEO
@@ -219,7 +210,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         <AuthProvider>
           <ClientProviders>

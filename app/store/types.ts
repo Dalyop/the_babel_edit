@@ -89,6 +89,7 @@ export interface CartItem {
   quantity: number;
   size?: string;
   color?: string;
+  stock: number;
   subtotal: number;
 }
 

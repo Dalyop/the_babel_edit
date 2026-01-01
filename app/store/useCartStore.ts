@@ -122,6 +122,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
           quantity,
           size: options.size,
           color: options.color,
+          stock: 0, // Default stock for offline items
           subtotal: 0,
         };
         updatedItems = [...items, newItem];
