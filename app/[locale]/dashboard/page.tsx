@@ -18,6 +18,17 @@ interface Feedback {
   } | null;
 }
 
+interface Testimonial {
+  id: string;
+  comment: string;
+  rating: number;
+  user: {
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+}
+
 // Your original components would be imported here
 import NavbarWithSuspense from '@/app/components/features/Navbar/NavbarWithSuspense'
 import Carousel from '@/app/components/features/Carousel/Carousel';
@@ -267,6 +278,8 @@ function Dashboard() {
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [featuredFeedbacks, setFeaturedFeedbacks] = useState<Feedback[]>([]);
   const [feedbacksLoading, setFeedbacksLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
 
   useEffect(() => {
     // Fetch featured products from backend
@@ -291,6 +304,20 @@ function Dashboard() {
       }
     };
     fetchFeaturedFeedbacks();
+  }, []);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const data = await apiRequest<Testimonial[]>(API_ENDPOINTS.ADMIN.TESTIMONIALS.PUBLIC_LIST);
+        setTestimonials(data);
+      } catch (error) {
+        console.error('Failed to fetch testimonials:', error);
+      } finally {
+        setTestimonialsLoading(false);
+      }
+    };
+    fetchTestimonials();
   }, []);
 
   // Fetch collections for the highlight section
@@ -587,25 +614,34 @@ function Dashboard() {
             { name: "H&M", src: "https://logos-world.net/wp-content/uploads/2020/04/HM-Logo-700x394.png" },
             { name: "Puma", src: "https://logos-world.net/wp-content/uploads/2020/04/Puma-Logo.png" },
             { name: "Uniqlo", src: "https://logos-world.net/wp-content/uploads/2023/01/Uniqlo-Logo-500x281.png" },
-            { name: "Chanel", src: "https://www.stickpng.com/img/icons-logos-emojis/iconic-brands/chanel-logo-transparent-png" },
-            { name: "Prada", src: "https://upload.wikimedia.org/wikipedia/commons/4/44/Prada.png" },
-            { name: "Dior", src: "https://www.stickpng.com/assets/images/icons/iconic-brands/dior-logo.png" },
-            { name: "Versace", src: "https://upload.wikimedia.org/wikipedia/commons/a/ad/Versace_logo.svg" },
+            { name: "Chanel" },
+            { name: "Prada" },
+            { name: "Dior" },
+            { name: "Versace" },
             { name: "Balenciaga", src: "https://logowik.com/content/uploads/images/balenciaga5106.jpg" },
-            { name: "Fendi", src: "https://www.citypng.com/public/uploads/preview/-11594957117gcn10p5y5q.png" },
+            { name: "Fendi" },
             { name: "Burberry", src: "https://static.cdnlogo.com/logos/b/6/burberry.svg" },
-            { name: "Hermes", src: "https://logo-teka.com/wp-content/uploads/2025/07/hermes-logo.png" },
+            { name: "Hermes" },
           ].map((brand, index) => (
             <div key={index} className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300 group">
-              <img
-                src={brand.src}
-                alt={brand.name}
-                className="h-6 md:h-8 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300 filter grayscale group-hover:grayscale-0"
-                onError={(e) => {
-                  // Fallback if image fails to load
-                  e.currentTarget.src = `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 30"><rect width="80" height="30" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" rx="4"/><text x="40" y="20" font-family="Arial, sans-serif" font-size="10" fill="#6b7280" text-anchor="middle">${brand.name}</text></svg>`)}`;
-                }}
-              />
+              {brand.src ? (
+                <img
+                  src={brand.src}
+                  alt={brand.name}
+                  className="h-6 md:h-8 w-auto object-contain opacity-60 group-hover:opacity-90 transition-opacity duration-300 filter grayscale group-hover:grayscale-0"
+                  onError={(e) => {
+                    // Replace with text fallback on error
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<span class="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">${brand.name}</span>`;
+                    }
+                  }}
+                />
+              ) : (
+                <span className="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">
+                  {brand.name}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -671,12 +707,17 @@ function Dashboard() {
             <h2 className="text-3xl md:text-4xl font-bold mb-2">THEY SAYS</h2>
             <p className="text-gray-500 text-sm tracking-wider">OUR HAPPY CLIENTS</p>
           </div>
-          {feedbacksLoading ? (
-            <div>Loading testimonials...</div>
-          ) : featuredFeedbacks.length > 0 ? (
-            <FeedbackCarousel feedbacks={featuredFeedbacks} />
+          {testimonialsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : testimonials.length > 0 ? (
+            <FeedbackCarousel testimonials={testimonials} />
           ) : (
-            <p>No testimonials yet.</p>
+            <div className="py-8">
+              <p className="text-gray-500 mb-4">No testimonials yet.</p>
+              <p className="text-sm text-gray-400">Check back soon to see what our customers are saying!</p>
+            </div>
           )}
         </div>
       </section>
